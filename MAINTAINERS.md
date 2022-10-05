@@ -1,5 +1,5 @@
 # Maintainers
 
-- [GitHub Username](https://github.com/username)
-- [GitHub Username](https://github.com/username)
-- [GitHub Username](https://github.com/username)
+- [Vikram Patki](https://github.com/patkivikram)
+- [Aditya Vaderiyattil](https://github.com/appu1232)
+
