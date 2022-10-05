@@ -9,9 +9,9 @@ This document outlines security procedures and general policies for the
 
 ## Reporting a Bug
 
-The `<project name>` team and community take all security bugs in
-`<project name>` seriously.  Thank you for improving the security of
-`<project name>`. We appreciate your efforts and responsible disclosure and
+The `dagger` team and community take all security bugs in
+`dagger` seriously.  Thank you for improving the security of
+`dagger`. We appreciate your efforts and responsible disclosure and
 will make every effort to acknowledge your contributions.
 
 Report security bugs by emailing `OpenSource@wayfair.com`.
