@@ -1,80 +1,369 @@
-# Open Source Project Template
+# Dagger
 
-[![Release](https://img.shields.io/github/v/release/wayfair-incubator/oss-template?display_name=tag)](CHANGELOG.md)
-[![Lint](https://github.com/wayfair-incubator/oss-template/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/wayfair-incubator/oss-template/actions/workflows/lint.yml)
+[![Release](https://img.shields.io/github/v/release/wayfair-incubator/dagger?display_name=tag)](CHANGELOG.md)
+[![Lint](https://github.com/wayfair-incubator/dagger/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/wayfair-incubator/dagger/actions/workflows/lint.yml)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![Maintainer](https://img.shields.io/badge/Maintainer-Wayfair-7F187F)](https://wayfair.github.io)
 
-## Before You Start
-
-As much as possible, we have tried to provide enough tooling to get you up and running quickly and with a minimum of effort. This includes sane defaults for documentation; templates for bug reports, feature requests, and pull requests; and [GitHub Actions](https://github.com/features/actions) that will automatically manage stale issues and pull requests. This latter defaults to labeling issues and pull requests as stale after 60 days of inactivity, and closing them after 7 additional days of inactivity. These [defaults](.github/workflows/stale.yml) and more can be configured. For configuration options, please consult the documentation for the [stale action](https://github.com/actions/stale).
-
-In trying to keep this template as generic and reusable as possible, there are some things that were omitted out of necessity and others that need a little tweaking. Before you begin developing in earnest, there are a few changes that need to be made:
-
-- [ ] ✅ Select an appropriate license for your project. This can easily be achieved through the 'Add File' button on the GitHub UI, naming the file `LICENSE`, and selecting your desired license from the provided list.
-- [ ] Update the `<License name>` placeholder in this file to reflect the name of the license you selected above.
-- [ ] Replace `[INSERT CONTACT METHOD]` in [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) with a suitable communication channel.
-- [ ] Change references to `org_name` to the name of the org your repo belongs to (eg. `wayfair-incubator`):
-  - [ ] In [`README.md`](README.md)
-  - [ ] In [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- [ ] Change references to `repo_name` to the name of your new repo:
-  - [ ] In [`README.md`](README.md)
-  - [ ] In [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- [ ] Update the link to the contribution guidelines to point to your project:
-  - [ ] In [`.github/ISSUE_TEMPLATE/BUG_REPORT.md`](.github/ISSUE_TEMPLATE/BUG_REPORT.md)
-  - [ ] In [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md)
-- [ ] Replace the `<project name>` placeholder with the name of your project:
-  - [ ] In [`CONTRIBUTING.md`](CONTRIBUTING.md)
-  - [ ] In [`SECURITY.md`](SECURITY.md)
-- [ ] Add names and contact information for actual project maintainers to [`MAINTAINERS.md`](MAINTAINERS.md).
-- [ ] Delete the content of [`CHANGELOG.md`](CHANGELOG.md). We encourage you to [keep a changelog](https://keepachangelog.com/en/1.0.0/).
-- [ ] Configure [`renovate.json`](renovate.json) for your project's language and tooling dependencies.
-  - [ ] 💡 To learn more about using and configuring [Renovate](http://renovatebot.com/), check out our [wayfair.github.io](https://wayfair.github.io) article: **[Managing Project Dependencies](https://wayfair.github.io/docs/managing-dependencies/)**.
-- [ ] Replace the generic content in this file with the relevant details about your project.
-- [ ] Acknowledge that some features like [branch protection rules](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/managing-a-branch-protection-rule) are only available when the repo is `public`.
-- [ ] 🚨 Delete this section of the `README`!
 
 ## About The Project
 
-Provide some information about what the project is/does.
+**Dagger** is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous and synchronous long-running business logic in a scalable and resilient way.
 
-## Getting Started
 
-To get a local copy up and running follow these simple steps.
+Dagger requires Python 3.7 or later for the new `async/await`_ syntax,
+and variable type annotations.
 
-### Prerequisites
+Here's an example of how to use the library to build and run a workflow:
 
-This is an example of how to list things you need to use the software and how to install them.
+```
+import logging
+from uuid import uuid1
+from dagger.service.services import Dagger
+from dagger.modeler.definition import *
+from dagger.templates.template import *
 
-- npm
+logger = logging.getLogger(__name__)
 
-  ```sh
-  npm install npm@latest -g
-  ```
+workflow_engine = Dagger(broker="kafka://localhost:9092", datadir="/tmp/data/")
 
-### Installation
+@Dagger.register_template('OrderWorkflow')
+def order_template(template_name: str) -> ITemplateDAG:
 
-1. Clone the repo
 
-   ```sh
-   git clone https://github.com/org_name/repo_name.git
-   ```
+    # Create empty default Template
+    template_builder = DefaultTemplateBuilder(Dagger.app)
+    template_builder.set_name(template_name)
+    template_builder.set_type(DefaultTemplateDAGInstance)
 
-2. Install NPM packages
+    # First process in template (first node in DAG) named waving
+    payment_process_builder = ProcessTemplateDagBuilder(Dagger.app)
+    payment_process_builder.set_name("PAYMENT")
 
-   ```sh
-   npm install
-   ```
+    # First task and topic in payment process
+    payment_command_topic =  Dagger.create_topic("PAYMENT_COMMAND", key_type=bytes, value_type=bytes)
+    payment_command_task_template_builder = KafkaCommandTaskTemplateBuilder(Dagger.app)
+    payment_command_task_template_builder.set_topic(payment_command_topic)
+    payment_command_task_template_builder.set_type(PaymentKafkaCommandTask)
 
-## Usage
+    # Second task and topic in payment process
+    payment_topic: Topic =  Dagger.create_topic("PAYMENT_LISTENER", key_type=bytes, value_type=bytes)
+    payment_listener_task_template_builder = KafkaListenerTaskTemplateBuilder(Dagger.app)
+    payment_listener_task_template_builder.set_topic(payment_topic)
+    payment_listener_task_template_builder.set_type(PaymentKafkaListenerTask)
+    
+    # Link and build tasks in payment process (define root task and order, essentially just created a child DAG inside the parent DAG)
+    payment_listener_task_template = payment_listener_task_template_builder.build()
+    payment_command_task_template_builder.set_next(payment_listener_task_template)
+    payment_command_task_template = payment_command_task_template_builder.build()
+    payment_process_builder.set_root_task(payment_command_task_template)
+    payment_process_builder.set_type(DefaultProcessTemplateDAGInstance)
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+    # Build more processes like above
 
-_For more examples, please refer to the [Documentation](https://example.com) or the [Wiki](https://github.com/org_name/repo_name/wiki)_
+    [...]
+
+    # Link and build processes in DAG (define root task and order) Assuming one more process called "SHIPPING" was created, this would be the flow:
+    shipping_template = shipping_process_builder.build()
+    payment_process_builder.set_next_process(shipping_template)
+    payment_template = payment_process_builder.build()
+    template_builder.set_root(payment_template)
+
+    btemplate = template_builder.build()
+    return btemplate
+
+# Starts the worker
+workflow_engine.main()
+```
+       
+    
+
+The ``register_template`` decorator defines a "DAG processor" that essentially
+defines the various processes and child tasks the DAG executes. In the example above the code
+creates a named template ``OrderWorkflow``  and associates a ``PAYMENT`` process with 2 child
+tasks ``PAYMENT_LISTENER`` and ``PAYMENT_COMMAND``. The ``SHIPPING`` process follows with similarly
+named topics and processes and the template defines the root process and links them in a DAG (Directed
+Acyclic Graph) structure
+
+The application can define as many DAG'S it needs to model using the ``register_template``
+decorator. process-engine populates all the DAG templates in the codebase decorated with `register_template`
+
+Here's and example of how to create an instance of a specific DAG:
+    
+        template = workflow_engine.get_template('BulkTemplate')
+        runtime_parameters:Dict[str, str] = dict()
+        runtime_parameters['customer_name']= `EXAMPLE_CUSTOMER`
+        runtime_parameters['order_number'] = 'EXAMPLE_ORDER' 
+        template_instance = await template.create_instance(uuid1(), runtime_parameters)
+
+To begin execution of the DAG instance created above
+    
+        await workflow_engine.submit(template_instance)
+        
+This begins the actual execution of the tasks created by the template definition and executes them in the sequence as defined
+in the template. The engine currently supports the following types of tasks:
+
+## KafkaCommandTask
+
+This task is used to send a request/message on a Kafka Topic defined using the template builder. This type of task is a child task in the 
+execution graph and can be extended by implementing the method 
+
+        @abc.abstractmethod
+        async def execute(self) -> None:
+            ...
+                
+
+ 
+## KafkaListenerTask
+
+This task waits/halts the execution of the DAG until a message is received on the defined Kafka topic(in the template definition). Each task is created using the
+DAG builder defines a durable key to correlate each received message on the topic against listener tasks. The Engine handles the complexity of invoking the
+appropriate task instance based on the key in the payload.
+
+A listener task needs to implement the following methods
+
+         @abc.abstractmethod
+         async def on_message(self, *args: Any, **kwargs: Any) -> None :
+            ...
+            
+         @abc.abstractmethod
+         async def get_correlatable_key(self, payload: Any) -> TaskLookupKey: 
+            ...
+            
+The get_correlatable_key method extracts the key by parsing the payload received on the Kafka topic. Using this key the DAGGER looks up the 
+appropriate task from the list of tasks waiting on this event and invokes `on_message` on each one of them. The default implementation of this task
+just sets this task and `COMPLETED`
+
+The engine provides the flexibility to implement any other type of listener task by implementing the following interface
+    
+    class SensorTask(ITask[KT, VT]):
+
+along with a custom `TaskTemplateBuilder`
+
+    class TaskTemplateBuilder:
+    app: Service
+
+    def __init__(self, app: Service) -> None :
+        self.app = app
+
+    @abc.abstractmethod
+    def set_type(self, task_type:Type[ITask]) -> TaskTemplateBuilder:
+        ...
+
+    @abc.abstractmethod
+    def build(self) -> TaskTemplate:
+        ...
+ 
+## TriggerTask
+
+This task waits/halts the execution of the DAG until current time >= the trigger time on the task
+
+A trigger task needs to implement the following method
+
+        @abc.abstractmethod
+        async def execute(self) -> None:
+            ...
+            
+The engine provides a `TriggerTaskTemplateBuilder` helper to model the task in the DAG. The `set_time_to_execute_lookup_key` on this builder is used
+to define the key to lookup the trigger time provided in the runtime parameters of the task
+            
+## DecisionTask
+
+This type of task is similar to the `case..switch` statement in a programming language. It returns the next task to execute
+based on the execution logic. A decision task needs to implement 
+
+    @abc.abstractmethod
+    async def evaluate(self, **kwargs: Any) -> Optional[UUID]:
+        ...
+     
+This method returns the UUID of the next task to execute in the execution path
+
+The Engine provides a `DecisionTaskTemplateBuilder` to model a decision task in the DAG
+
+## RESTful API
+                    
+
+The framework provides a RESTFul API to retrieve the status of root task instances. Root task is the instance created using the `TaskTemplate`
+which then has multiple, chained ProcessTasks and child tasks(KafkaCommand and KafkaListener tasks)
+
+    http://<hostname>:6066/tasks/instances
+
+    [
+        {
+            "child_dags": [],
+            "child_tasks": [
+                {
+                    "child_dags": [
+                        "89bbf26c-0727-11ea-96e5-0242ac150004",
+                        "89bc1486-0727-11ea-96e5-0242ac150004"
+                    ],
+                    "correlatable_key": null,
+                    "id": "89bbedd0-0727-11ea-96e5-0242ac150004",
+                    "lastupdated": 1573767727,
+                    "parent_id": "89bbe43e-0727-11ea-96e5-0242ac150004",
+                    "process_name": "PAYMENT",
+                    "runtime_parameters": {
+                        "order_number": "ID000",
+                        "customer": "ID000"
+                    },
+                    "status": {
+                        "code": "COMPLETED",
+                        "value": "Complete"
+                    },
+                    "task_type": "NON_ROOT",
+                    "time_completed": 1573767727,
+                    "time_created": 1573767624,
+                    "time_submitted": 1573767698
+                },
+                {
+                    "child_dags": [
+                        "89bc3984-0727-11ea-96e5-0242ac150004",
+                        "89bc482a-0727-11ea-96e5-0242ac150004"
+                    ],
+                    "correlatable_key": null,
+                    "id": "89bc35f6-0727-11ea-96e5-0242ac150004",
+                    "lastupdated": 1573767727,
+                    "parent_id": "89bbe43e-0727-11ea-96e5-0242ac150004",
+                    "process_name": "SHIPPING",
+                    "runtime_parameters": {
+                        "order_number": "ID000",
+                        "customer": "ID000"
+                    },
+                    "status": {
+                        "code": "EXECUTING",
+                        "value": "Executing"
+                    },
+                    "task_type": "NON_ROOT",
+                    "time_completed": 0,
+                    "time_created": 1573767624,
+                    "time_submitted": 1573767727
+                }
+            ],
+            "correlatable_key": null,
+            "id": "89bbe43e-0727-11ea-96e5-0242ac150004",
+            "lastupdated": 1573767624,
+            "parent_id": null,
+            "runtime_parameters": {
+                "order_number": "ID000",
+                "customer": "ID000"
+            },
+            "status": {
+                "code": "EXECUTING",
+                "value": "Executing"
+            },
+            "task_type": "ROOT",
+            "time_completed": 0,
+            "time_created": 1573767624,
+            "time_submitted": 1573767698
+        }]
+        
+     
+
+Dagger supports any type of stream data: bytes, Unicode and serialized
+structures, but also comes with "Models" that use modern Python
+syntax to describe how keys and values in streams are serialized. For more details on supported models refer to
+https://faust.readthedocs.io/en/latest/userguide/models.html
+
+## OpenTelemetry
+
+Dagger has support for open telemetry. To enable open telemetry the client application has to initialise the tracer 
+implementation and set the flag enable_telemetry while initializing dagger
+
+Dagger is...
+===========
+
+**Simple**
+============
+
+
+Dagger is extremely easy to use. To get started applications need to install this library, define a DAG using
+the default templates or extending them based on the use case, creating instances of these DAG's and scheduling them for 
+execution. The library hides all the complexity of producing and consuming from Kafka, maintaining Kafka Streams topology processing and also persistence
+and recovery of created tasks
+
+
+**Highly Available**
+============
+
+
+Dagger is highly available and can survive network problems and server
+crashes.  In the case of node failure, it can automatically recover the state store(representing task data)
+or failover to a standby node
+
+**Distributed**
+============
+
+ Start more instances of your application as needed to distribute the load on the system
+
+**Fast**
+============
+
+A single-core  worker instance can already process tens of thousands
+of tasks every second. Dagger uses a fast key-value lookup store based on
+rocksDB replicated to kafka topics for fault tolerance
+
+
+
+Installation
+============
+
+You can install dagger  via the Wayfair artifactory
+or from source.
+
+To install using `pip`:
+
+
+    $ pip install py-dagger
+    
+processingengine has a dependency on `faust` for kafka stream processing
+
+Development Setup
+============
+
+Clone the git repo to your machine.
+
+    $ git clone git@github.csnzoo.com:shared/dagger.git
+
+Create a virtual environment for the process engine project 
+
+    $ cd ./dagger
+    $ python3 -m venv env
+    
+Install the project requirements in your newly created virtual environment.
+    
+    $ source env/bin/activate
+    (env)$ pip install -r requirements.txt
+    (env)$ pip install -r requirements-test.txt
+
+Run docker-compose to see if your installation is in a good state
+
+    $ docker-compose up
+
+Don't forget to set your IDE's interpreter to use the Python instance in the virtual environment you just setup.
+
+PyCharm: Prefences->Project->Project Interpreter
+
+FAQ
+===
+
+
+Which version of python is supported?
+---------------------------------------
+dagger supports python version >= 3.7
+
+
+
+What kafka versions are supported?
+---------------------------------------
+
+dagger supports kafka with version >= 0.10.
+
+
+
 
 ## Roadmap
 
-See the [open issues](https://github.com/org_name/repo_name/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/wayfair-incubator/dagger/issues) for a list of proposed features (and known issues).
 
 ## Contributing
 
@@ -82,13 +371,13 @@ Contributions are what make the open source community such an amazing place to l
 
 ## License
 
-Distributed under the `<License name>` License. See `LICENSE` for more information.
+Distributed under the `MIT LICENSE` License. See `LICENSE` for more information.
 
 ## Contact
 
-Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - email
+Vikram Patki - vpatki@wayfair.com
 
-Project Link: [https://github.com/org_name/repo_name](https://github.com/org_name/repo_name)
+Project Link: [https://github.com/wayfair-incubator/dagger](https://github.com/wayfair-incubator/dagger)
 
 ## Acknowledgements
 
