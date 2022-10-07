@@ -1,0 +1,11 @@
+aiohttp>=3.5.2,<4.0
+cachetools==5.0.0
+faust-streaming>=0.6.1
+guppy3==3.1.0
+jsonpickle>=1.4.1
+kafka-python==2.0.2
+opentracing>=1.3.0,<=2.4.0
+Tornado==6.1
+aerospike>=7.1.0
+dataclasses-avroschema==0.26.1
+python-schema-registry-client==1.8.2
