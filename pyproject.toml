@@ -1,0 +1,28 @@
+[tool.black]
+line-length = 88
+target-version = ["py37", "py38", "py39", "py310"]
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.isort]
+profile = "black"
+
+[tool.coverage.run]
+branch = true
+data_file = "/tmp/dagger_coverage"
+
+[tool.coverage.report]
+fail_under = 90
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover"
+]
+
+[tool.pytest.ini_options]
+addopts = "--verbose --cov=dagger --cov-report xml:/tmp/coverage.xml --cov-report term-missing"
+testpaths = ["tests"]
+
+[build-system]
+requires = ["setuptools >= 40.9.0", "wheel"]
+build-backend = "setuptools.build_meta"
