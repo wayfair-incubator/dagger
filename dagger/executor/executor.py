@@ -21,12 +21,19 @@ class SerialExecutorStrategy(ExecutorStrategy):
         super().__init__()
         self.app = app
 
-    async def submit(self, task_template: ITemplateDAGInstance, *, repartition: bool = True) -> None:
+    async def submit(
+        self, task_template: ITemplateDAGInstance, *, repartition: bool = True
+    ) -> None:
         if task_template.status.code != TaskStatusEnum.COMPLETED.name:
-            task_template.status = TaskStatus(code=TaskStatusEnum.SUBMITTED.name, value=TaskStatusEnum.SUBMITTED.value)
+            task_template.status = TaskStatus(
+                code=TaskStatusEnum.SUBMITTED.name, value=TaskStatusEnum.SUBMITTED.value
+            )
             if repartition:
                 await self.app.tasks_topic.send(  # type: ignore
-                    key=task_template.runtime_parameters[task_template.partition_key_lookup], value=task_template
+                    key=task_template.runtime_parameters[
+                        task_template.partition_key_lookup
+                    ],
+                    value=task_template,
                 )
             else:
                 await self.app._store_and_create_task(task_template)  # type: ignore

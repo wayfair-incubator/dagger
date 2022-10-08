@@ -110,7 +110,9 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
         """
         ...
 
-    async def notify(self, status: TaskStatus, workflow_instance: ITask) -> None:  # pragma: no cover
+    async def notify(
+        self, status: TaskStatus, workflow_instance: ITask
+    ) -> None:  # pragma: no cover
         """If not completed, runs the steps required for completion by calling on_complete()."""
         if self.status.code != status.code:
             await self.on_complete(status=status, workflow_instance=workflow_instance)
@@ -127,7 +129,9 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
         """
         ...
 
-    async def get_correlatable_key_from_payload(self, payload: Any) -> TaskLookupKey:  # pragma: no cover
+    async def get_correlatable_key_from_payload(
+        self, payload: Any
+    ) -> TaskLookupKey:  # pragma: no cover
         """Get the lookup key,value associated with the task(Deprecated use get_correlatable_keys_from_payload).
 
         Args:
@@ -138,7 +142,9 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
         """
         return self.get_correlatable_key(payload=payload)
 
-    async def get_correlatable_keys_from_payload(self, payload: Any) -> List[TaskLookupKey]:  # pragma: no cover
+    async def get_correlatable_keys_from_payload(
+        self, payload: Any
+    ) -> List[TaskLookupKey]:  # pragma: no cover
         """Get a list of lookup key,value associated with the task(s).
 
         Args:
@@ -181,7 +187,9 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
             )
             return tasks
         if task_instance.root_dag:
-            await self.get_remaining_tasks(task_instance.root_dag, workflow_instance, tasks, end_task_id)
+            await self.get_remaining_tasks(
+                task_instance.root_dag, workflow_instance, tasks, end_task_id
+            )
         if task_instance.get_id() == end_task_id:
             tasks.append(task_instance)
             return tasks
@@ -190,13 +198,17 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
         else:
             tasks.append(task_instance)
             for next_dag_id in task_instance.next_dags:
-                await self.get_remaining_tasks(next_dag_id, workflow_instance, tasks, end_task_id)
+                await self.get_remaining_tasks(
+                    next_dag_id, workflow_instance, tasks, end_task_id
+                )
         return tasks
 
     async def on_complete(
         self,
         workflow_instance: ITask,
-        status: TaskStatus = TaskStatus(code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value),
+        status: TaskStatus = TaskStatus(
+            code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+        ),
         *,
         iterate: bool = True,
     ) -> None:
@@ -205,7 +217,9 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
         if self.status.code != status.code:
             self.status = status
             if self.time_completed > 0:
-                time_completed = self.time_completed  # if time_completed is set by the application honor that
+                time_completed = (
+                    self.time_completed
+                )  # if time_completed is set by the application honor that
             else:
                 time_completed = int(time.time())
             self.time_completed = time_completed
@@ -226,14 +240,20 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
             if next_dag_instance.status.code == TaskStatusEnum.SKIPPED.name:
                 logger.info(f"Skipping skipped task {next_dag_instance} {next_dag_id}")
             else:
-                return await next_dag_instance.start(workflow_instance=workflow_instance)
+                return await next_dag_instance.start(
+                    workflow_instance=workflow_instance
+                )
         if next_task_submitted is False and self.parent_id:
             parent_node = workflow_instance.get_task(id=self.parent_id)
             if parent_node:
                 parent_node.time_completed = self.time_completed
-                await parent_node.notify(status=status, workflow_instance=workflow_instance)
+                await parent_node.notify(
+                    status=status, workflow_instance=workflow_instance
+                )
             else:
-                logger.error(f"Unable to retrieve parent node for task with id: {str(self.get_id())}")
+                logger.error(
+                    f"Unable to retrieve parent node for task with id: {str(self.get_id())}"
+                )
         elif self.task_type == TaskType.ROOT.name:
             subdags_in_non_terminating_state = False
             logger.debug(f"Executing root dag cleanup {str(workflow_instance.id)}")
@@ -265,19 +285,31 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
 
 
 class ExecutorTask(ITask[KT, VT], abc.ABC):
-    async def start(self, workflow_instance: ITask, ignore_status: bool = False) -> None:
+    async def start(
+        self, workflow_instance: ITask, ignore_status: bool = False
+    ) -> None:
         # pre-execute
-        if self.status.code in [TaskStatusEnum.COMPLETED.name, TaskStatusEnum.SKIPPED.name]:
-            return await self.on_complete(status=self.status, workflow_instance=workflow_instance)
+        if self.status.code in [
+            TaskStatusEnum.COMPLETED.name,
+            TaskStatusEnum.SKIPPED.name,
+        ]:
+            return await self.on_complete(
+                status=self.status, workflow_instance=workflow_instance
+            )
         if ignore_status or self.status.code == TaskStatusEnum.NOT_STARTED.name:
-            self.status = TaskStatus(code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value)
+            self.status = TaskStatus(
+                code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+            )
             self.time_submitted = int(time.time())
             await self.execute(
-                runtime_parameters=workflow_instance.runtime_parameters, workflow_instance=workflow_instance
+                runtime_parameters=workflow_instance.runtime_parameters,
+                workflow_instance=workflow_instance,
             )
             await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
         if self.status.code == TaskStatusEnum.FAILURE.name:
-            await self.on_complete(status=self.status, workflow_instance=workflow_instance)
+            await self.on_complete(
+                status=self.status, workflow_instance=workflow_instance
+            )
         else:
             await self.on_complete(workflow_instance=workflow_instance)
 
@@ -289,7 +321,9 @@ class ExecutorTask(ITask[KT, VT], abc.ABC):
         """
         raise NotImplementedError("Executor does not evaluate")
 
-    async def on_message(self, runtime_parameters: Dict[str, str], *args: Any, **kwargs: Any) -> bool:
+    async def on_message(
+        self, runtime_parameters: Dict[str, str], *args: Any, **kwargs: Any
+    ) -> bool:
         """Not implemented.
 
         Raises:
@@ -301,13 +335,19 @@ class ExecutorTask(ITask[KT, VT], abc.ABC):
 class TriggerTask(ExecutorTask[KT, VT], abc.ABC):
     time_to_execute: int = None
 
-    async def start(self, workflow_instance: ITemplateDAGInstance, ignore_status=True) -> None:
+    async def start(
+        self, workflow_instance: ITemplateDAGInstance, ignore_status=True
+    ) -> None:
         await asyncio.sleep(0)
         if self.status.code == TaskStatusEnum.NOT_STARTED.name:
-            self.status = TaskStatus(code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value)
+            self.status = TaskStatus(
+                code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+            )
             self.time_submitted = int(time.time())
         if not self.time_to_execute or int(time.time()) >= self.time_to_execute:
-            logger.info(f"Trigger task {self.id} triggered for trigger time {self.time_to_execute} ")
+            logger.info(
+                f"Trigger task {self.id} triggered for trigger time {self.time_to_execute} "
+            )
             await super().start(workflow_instance=workflow_instance, ignore_status=True)
         else:
             logger.warning(
@@ -317,7 +357,9 @@ class TriggerTask(ExecutorTask[KT, VT], abc.ABC):
     async def on_complete(
         self,
         workflow_instance: ITask,
-        status: TaskStatus = TaskStatus(code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value),
+        status: TaskStatus = TaskStatus(
+            code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+        ),
         iterate=True,
     ) -> None:
         await dagger.service.services.Dagger.app._store.process_trigger_task_complete(self, wokflow_instance=workflow_instance)  # type: ignore
@@ -331,20 +373,31 @@ class IntervalTask(TriggerTask[KT, VT], abc.ABC):
     async def start(self, workflow_instance: ITask) -> bool:  # type: ignore
         is_finished = False
         if self.status.code == TaskStatusEnum.NOT_STARTED.name:
-            self.status = TaskStatus(code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value)
+            self.status = TaskStatus(
+                code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+            )
             self.time_submitted = int(time.time())
             await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
         if self.time_to_execute and int(time.time()) < self.time_to_execute:
             return False
         if not self.time_to_execute or int(time.time()) >= self.time_to_execute:
-            logger.info(f"Interval task {self.id} executed on interval of {self.interval_execute_period} ")
-            is_finished = await self.interval_execute(workflow_instance.runtime_parameters)
+            logger.info(
+                f"Interval task {self.id} executed on interval of {self.interval_execute_period} "
+            )
+            is_finished = await self.interval_execute(
+                workflow_instance.runtime_parameters
+            )
             if not is_finished and self.interval_execute_period:
                 self.time_to_execute = int(time.time()) + self.interval_execute_period
                 await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
                 await dagger.service.services.Dagger.app._store_trigger_instance(self, workflow_instance=workflow_instance)  # type: ignore
-        if is_finished or (self.time_to_force_complete and int(time.time()) >= self.time_to_force_complete):
-            await super().start(ignore_status=False, workflow_instance=workflow_instance)
+        if is_finished or (
+            self.time_to_force_complete
+            and int(time.time()) >= self.time_to_force_complete
+        ):
+            await super().start(
+                ignore_status=False, workflow_instance=workflow_instance
+            )
             return True
         return False
 
@@ -361,7 +414,9 @@ class MonitoringTask(TriggerTask[KT, VT], abc.ABC):
     monitored_task_id: UUID = None
 
     @abc.abstractmethod
-    async def process_monitored_task(self, monitored_task: ITask, workflow_instance: ITask) -> None:  # pragma: no cover
+    async def process_monitored_task(
+        self, monitored_task: ITask, workflow_instance: ITask
+    ) -> None:  # pragma: no cover
         """
         Callback on when business logic has to be executed on the monitored task based on the time condition
         :param monitored_task: the monitored task
@@ -372,15 +427,25 @@ class MonitoringTask(TriggerTask[KT, VT], abc.ABC):
     async def on_complete(
         self,
         workflow_instance: ITask,
-        status: TaskStatus = TaskStatus(code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value),
+        status: TaskStatus = TaskStatus(
+            code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+        ),
         iterate=True,
     ) -> None:
-        await super().on_complete(workflow_instance=workflow_instance, status=status, iterate=iterate)
+        await super().on_complete(
+            workflow_instance=workflow_instance, status=status, iterate=iterate
+        )
 
 
 class DefaultMonitoringTask(MonitoringTask[str, str]):
-    async def execute(self, runtime_parameters: Dict[str, str], workflow_instance: ITemplateDAGInstance = None) -> None:
-        logger.info(f"Executing DefaultMonitoringTask {self.id} monitoring for {self.monitored_task_id}")
+    async def execute(
+        self,
+        runtime_parameters: Dict[str, str],
+        workflow_instance: ITemplateDAGInstance = None,
+    ) -> None:
+        logger.info(
+            f"Executing DefaultMonitoringTask {self.id} monitoring for {self.monitored_task_id}"
+        )
         # check the status of the monitored task
         monitored_task = workflow_instance.get_task(id=self.monitored_task_id)  # type: ignore
         if monitored_task and monitored_task.status.code not in [
@@ -389,11 +454,15 @@ class DefaultMonitoringTask(MonitoringTask[str, str]):
             TaskStatusEnum.FAILURE.name,
         ]:
             logger.info(f"Processing the monitored task {self.monitored_task_id}")
-            await self.process_monitored_task(monitored_task=monitored_task, workflow_instance=workflow_instance)
+            await self.process_monitored_task(
+                monitored_task=monitored_task, workflow_instance=workflow_instance
+            )
 
 
 class SkipOnMaxDurationTask(DefaultMonitoringTask):
-    async def process_monitored_task(self, monitored_task: ITask, workflow_instance: ITask) -> None:  # pragma: no cover
+    async def process_monitored_task(
+        self, monitored_task: ITask, workflow_instance: ITask
+    ) -> None:  # pragma: no cover
         if monitored_task.status.code == TaskStatusEnum.EXECUTING.name:
             if monitored_task:
                 logger.info(
@@ -401,32 +470,52 @@ class SkipOnMaxDurationTask(DefaultMonitoringTask):
                 )
 
                 all_prev_dags = await self.get_remaining_tasks(
-                    workflow_instance.get_id(), workflow_instance, [], end_task_id=monitored_task.get_id()
+                    workflow_instance.get_id(),
+                    workflow_instance,
+                    [],
+                    end_task_id=monitored_task.get_id(),
                 )
-                skipped_task_status = TaskStatus(code=TaskStatusEnum.SKIPPED.name, value=TaskStatusEnum.SKIPPED.value)
+                skipped_task_status = TaskStatus(
+                    code=TaskStatusEnum.SKIPPED.name, value=TaskStatusEnum.SKIPPED.value
+                )
                 for dag in all_prev_dags[:-1]:
-                    if dag.status.code in [TaskStatusEnum.EXECUTING.value, TaskStatusEnum.NOT_STARTED.value]:
+                    if dag.status.code in [
+                        TaskStatusEnum.EXECUTING.value,
+                        TaskStatusEnum.NOT_STARTED.value,
+                    ]:
                         await dag.on_complete(
-                            status=skipped_task_status, workflow_instance=workflow_instance, iterate=False
+                            status=skipped_task_status,
+                            workflow_instance=workflow_instance,
+                            iterate=False,
                         )
-                await monitored_task.on_complete(workflow_instance=workflow_instance, status=skipped_task_status)
+                await monitored_task.on_complete(
+                    workflow_instance=workflow_instance, status=skipped_task_status
+                )
 
 
 class DecisionTask(ITask[KT, VT]):
     async def start(self, workflow_instance: ITask) -> None:
         # pre-execute
-        if self.status.code in [TaskStatusEnum.COMPLETED.name, TaskStatusEnum.SKIPPED.name]:
+        if self.status.code in [
+            TaskStatusEnum.COMPLETED.name,
+            TaskStatusEnum.SKIPPED.name,
+        ]:
             return await self.on_complete(workflow_instance=workflow_instance)
         if self.status.code == TaskStatusEnum.NOT_STARTED.name:
-            self.status = TaskStatus(code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value)
+            self.status = TaskStatus(
+                code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+            )
             self.time_submitted = int(time.time())
-            task_to_execute = await self.evaluate(**workflow_instance.runtime_parameters)
+            task_to_execute = await self.evaluate(
+                **workflow_instance.runtime_parameters
+            )
             for next_task_id in self.next_dags:
                 if next_task_id != task_to_execute:
                     task_to_skip = workflow_instance.get_taskt(id=next_task_id)  # type: ignore
                     if task_to_skip:
                         task_to_skip.status = TaskStatus(
-                            code=TaskStatusEnum.SKIPPED.name, value=TaskStatusEnum.SKIPPED.value
+                            code=TaskStatusEnum.SKIPPED.name,
+                            value=TaskStatusEnum.SKIPPED.value,
                         )
                     else:
                         logger.warning(
@@ -435,7 +524,9 @@ class DecisionTask(ITask[KT, VT]):
         await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
         await self.on_complete(workflow_instance=workflow_instance)
 
-    async def execute(self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None) -> None:
+    async def execute(
+        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+    ) -> None:
         """Not implemented.
 
         Raises:
@@ -443,7 +534,9 @@ class DecisionTask(ITask[KT, VT]):
         """
         raise NotImplementedError("Decision task does not process execute")
 
-    async def on_message(self, runtime_parameters: Dict[str, str], *args: Any, **kwargs: Any) -> bool:
+    async def on_message(
+        self, runtime_parameters: Dict[str, str], *args: Any, **kwargs: Any
+    ) -> bool:
         """Not implemented.
 
         Raises:
@@ -484,12 +577,16 @@ class SystemTask(ExecutorTask[str, str]):
         Raises:
             NotImplementedError: Not implemented.
         """
-        raise NotImplementedError("SystemTask task does not process get_correlatable_key")
+        raise NotImplementedError(
+            "SystemTask task does not process get_correlatable_key"
+        )
 
     async def on_complete(
         self,
         workflow_instance: ITask,
-        status: TaskStatus = TaskStatus(code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value),
+        status: TaskStatus = TaskStatus(
+            code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+        ),
         iterate=True,
     ) -> None:
         """Not implemented.
@@ -501,20 +598,27 @@ class SystemTask(ExecutorTask[str, str]):
 
     async def start(self, workflow_instance: ITask, ignore_status=True) -> None:
         if ignore_status or self.status.code == TaskStatusEnum.NOT_STARTED.name:
-            self.status = TaskStatus(code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value)
+            self.status = TaskStatus(
+                code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+            )
             self.time_submitted = int(time.time())
             await self.execute(
-                runtime_parameters=workflow_instance.runtime_parameters, workflow_instance=workflow_instance
+                runtime_parameters=workflow_instance.runtime_parameters,
+                workflow_instance=workflow_instance,
             )
 
 
 class SystemTimerTask(SystemTask):
-    async def execute(self, runtime_parameters: Dict[str, VT], workflow_instance: ITask = None) -> None:
+    async def execute(
+        self, runtime_parameters: Dict[str, VT], workflow_instance: ITask = None
+    ) -> None:
         start_time = time.time()
         try:
             await dagger.service.services.Dagger.app._store.execute_system_timer_task()  # type: ignore
         except Exception as ex:
-            logger.warning(f"Exception in SystemTimerTask execute {ex} {traceback.format_stack()}")
+            logger.warning(
+                f"Exception in SystemTimerTask execute {ex} {traceback.format_stack()}"
+            )
 
         end_time = time.time()
         logger.info(f"SystemTimerTask.execute took {end_time-start_time}")
@@ -525,10 +629,17 @@ class SensorTask(ITask[KT, VT], abc.ABC):
 
     async def start(self, workflow_instance: ITask) -> None:
         # pre-execute
-        if self.status.code in [TaskStatusEnum.COMPLETED.name, TaskStatusEnum.SKIPPED.name]:
-            return await self.on_complete(status=self.status, workflow_instance=workflow_instance)
+        if self.status.code in [
+            TaskStatusEnum.COMPLETED.name,
+            TaskStatusEnum.SKIPPED.name,
+        ]:
+            return await self.on_complete(
+                status=self.status, workflow_instance=workflow_instance
+            )
         if self.status.code == TaskStatusEnum.NOT_STARTED.name:
-            self.status = TaskStatus(code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value)
+            self.status = TaskStatus(
+                code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+            )
             self.time_submitted = int(time.time())
             await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
 
@@ -539,7 +650,9 @@ class SensorTask(ITask[KT, VT], abc.ABC):
             None.
         """
         if workflow_instance and workflow_instance.runtime_parameters:
-            global_key = workflow_instance.runtime_parameters.get(self.correlatable_key, None)
+            global_key = workflow_instance.runtime_parameters.get(
+                self.correlatable_key, None
+            )
             if self.status.code in [
                 TaskStatusEnum.NOT_STARTED.name,
                 TaskStatusEnum.EXECUTING.name,
@@ -560,7 +673,9 @@ class SensorTask(ITask[KT, VT], abc.ABC):
         """
         raise NotImplementedError("Executor does not evaluate")
 
-    async def execute(self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None) -> None:
+    async def execute(
+        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+    ) -> None:
         """Not implemented.
 
         Raises:
@@ -575,7 +690,9 @@ class IMonitoredTask:
         ...
 
     @abc.abstractmethod
-    async def setup_monitoring_task(self, workflow_instance: ITask) -> None:  # pragma: no cover
+    async def setup_monitoring_task(
+        self, workflow_instance: ITask
+    ) -> None:  # pragma: no cover
         ...
 
 
@@ -595,9 +712,14 @@ class KafkaAgent:
         if mappings:
             for mapping in mappings:
                 if not mapping or len(mapping) < 2:
-                    logger.warning(f"Listener on topic {self.__topic.get_topic_name()} has incorrect mapping {mapping}")
+                    logger.warning(
+                        f"Listener on topic {self.__topic.get_topic_name()} has incorrect mapping {mapping}"
+                    )
                     continue
-                updated_mapping = (mapping[0], f"{mapping[1]}_{self.__topic.get_topic_name()}")
+                updated_mapping = (
+                    mapping[0],
+                    f"{mapping[1]}_{self.__topic.get_topic_name()}",
+                )
                 async for workflow_instance, task_instance in self.app._get_tasks_by_correlatable_key(
                     updated_mapping, get_completed=True
                 ):
@@ -606,7 +728,8 @@ class KafkaAgent:
                             if task_instance.topic == self.__topic.get_topic_name():
                                 # Skip previous tasks if received task was in not started status.
                                 if (
-                                    task_instance.status.code == TaskStatusEnum.NOT_STARTED.name
+                                    task_instance.status.code
+                                    == TaskStatusEnum.NOT_STARTED.name
                                     and task_instance.allow_skip_to  # noqa: W503
                                 ):
                                     logger.debug(
@@ -615,14 +738,17 @@ class KafkaAgent:
 
                                     if workflow_instance is None:
                                         continue
-                                    previous_tasks = await workflow_instance.get_remaining_tasks(
-                                        workflow_instance.root_dag,
-                                        workflow_instance=workflow_instance,
-                                        tasks=[],
-                                        end_task_id=task_instance.get_id(),
+                                    previous_tasks = (
+                                        await workflow_instance.get_remaining_tasks(
+                                            workflow_instance.root_dag,
+                                            workflow_instance=workflow_instance,
+                                            tasks=[],
+                                            end_task_id=task_instance.get_id(),
+                                        )
                                     )
                                     task_instance.status = TaskStatus(
-                                        code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+                                        code=TaskStatusEnum.EXECUTING.name,
+                                        value=TaskStatusEnum.EXECUTING.value,
                                     )
                                     task_instance.time_submitted = int(time.time())
                                     processed_task = True
@@ -635,17 +761,23 @@ class KafkaAgent:
                                             await task.on_complete(
                                                 workflow_instance=workflow_instance,
                                                 status=TaskStatus(
-                                                    code=TaskStatusEnum.SKIPPED.name, value=TaskStatusEnum.SKIPPED.value
+                                                    code=TaskStatusEnum.SKIPPED.name,
+                                                    value=TaskStatusEnum.SKIPPED.value,
                                                 ),
                                                 iterate=False,
                                             )
 
-                                if task_instance.status.code == TaskStatusEnum.COMPLETED.name:
+                                if (
+                                    task_instance.status.code
+                                    == TaskStatusEnum.COMPLETED.name
+                                ):
                                     if (
                                         hasattr(task_instance, "reprocess_on_message")
                                         and task_instance.reprocess_on_message
                                     ):
-                                        await task_instance.on_message(workflow_instance.runtime_parameters, event)
+                                        await task_instance.on_message(
+                                            workflow_instance.runtime_parameters, event
+                                        )
                                         await workflow_instance._update_global_runtime_parameters()
                                     else:
                                         await task_instance.start(workflow_instance)
@@ -653,27 +785,43 @@ class KafkaAgent:
                                     continue
 
                                 # Process on_message for task only if executing or skipped but set to allow out of order processing
-                                elif task_instance.status.code != TaskStatusEnum.EXECUTING.name and (
-                                    task_instance.status.code != TaskStatusEnum.SKIPPED.name
-                                    or not task_instance.allow_skip_to  # noqa: W503
+                                elif (
+                                    task_instance.status.code
+                                    != TaskStatusEnum.EXECUTING.name
+                                    and (
+                                        task_instance.status.code
+                                        != TaskStatusEnum.SKIPPED.name
+                                        or not task_instance.allow_skip_to  # noqa: W503
+                                    )
                                 ):
                                     logger.info(
                                         f"Received event for task {task_instance} however the task was not in an executing state nor was it in a skipped state with out of order processing enabled. Not processing on_message for this task. Event: {event}"
                                     )
                                     continue
-                                completed = await task_instance.on_message(workflow_instance.runtime_parameters, event)
+                                completed = await task_instance.on_message(
+                                    workflow_instance.runtime_parameters, event
+                                )
                                 await workflow_instance._update_global_runtime_parameters()
                                 if completed:
-                                    await task_instance.on_complete(workflow_instance=workflow_instance)
+                                    await task_instance.on_complete(
+                                        workflow_instance=workflow_instance
+                                    )
                                 processed_task = True
 
                                 if getattr(self.__task, "match_only_one", False):
-                                    logger.info(f"Matched exactly once on input topic {self.__topic.get_topic_name()}")
+                                    logger.info(
+                                        f"Matched exactly once on input topic {self.__topic.get_topic_name()}"
+                                    )
                                     break
                     except Exception as ex:
-                        logger.error(f"Error processing event for {task_instance.id}. error {ex}", exc_info=True)
+                        logger.error(
+                            f"Error processing event for {task_instance.id}. error {ex}",
+                            exc_info=True,
+                        )
         if not processed_task:
-            logger.debug(f"listener agent on topic: {self.__topic} found no tasks for mapping")
+            logger.debug(
+                f"listener agent on topic: {self.__topic} found no tasks for mapping"
+            )
         end_time = dagger.service.services.Dagger.app.faust_app.loop.time() - start_time  # type: ignore
         if processed_task and getattr(dagger.service.services.Dagger.app, "dd_sensor", None):  # type: ignore
             dagger.service.services.Dagger.app.dd_sensor.client.histogram(  # type: ignore
@@ -708,11 +856,20 @@ class INonLeafNodeTask(ITask[KT, VT], abc.ABC):
         pass
 
     async def start(self, workflow_instance: ITask) -> None:
-        if self.status.code in [TaskStatusEnum.COMPLETED.name, TaskStatusEnum.SKIPPED.name]:
-            return await self.on_complete(status=self.status, workflow_instance=workflow_instance)
-        if self.status.code == TaskStatusEnum.NOT_STARTED.name or self.status.code == TaskStatusEnum.SUBMITTED.name:
+        if self.status.code in [
+            TaskStatusEnum.COMPLETED.name,
+            TaskStatusEnum.SKIPPED.name,
+        ]:
+            return await self.on_complete(
+                status=self.status, workflow_instance=workflow_instance
+            )
+        if (
+            self.status.code == TaskStatusEnum.NOT_STARTED.name
+            or self.status.code == TaskStatusEnum.SUBMITTED.name
+        ):
             await self.execute(
-                runtime_parameters=workflow_instance.runtime_parameters, workflow_instance=workflow_instance
+                runtime_parameters=workflow_instance.runtime_parameters,
+                workflow_instance=workflow_instance,
             )
             await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
         logger.debug(
@@ -722,11 +879,17 @@ class INonLeafNodeTask(ITask[KT, VT], abc.ABC):
         if first_dag_instance:
             await first_dag_instance.start(workflow_instance=workflow_instance)
         else:
-            logger.error(f"Could not find task instance for task with id: {self.root_dag}. Unable to start.")
+            logger.error(
+                f"Could not find task instance for task with id: {self.root_dag}. Unable to start."
+            )
 
-    async def execute(self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None) -> None:
+    async def execute(
+        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+    ) -> None:
         logger.debug(f"starting execution of {self.id}")
-        self.status = TaskStatus(code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value)
+        self.status = TaskStatus(
+            code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+        )
         self.time_submitted = int(time.time())
 
 
@@ -752,28 +915,46 @@ class ParallelCompositeTask(ITask[KT, VT], abc.ABC):
     async def start(self, workflow_instance: ITask) -> None:
         await asyncio.sleep(0)
         if self.status.code in TERMINAL_STATUSES:
-            return await self.on_complete(workflow_instance=workflow_instance, status=self.status)
-        if self.status.code == TaskStatusEnum.NOT_STARTED.name or self.status.code == TaskStatusEnum.SUBMITTED.name:
-            self.status = TaskStatus(code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value)
+            return await self.on_complete(
+                workflow_instance=workflow_instance, status=self.status
+            )
+        if (
+            self.status.code == TaskStatusEnum.NOT_STARTED.name
+            or self.status.code == TaskStatusEnum.SUBMITTED.name
+        ):
+            self.status = TaskStatus(
+                code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+            )
             self.time_submitted = int(time.time())
             await self.execute(
-                runtime_parameters=workflow_instance.runtime_parameters, workflow_instance=workflow_instance
+                runtime_parameters=workflow_instance.runtime_parameters,
+                workflow_instance=workflow_instance,
             )
             await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
-        logger.debug(f"Starting task {self.task_name} with parent task id {self.parent_id}, and task id {self.id}")
+        logger.debug(
+            f"Starting task {self.task_name} with parent task id {self.parent_id}, and task id {self.id}"
+        )
         for task_id in self.parallel_child_task_list:
             dag_instance = workflow_instance.get_task(id=task_id)  # type: ignore
             if dag_instance:
                 await dag_instance.start(workflow_instance)
             else:
-                logger.error(f"Could not find task instance for task with id: {task_id}. Unable to start.")
+                logger.error(
+                    f"Could not find task instance for task with id: {task_id}. Unable to start."
+                )
 
-    async def execute(self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None) -> None:
+    async def execute(
+        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+    ) -> None:
         logger.debug(f"starting execution of ParallelCompositeTask {self.id}")
-        self.status = TaskStatus(code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value)
+        self.status = TaskStatus(
+            code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+        )
         self.time_submitted = int(time.time())
 
-    async def notify(self, status: TaskStatus, workflow_instance: ITask = None) -> None:  # pragma: no cover
+    async def notify(
+        self, status: TaskStatus, workflow_instance: ITask = None
+    ) -> None:  # pragma: no cover
         """If not completed, runs the steps required for completion by calling on_complete()."""
         atleast_one = False
         all_in_terminal = True
@@ -791,11 +972,15 @@ class ParallelCompositeTask(ITask[KT, VT], abc.ABC):
                         if self.operator_type == TaskOperator.JOIN_ALL.name:
                             break
                 else:
-                    logger.error(f"Could not find task instance for task with id: {task_id}. Unable to notify.")
-            if (self.operator_type == TaskOperator.JOIN_ALL.name and all_in_terminal) or (
-                self.operator_type == TaskOperator.ATLEAST_ONE.name and atleast_one
-            ):
-                await self.on_complete(workflow_instance=workflow_instance, status=status)
+                    logger.error(
+                        f"Could not find task instance for task with id: {task_id}. Unable to notify."
+                    )
+            if (
+                self.operator_type == TaskOperator.JOIN_ALL.name and all_in_terminal
+            ) or (self.operator_type == TaskOperator.ATLEAST_ONE.name and atleast_one):
+                await self.on_complete(
+                    workflow_instance=workflow_instance, status=status
+                )
 
 
 class IProcessTemplateDAGInstance(INonLeafNodeTask[KT, VT], abc.ABC):
@@ -828,13 +1013,17 @@ class ITemplateDAGInstance(INonLeafNodeTask[KT, VT], abc.ABC):
 
     async def _update_global_runtime_parameters(self) -> None:
 
-        for sensor_task_id, correletable_kv in self.sensor_tasks_to_correletable_map.items():
+        for (
+            sensor_task_id,
+            correletable_kv,
+        ) in self.sensor_tasks_to_correletable_map.items():
             new_runtime_value: str = self.runtime_parameters.get(correletable_kv.correlatable_key_attr, None)  # type: ignore
             existing_value = correletable_kv.correlatable_key_attr_value
             sensor_task_instance = self.get_task(id=sensor_task_id)
             if (
                 sensor_task_instance
-                and sensor_task_instance.status.code in [TaskStatusEnum.NOT_STARTED.name, TaskStatusEnum.EXECUTING.name]
+                and sensor_task_instance.status.code
+                in [TaskStatusEnum.NOT_STARTED.name, TaskStatusEnum.EXECUTING.name]
                 and new_runtime_value != existing_value
             ):
                 correletable_kv.correlatable_key_attr_value = new_runtime_value
@@ -845,25 +1034,40 @@ class DefaultProcessTemplateDAGInstance(IProcessTemplateDAGInstance[str, str]):
     async def on_complete(
         self,
         workflow_instance: ITemplateDAGInstance,
-        status: TaskStatus = TaskStatus(code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value),
+        status: TaskStatus = TaskStatus(
+            code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+        ),
         iterate: bool = True,
     ) -> None:
-        if hasattr(self, "max_run_duration_monitor_task_id") and self.max_run_duration_monitor_task_id:
+        if (
+            hasattr(self, "max_run_duration_monitor_task_id")
+            and self.max_run_duration_monitor_task_id
+        ):
             max_run_duration_monitor_task: ITask = await dagger.service.services.Dagger.app.get_instance(  # type: ignore
                 self.max_run_duration_monitor_task_id, log=False
             )
             if max_run_duration_monitor_task:
-                await max_run_duration_monitor_task.on_complete(iterate=iterate, workflow_instance=workflow_instance)
-        await super().on_complete(workflow_instance=workflow_instance, status=status, iterate=iterate)
+                await max_run_duration_monitor_task.on_complete(
+                    iterate=iterate, workflow_instance=workflow_instance
+                )
+        await super().on_complete(
+            workflow_instance=workflow_instance, status=status, iterate=iterate
+        )
 
-    async def execute(self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None) -> None:
-        await super().execute(runtime_parameters=runtime_parameters, workflow_instance=workflow_instance)
+    async def execute(
+        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+    ) -> None:
+        await super().execute(
+            runtime_parameters=runtime_parameters, workflow_instance=workflow_instance
+        )
         await self.setup_max_run_duration(wokflow_instance=workflow_instance)
 
     async def setup_max_run_duration(self, wokflow_instance: ITask) -> None:
         if hasattr(self, "max_run_duration") and self.max_run_duration != 0:
             max_run_duration_monitor_task: ITask = SkipOnMaxDurationTask(
-                id=uuid.uuid1(), monitored_task_id=self.id, time_to_execute=int(time.time()) + self.max_run_duration
+                id=uuid.uuid1(),
+                monitored_task_id=self.id,
+                time_to_execute=int(time.time()) + self.max_run_duration,
             )
             wokflow_instance.add_task(task=max_run_duration_monitor_task)
             max_run_duration_monitor_task.status = TaskStatus(
@@ -873,7 +1077,9 @@ class DefaultProcessTemplateDAGInstance(IProcessTemplateDAGInstance[str, str]):
 
             await dagger.service.services.Dagger.app._store_trigger_instance(task_instance=max_run_duration_monitor_task, wokflow_instance=wokflow_instance)  # type: ignore
 
-    async def on_message(self, runtime_parameters: Dict[str, VT], *args: Any, **kwargs: Any) -> bool:
+    async def on_message(
+        self, runtime_parameters: Dict[str, VT], *args: Any, **kwargs: Any
+    ) -> bool:
         """Not implemented.
 
         Raises:
@@ -895,27 +1101,43 @@ class DefaultProcessTemplateDAGInstance(IProcessTemplateDAGInstance[str, str]):
         Raises:
             NotImplementedError: Not implemented.
         """
-        raise NotImplementedError("ProcessInstance does not process get_correlatable_key")
+        raise NotImplementedError(
+            "ProcessInstance does not process get_correlatable_key"
+        )
 
 
-class MonitoredProcessTemplateDAGInstance(DefaultProcessTemplateDAGInstance, IMonitoredTask):
+class MonitoredProcessTemplateDAGInstance(
+    DefaultProcessTemplateDAGInstance, IMonitoredTask
+):
     monitoring_task_id: UUID = None
 
     async def on_complete(
         self,
         workflow_instance: ITask,
-        status: TaskStatus = TaskStatus(code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value),
+        status: TaskStatus = TaskStatus(
+            code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+        ),
         iterate: bool = True,
     ) -> None:
         """Sets the status of the ITask to completed and starts the next ITask if there is one."""
         if self.monitoring_task_id:
-            monitoring_task: ITask = workflow_instance.get_task(id=self.monitoring_task_id)
+            monitoring_task: ITask = workflow_instance.get_task(
+                id=self.monitoring_task_id
+            )
             if monitoring_task:
-                await monitoring_task.on_complete(workflow_instance=workflow_instance, iterate=iterate)
-        await super().on_complete(workflow_instance=workflow_instance, status=status, iterate=iterate)
+                await monitoring_task.on_complete(
+                    workflow_instance=workflow_instance, iterate=iterate
+                )
+        await super().on_complete(
+            workflow_instance=workflow_instance, status=status, iterate=iterate
+        )
 
-    async def execute(self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None) -> None:
-        await super().execute(runtime_parameters=runtime_parameters, workflow_instance=workflow_instance)
+    async def execute(
+        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+    ) -> None:
+        await super().execute(
+            runtime_parameters=runtime_parameters, workflow_instance=workflow_instance
+        )
         await self.setup_monitoring_task(workflow_instance=workflow_instance)
 
     async def setup_monitoring_task(self, workflow_instance: ITask) -> None:
@@ -923,10 +1145,13 @@ class MonitoredProcessTemplateDAGInstance(DefaultProcessTemplateDAGInstance, IMo
         if wait_time:
             if self.monitoring_task_id is None:
                 monitoring_task: ITask = self.get_monitoring_task_type()(
-                    id=uuid.uuid1(), monitored_task_id=self.id, time_to_execute=wait_time
+                    id=uuid.uuid1(),
+                    monitored_task_id=self.id,
+                    time_to_execute=wait_time,
                 )
                 monitoring_task.status = TaskStatus(
-                    code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+                    code=TaskStatusEnum.EXECUTING.name,
+                    value=TaskStatusEnum.EXECUTING.value,
                 )
                 workflow_instance.add_task(task=monitoring_task)
                 self.monitoring_task_id = monitoring_task.id
@@ -942,7 +1167,9 @@ class DefaultTemplateDAGInstance(ITemplateDAGInstance[str, str]):
         Raises:
             NotImplementedError: Not implemented.
         """
-        raise NotImplementedError("DefaultTemplateDAGInstance does not process get_correlatable_key")
+        raise NotImplementedError(
+            "DefaultTemplateDAGInstance does not process get_correlatable_key"
+        )
 
     async def evaluate(self, **kwargs: Any) -> Optional[ITask]:
         """Not implemented.
@@ -952,13 +1179,17 @@ class DefaultTemplateDAGInstance(ITemplateDAGInstance[str, str]):
         """
         raise NotImplementedError("DefaultTemplateDAGInstance does not evaluate")
 
-    async def on_message(self, runtime_parameters: Dict[str, VT], *args: Any, **kwargs: Any) -> bool:
+    async def on_message(
+        self, runtime_parameters: Dict[str, VT], *args: Any, **kwargs: Any
+    ) -> bool:
         """Not implemented.
 
         Raises:
             NotImplementedError: Not implemented.
         """
-        raise NotImplementedError("DefaultTemplateDAGInstance does not process on_message")
+        raise NotImplementedError(
+            "DefaultTemplateDAGInstance does not process on_message"
+        )
 
 
 class Trigger(Record, serializer="raw"):  # type: ignore

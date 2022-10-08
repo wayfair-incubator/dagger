@@ -43,7 +43,9 @@ class DefaultTemplateBuilder(ITemplateDAGBuilder):
     def __init__(self, app: Dagger) -> None:
         super().__init__(app)
 
-    def set_type(self, template_type: Type[ITemplateDAGInstance]) -> ITemplateDAGBuilder:
+    def set_type(
+        self, template_type: Type[ITemplateDAGInstance]
+    ) -> ITemplateDAGBuilder:
         self.__template_type = template_type
         return self
 
@@ -96,7 +98,9 @@ class ProcessTemplateDAG(IProcessTemplateDAG):
         **kwargs: Any,
     ) -> IProcessTemplateDAGInstance[KT, VT]:
         # create the instance in the graph store
-        process_instance = self.process_type(id=id, process_name=self.name, parent_id=parent_id)
+        process_instance = self.process_type(
+            id=id, process_name=self.name, parent_id=parent_id
+        )
         process_instance.task_type = TaskType.SUB_DAG.name
         process_instance.max_run_duration = self.max_run_duration
         process_instance.time_created = int(time.time())
@@ -193,7 +197,9 @@ class ParallelCompositeProcessTemplateDAG(ProcessTemplateDAG):
     ) -> ParallelCompositeTask[KT, VT]:
         # create the instance in the graph store
         kwargs = {} if workflow_instance else kwargs
-        process_instance = self.process_type(id=id, process_name=self.name, parent_id=parent_id)
+        process_instance = self.process_type(
+            id=id, process_name=self.name, parent_id=parent_id
+        )
         process_instance.task_type = TaskType.PARALLEL_COMPOSITE.name
         process_instance.time_created = int(time.time())
         process_instance.status = TaskStatus(
@@ -239,12 +245,23 @@ class DynamicProcessTemplateDAG(IDynamicProcessTemplateDAG):
     _dynamic_process_builders: List[ProcessTemplateDagBuilder] = []
 
     def __init__(
-        self, next_process_dag: List[IProcessTemplateDAG], app: Dagger, name: str, max_run_duration: int
+        self,
+        next_process_dag: List[IProcessTemplateDAG],
+        app: Dagger,
+        name: str,
+        max_run_duration: int,
     ) -> None:
-        super().__init__(next_process_dags=next_process_dag, app=app, name=name, max_run_duration=max_run_duration)
+        super().__init__(
+            next_process_dags=next_process_dag,
+            app=app,
+            name=name,
+            max_run_duration=max_run_duration,
+        )
 
     def build_and_link_processes(
-        self, process_builder_list: List[ProcessTemplateDagBuilder], dag_templates: List[IProcessTemplateDAG]
+        self,
+        process_builder_list: List[ProcessTemplateDagBuilder],
+        dag_templates: List[IProcessTemplateDAG],
     ) -> List[IProcessTemplateDAG]:
         for dag_template in dag_templates:
             process_builder_list[-1].set_next_process(dag_template)
@@ -271,7 +288,9 @@ class DynamicProcessTemplateDAG(IDynamicProcessTemplateDAG):
 
         head_process: List[IProcessTemplateDAG] = None
         if len(self._dynamic_process_builders) > 0:
-            head_process = self.build_and_link_processes(self._dynamic_process_builders, self.next_process_dag)
+            head_process = self.build_and_link_processes(
+                self._dynamic_process_builders, self.next_process_dag
+            )
         else:
             head_process = self.next_process_dag
         if head_process and len(head_process) > 0:
@@ -335,10 +354,15 @@ class TemplateDAG(ITemplateDAG):
         """
         composite_process = self.get_given_process(process_name=name)
         if composite_process:
-            composite_process.set_parallel_process_template_dags(parallel_process_templates)
+            composite_process.set_parallel_process_template_dags(
+                parallel_process_templates
+            )
 
     def set_given_num_of_parallel_processes_for_a_composite_process(
-        self, no_of_processes: int, composite_process_name: str, parallel_template_builder: ProcessTemplateDagBuilder
+        self,
+        no_of_processes: int,
+        composite_process_name: str,
+        parallel_template_builder: ProcessTemplateDagBuilder,
     ):
         """This method creates and sets 'N' number of new parralel processes for a given process in a DAG
 
@@ -355,15 +379,27 @@ class TemplateDAG(ITemplateDAG):
 
         composite_process = self.get_given_process(process_name=composite_process_name)
         if composite_process:
-            composite_process.set_parallel_process_template_dags(parallel_process_templates)
+            composite_process.set_parallel_process_template_dags(
+                parallel_process_templates
+            )
 
     def __init__(
-        self, dag: IProcessTemplateDAG, name: str, app: Dagger, template_type: Type[ITemplateDAGInstance[KT, VT]]
+        self,
+        dag: IProcessTemplateDAG,
+        name: str,
+        app: Dagger,
+        template_type: Type[ITemplateDAGInstance[KT, VT]],
     ) -> None:
         super().__init__(dag, name, app, template_type)
 
     async def create_instance(
-        self, id: UUID, partition_key_lookup: str, *, repartition: bool = True, seed: random.Random = None, **kwargs
+        self,
+        id: UUID,
+        partition_key_lookup: str,
+        *,
+        repartition: bool = True,
+        seed: random.Random = None,
+        **kwargs,
     ) -> ITemplateDAGInstance[KT, VT]:
         template_instance = self.template_type(
             id=id,
@@ -374,7 +410,9 @@ class TemplateDAG(ITemplateDAG):
         )
         template_instance.next_dags = list()
         template_instance.tasks = dict()
-        dag_id: UUID = DAGIDGenerator.generate_dag_id_from_seed(seed) if seed else uuid.uuid1()
+        dag_id: UUID = (
+            DAGIDGenerator.generate_dag_id_from_seed(seed) if seed else uuid.uuid1()
+        )
         kwargs = {} if template_instance else kwargs
         process_instance = await self.root_process_dag.create_instance(
             id=dag_id,
@@ -413,7 +451,9 @@ class ProcessTemplateDagBuilder(IProcessTemplateDAGBuilder):
         self.root_task_dag = task
         return self
 
-    def set_next_process(self, task_template: IProcessTemplateDAG) -> IProcessTemplateDAGBuilder:
+    def set_next_process(
+        self, task_template: IProcessTemplateDAG
+    ) -> IProcessTemplateDAGBuilder:
         self.next_process_dag.append(task_template)
         return self
 
@@ -455,7 +495,9 @@ class DynamicProcessTemplateDagBuilder(IProcessTemplateDAGBuilder):
         Raises:
             NotImplementedError: Not implemented.
         """
-        raise NotImplementedError("DynamicProcessTemplateDagBuilder does not implement this method")
+        raise NotImplementedError(
+            "DynamicProcessTemplateDagBuilder does not implement this method"
+        )
 
     def set_next_process(self, task: IProcessTemplateDAG) -> IProcessTemplateDAGBuilder:
         self.next_process_dag.append(task)
@@ -471,7 +513,9 @@ class DynamicProcessTemplateDagBuilder(IProcessTemplateDAGBuilder):
         Raises:
             NotImplementedError: Not implemented.
         """
-        raise NotImplementedError("DynamicProcessTemplateDagBuilder does not implement this method")
+        raise NotImplementedError(
+            "DynamicProcessTemplateDagBuilder does not implement this method"
+        )
 
     def set_max_run_duration(self, max_run_duration: int) -> IProcessTemplateDAGBuilder:
         self.__max_run_duration = max_run_duration
@@ -496,7 +540,9 @@ class ParallelCompositeProcessTemplateDagBuilder(IProcessTemplateDAGBuilder):
         self.parallel_operator_type = TaskOperator.JOIN_ALL
         self.child_process_task_templates = list()
 
-    def set_parallel_operator_type(self, operator_type: TaskOperator) -> IProcessTemplateDAGBuilder:
+    def set_parallel_operator_type(
+        self, operator_type: TaskOperator
+    ) -> IProcessTemplateDAGBuilder:
         self.parallel_operator_type = operator_type
         return self
 
@@ -506,13 +552,17 @@ class ParallelCompositeProcessTemplateDagBuilder(IProcessTemplateDAGBuilder):
         Raises:
             NotImplementedError: Not implemented.
         """
-        raise NotImplementedError("ParallelCompositeProcessTemplateDagBuilder does not implement this method")
+        raise NotImplementedError(
+            "ParallelCompositeProcessTemplateDagBuilder does not implement this method"
+        )
 
     def set_next_process(self, task: IProcessTemplateDAG) -> IProcessTemplateDAGBuilder:
         self.next_process_dag.append(task)
         return self
 
-    def set_parallel_process_templates(self, task: IProcessTemplateDAG) -> IProcessTemplateDAGBuilder:
+    def set_parallel_process_templates(
+        self, task: IProcessTemplateDAG
+    ) -> IProcessTemplateDAGBuilder:
         self.child_process_task_templates.append(task)
         return self
 
@@ -530,7 +580,9 @@ class ParallelCompositeProcessTemplateDagBuilder(IProcessTemplateDAGBuilder):
         Raises:
             NotImplementedError: Not implemented.
         """
-        raise NotImplementedError("ParallelCompositeProcessTemplateDagBuilder does not implement this method")
+        raise NotImplementedError(
+            "ParallelCompositeProcessTemplateDagBuilder does not implement this method"
+        )
 
     def build(self) -> IProcessTemplateDAG:
         return ParallelCompositeProcessTemplateDAG(

@@ -93,10 +93,15 @@ class TestTasks:
             pytest.fail("Error should not be thrown")
 
     @pytest.mark.asyncio
-    async def test_parallel_composite_task_execute(self, parallel_composite_task_fixture):
+    async def test_parallel_composite_task_execute(
+        self, parallel_composite_task_fixture
+    ):
         try:
             await parallel_composite_task_fixture.execute(runtime_parameters={})
-            assert parallel_composite_task_fixture.status.code == TaskStatusEnum.EXECUTING.name
+            assert (
+                parallel_composite_task_fixture.status.code
+                == TaskStatusEnum.EXECUTING.name
+            )
         except Exception:
             pytest.fail("Error should not be thrown")
 
@@ -110,7 +115,9 @@ class TestTasks:
             )
             parallel_composite_task_fixture.execute = CoroutineMock()
             parallel_composite_task_fixture.on_complete = CoroutineMock()
-            await parallel_composite_task_fixture.start(workflow_instance=workflow_instance_fixture)
+            await parallel_composite_task_fixture.start(
+                workflow_instance=workflow_instance_fixture
+            )
             assert not parallel_composite_task_fixture.execute.called
             assert parallel_composite_task_fixture.on_complete.called
         except Exception:
@@ -141,7 +148,9 @@ class TestTasks:
             workflow_instance_fixture.tasks[id1] = child_task1
             workflow_instance_fixture.tasks[id2] = child_task2
 
-            await parallel_composite_task_fixture.start(workflow_instance=workflow_instance_fixture)
+            await parallel_composite_task_fixture.start(
+                workflow_instance=workflow_instance_fixture
+            )
             assert parallel_composite_task_fixture.execute.called
             assert dagger.service.services.Dagger.app._update_instance.called
             assert not parallel_composite_task_fixture.on_complete.called
@@ -171,7 +180,9 @@ class TestTasks:
             workflow_instance_fixture.tasks[id2] = child_task2
             parallel_composite_task_fixture.execute = CoroutineMock()
             parallel_composite_task_fixture.on_complete = CoroutineMock()
-            await parallel_composite_task_fixture.start(workflow_instance=workflow_instance_fixture)
+            await parallel_composite_task_fixture.start(
+                workflow_instance=workflow_instance_fixture
+            )
             assert not parallel_composite_task_fixture.execute.called
             assert not parallel_composite_task_fixture.on_complete.called
             assert child_task1.start.called
@@ -181,7 +192,9 @@ class TestTasks:
             pytest.fail("Error should not be thrown")
 
     @pytest.mark.asyncio
-    async def test_parallel_composite_task_notify_same_status(self, parallel_composite_task_fixture):
+    async def test_parallel_composite_task_notify_same_status(
+        self, parallel_composite_task_fixture
+    ):
         parallel_composite_task_fixture.status = TaskStatus(
             code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
         )
@@ -193,7 +206,9 @@ class TestTasks:
         id2 = uuid1()
         parallel_composite_task_fixture.parallel_child_task_list = [id1, id2]
         dagger.service.services.Dagger.app.get_instance = CoroutineMock()
-        await parallel_composite_task_fixture.notify(parallel_composite_task_fixture.status)
+        await parallel_composite_task_fixture.notify(
+            parallel_composite_task_fixture.status
+        )
         assert not dagger.service.services.Dagger.app.get_instance.called
 
     @pytest.mark.asyncio
@@ -219,7 +234,9 @@ class TestTasks:
         workflow_instance_fixture.tasks[id1] = child_task1
         workflow_instance_fixture.tasks[id2] = child_task2
         await parallel_composite_task_fixture.notify(
-            TaskStatus(code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value),
+            TaskStatus(
+                code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+            ),
             workflow_instance=workflow_instance_fixture,
         )
         assert parallel_composite_task_fixture.on_complete.called
@@ -247,7 +264,9 @@ class TestTasks:
         workflow_instance_fixture.tasks[id1] = child_task1
         workflow_instance_fixture.tasks[id2] = child_task2
         await parallel_composite_task_fixture.notify(
-            TaskStatus(code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value),
+            TaskStatus(
+                code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+            ),
             workflow_instance=workflow_instance_fixture,
         )
         assert not parallel_composite_task_fixture.on_complete.called
@@ -275,7 +294,9 @@ class TestTasks:
         workflow_instance_fixture.tasks[id1] = child_task1
         workflow_instance_fixture.tasks[id2] = child_task2
         await parallel_composite_task_fixture.notify(
-            TaskStatus(code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value),
+            TaskStatus(
+                code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+            ),
             workflow_instance=workflow_instance_fixture,
         )
         assert not parallel_composite_task_fixture.on_complete.called
@@ -303,14 +324,20 @@ class TestTasks:
         workflow_instance_fixture.tasks[id1] = child_task1
         workflow_instance_fixture.tasks[id2] = child_task2
         await parallel_composite_task_fixture.notify(
-            TaskStatus(code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value),
+            TaskStatus(
+                code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+            ),
             workflow_instance=workflow_instance_fixture,
         )
         assert parallel_composite_task_fixture.on_complete.called
 
     @pytest.mark.asyncio
-    async def test_get_remaining_tasks(self, template_fixture, executor_fixture, sensor_fixture, decision_fixture):
-        dagger.service.services.Dagger.app.get_instance = CoroutineMock(side_effect=lambda m: m)
+    async def test_get_remaining_tasks(
+        self, template_fixture, executor_fixture, sensor_fixture, decision_fixture
+    ):
+        dagger.service.services.Dagger.app.get_instance = CoroutineMock(
+            side_effect=lambda m: m
+        )
         first_process = DefaultProcessTemplateDAGInstance(uuid1())
         second_process = DefaultProcessTemplateDAGInstance(uuid1())
         template_fixture.root_dag = first_process.id
@@ -334,37 +361,69 @@ class TestTasks:
         remaining_tasks = await template_fixture.get_remaining_tasks(
             template_fixture.root_dag, workflow_instance=template_fixture, tasks=[]
         )
-        assert remaining_tasks == [executor_fixture, sensor_fixture, first_process, decision_fixture, second_process]
+        assert remaining_tasks == [
+            executor_fixture,
+            sensor_fixture,
+            first_process,
+            decision_fixture,
+            second_process,
+        ]
 
         sensor_fixture.get_id = MagicMock(return_value=1)
         remaining_tasks = await template_fixture.get_remaining_tasks(
-            template_fixture.root_dag, workflow_instance=template_fixture, tasks=[], end_task_id=1
+            template_fixture.root_dag,
+            workflow_instance=template_fixture,
+            tasks=[],
+            end_task_id=1,
         )
         assert remaining_tasks == [executor_fixture, sensor_fixture]
 
         executor_fixture.get_id = MagicMock(return_value=2)
         remaining_tasks = await template_fixture.get_remaining_tasks(
-            template_fixture.root_dag, workflow_instance=template_fixture, tasks=[], end_task_id=2
+            template_fixture.root_dag,
+            workflow_instance=template_fixture,
+            tasks=[],
+            end_task_id=2,
         )
         assert remaining_tasks == [executor_fixture]
 
         first_process.get_id = MagicMock(return_value=3)
         remaining_tasks = await template_fixture.get_remaining_tasks(
-            template_fixture.root_dag, workflow_instance=template_fixture, tasks=[], end_task_id=3
+            template_fixture.root_dag,
+            workflow_instance=template_fixture,
+            tasks=[],
+            end_task_id=3,
         )
         assert remaining_tasks == [executor_fixture, sensor_fixture, first_process]
 
         decision_fixture.get_id = MagicMock(return_value=4)
         remaining_tasks = await template_fixture.get_remaining_tasks(
-            template_fixture.root_dag, workflow_instance=template_fixture, tasks=[], end_task_id=4
+            template_fixture.root_dag,
+            workflow_instance=template_fixture,
+            tasks=[],
+            end_task_id=4,
         )
-        assert remaining_tasks == [executor_fixture, sensor_fixture, first_process, decision_fixture]
+        assert remaining_tasks == [
+            executor_fixture,
+            sensor_fixture,
+            first_process,
+            decision_fixture,
+        ]
 
         second_process.get_id = MagicMock(return_value=5)
         remaining_tasks = await template_fixture.get_remaining_tasks(
-            template_fixture.root_dag, workflow_instance=template_fixture, tasks=[], end_task_id=5
+            template_fixture.root_dag,
+            workflow_instance=template_fixture,
+            tasks=[],
+            end_task_id=5,
         )
-        assert remaining_tasks == [executor_fixture, sensor_fixture, first_process, decision_fixture, second_process]
+        assert remaining_tasks == [
+            executor_fixture,
+            sensor_fixture,
+            first_process,
+            decision_fixture,
+            second_process,
+        ]
 
     @pytest.mark.asyncio
     async def test_merge_runtime_parameters_template_instance(self, template_fixture):
@@ -373,14 +432,20 @@ class TestTasks:
         template_fixture.runtime_parameters = {"k1": "10", "k2": "20"}
         remaining_task = SensorTask(uuid1())
         template_fixture.add_task(remaining_task)
-        template_fixture.sensor_tasks_to_correletable_map[remaining_task.id] = CorrelatableMapValue("k1", "0")
+        template_fixture.sensor_tasks_to_correletable_map[
+            remaining_task.id
+        ] = CorrelatableMapValue("k1", "0")
         remaining_task.status.code = TaskStatusEnum.NOT_STARTED.name
         remaining_task._update_correletable_key = CoroutineMock()
-        template_fixture.get_remaining_tasks = CoroutineMock(return_value=[remaining_task])
+        template_fixture.get_remaining_tasks = CoroutineMock(
+            return_value=[remaining_task]
+        )
         await template_fixture._update_global_runtime_parameters()
         assert template_fixture.runtime_parameters == {"k1": "10", "k2": "20"}
         assert remaining_task._update_correletable_key.called
-        assert template_fixture.sensor_tasks_to_correletable_map[remaining_task.id] == CorrelatableMapValue("k1", "10")
+        assert template_fixture.sensor_tasks_to_correletable_map[
+            remaining_task.id
+        ] == CorrelatableMapValue("k1", "10")
 
     @pytest.mark.asyncio
     async def test_executortask(self, executor_fixture, workflow_instance_fixture):
@@ -390,7 +455,9 @@ class TestTasks:
         mock_status = MagicMock()
         jsonpickle.encode = MagicMock()
         mock_status.status.code = TaskStatusEnum.SKIPPED.name
-        dagger.service.services.Dagger.app.get_instance = CoroutineMock(return_value=None)
+        dagger.service.services.Dagger.app.get_instance = CoroutineMock(
+            return_value=None
+        )
         assert executor_fixture.time_completed == 0
         executor_fixture.next_dags = []
         parent_task = DefaultProcessTemplateDAGInstance(uuid1())
@@ -410,7 +477,9 @@ class TestTasks:
         with pytest.raises(NotImplementedError):
             await executor_fixture.evaluate()
         with pytest.raises(NotImplementedError):
-            await executor_fixture.on_message(workflow_instance_fixture.runtime_parameters, {})
+            await executor_fixture.on_message(
+                workflow_instance_fixture.runtime_parameters, {}
+            )
 
     @pytest.mark.asyncio
     async def test_decisiontask(self, decision_fixture, workflow_instance_fixture):
@@ -418,7 +487,9 @@ class TestTasks:
         dagger.service.services.Dagger.app._update_instance = CoroutineMock()
         mock_status = MagicMock()
         mock_status.status.code = TaskStatusEnum.NOT_STARTED.name
-        dagger.service.services.Dagger.app.get_instance = CoroutineMock(return_value=mock_status)
+        dagger.service.services.Dagger.app.get_instance = CoroutineMock(
+            return_value=mock_status
+        )
         decision_fixture.next_dags = []
         decision_fixture.on_complete = CoroutineMock()
         workflow_instance_fixture.runtime_parameters = {}
@@ -427,7 +498,9 @@ class TestTasks:
         assert dagger.service.services.Dagger.app._update_instance.called
         assert decision_fixture.on_complete.called
         with pytest.raises(NotImplementedError):
-            await decision_fixture.execute(runtime_parameters={}, workflow_instance=workflow_instance_fixture)
+            await decision_fixture.execute(
+                runtime_parameters={}, workflow_instance=workflow_instance_fixture
+            )
         with pytest.raises(NotImplementedError):
             await decision_fixture.on_message(workflow_instance_fixture, {})
 
@@ -439,12 +512,21 @@ class TestTasks:
         mock_task.root_dag = None
         mock_task.next_dags = []
         mock_task.next_task_dag = None
-        dagger.service.services.Dagger.app.get_instance.side_effect = [mock_task, KeyError]
+        dagger.service.services.Dagger.app.get_instance.side_effect = [
+            mock_task,
+            KeyError,
+        ]
         dagger.service.services.Dagger.app._remove_itask_instance = CoroutineMock()
-        dagger.service.services.Dagger.app._remove_root_template_instance = CoroutineMock()
-        dagger.service.services.Dagger.app._remove_root_template_instance = CoroutineMock()
+        dagger.service.services.Dagger.app._remove_root_template_instance = (
+            CoroutineMock()
+        )
+        dagger.service.services.Dagger.app._remove_root_template_instance = (
+            CoroutineMock()
+        )
         monitoring_task = MagicMock()
-        dagger.service.services.Dagger.app.get_monitoring_task = CoroutineMock(return_value=monitoring_task)
+        dagger.service.services.Dagger.app.get_monitoring_task = CoroutineMock(
+            return_value=monitoring_task
+        )
         monitoring_task.on_complete = CoroutineMock()
         template_fixture.runtime_parameters = MagicMock()
         template_fixture.next_dags = []
@@ -462,9 +544,14 @@ class TestTasks:
         mock_task.root_dag = None
         mock_task.next_dags = []
         mock_task.next_task_dag = None
-        dagger.service.services.Dagger.app.get_instance.side_effect = [mock_task, KeyError]
+        dagger.service.services.Dagger.app.get_instance.side_effect = [
+            mock_task,
+            KeyError,
+        ]
         monitoring_task = MagicMock()
-        dagger.service.services.Dagger.app.get_monitoring_task = CoroutineMock(return_value=monitoring_task)
+        dagger.service.services.Dagger.app.get_monitoring_task = CoroutineMock(
+            return_value=monitoring_task
+        )
         monitoring_task.on_complete = CoroutineMock()
         template_fixture.runtime_parameters = MagicMock()
         template_fixture.next_dags = []
@@ -488,33 +575,47 @@ class TestTasks:
         assert dagger.service.services.Dagger.app._update_instance.called
         assert not sensor_fixture.on_complete.called
         with pytest.raises(NotImplementedError):
-            await sensor_fixture.execute({}, workflow_instance=workflow_instance_fixture)
+            await sensor_fixture.execute(
+                {}, workflow_instance=workflow_instance_fixture
+            )
         with pytest.raises(NotImplementedError):
             await sensor_fixture.evaluate()
 
     @pytest.mark.asyncio
-    async def test_sensortask_update_key_equal(self, sensor_fixture: SensorTask, workflow_instance_fixture):
+    async def test_sensortask_update_key_equal(
+        self, sensor_fixture: SensorTask, workflow_instance_fixture
+    ):
         template_instance = MagicMock()
         workflow_instance_fixture.runtime_parameters = {"k1": "v1", "k2": "v2"}
         dagger.service.services.Dagger.app.get_root_template_instance = CoroutineMock(
             return_value=workflow_instance_fixture
         )
         sensor_fixture.correlatable_key = "k2"
-        dagger.service.services.Dagger.app.update_correletable_key_for_task = CoroutineMock()
+        dagger.service.services.Dagger.app.update_correletable_key_for_task = (
+            CoroutineMock()
+        )
         await sensor_fixture._update_correletable_key(template_instance)
-        assert dagger.service.services.Dagger.app.update_correletable_key_for_task.called
+        assert (
+            dagger.service.services.Dagger.app.update_correletable_key_for_task.called
+        )
 
     @pytest.mark.asyncio
-    async def test_sensortask_update_key_both_none(self, sensor_fixture: SensorTask, workflow_instance_fixture):
+    async def test_sensortask_update_key_both_none(
+        self, sensor_fixture: SensorTask, workflow_instance_fixture
+    ):
         workflow_instance_fixture.runtime_parameters = {"k1": "v1", "k2": "v2"}
         dagger.service.services.Dagger.app.get_root_template_instance = CoroutineMock(
             return_value=workflow_instance_fixture
         )
         sensor_fixture.correlatable_key = "k3"
         sensor_fixture.runtime_parameters = {"k1": "v1"}
-        dagger.service.services.Dagger.app.update_correletable_key_for_task = CoroutineMock()
+        dagger.service.services.Dagger.app.update_correletable_key_for_task = (
+            CoroutineMock()
+        )
         await sensor_fixture._update_correletable_key(workflow_instance_fixture)
-        assert dagger.service.services.Dagger.app.update_correletable_key_for_task.called
+        assert (
+            dagger.service.services.Dagger.app.update_correletable_key_for_task.called
+        )
 
     @pytest.mark.asyncio
     async def test_future_triggertask(self, trigger_fixture, workflow_instance_fixture):
@@ -526,21 +627,29 @@ class TestTasks:
         assert trigger_fixture.status.code == TaskStatusEnum.EXECUTING.name
 
     @pytest.mark.asyncio
-    async def test_current_triggertask(self, trigger_fixture, workflow_instance_fixture):
+    async def test_current_triggertask(
+        self, trigger_fixture, workflow_instance_fixture
+    ):
         assert trigger_fixture.status.code == TaskStatusEnum.NOT_STARTED.name
         trigger_fixture.time_to_execute = int(time.time()) - 1
         dagger.service.services.Dagger.app._update_instance = CoroutineMock()
         dagger.service.services.Dagger.app._store.get_trigger = CoroutineMock()
         dagger.service.services.Dagger.app._store.insert_trigger = CoroutineMock()
-        dagger.service.services.Dagger.app._store.process_trigger_task_complete = CoroutineMock()
+        dagger.service.services.Dagger.app._store.process_trigger_task_complete = (
+            CoroutineMock()
+        )
         assert trigger_fixture.get_id() == trigger_fixture.id
         await trigger_fixture.start(workflow_instance=workflow_instance_fixture)
         assert dagger.service.services.Dagger.app._update_instance.called
         assert trigger_fixture.status.code == TaskStatusEnum.COMPLETED.name
-        assert dagger.service.services.Dagger.app._store.process_trigger_task_complete.called
+        assert (
+            dagger.service.services.Dagger.app._store.process_trigger_task_complete.called
+        )
 
     @pytest.mark.asyncio
-    async def test_future_interval_fixture(self, interval_fixture, workflow_instance_fixture):
+    async def test_future_interval_fixture(
+        self, interval_fixture, workflow_instance_fixture
+    ):
         assert interval_fixture.status.code == TaskStatusEnum.NOT_STARTED.name
         interval_fixture.time_to_execute = int(time.time()) + 1000
         dagger.service.services.Dagger.app._update_instance = CoroutineMock()
@@ -550,7 +659,9 @@ class TestTasks:
         assert interval_fixture.status.code == TaskStatusEnum.EXECUTING.name
 
     @pytest.mark.asyncio
-    async def test_current_interval_fixture(self, interval_fixture, workflow_instance_fixture):
+    async def test_current_interval_fixture(
+        self, interval_fixture, workflow_instance_fixture
+    ):
         assert interval_fixture.status.code == TaskStatusEnum.NOT_STARTED.name
         interval_fixture.time_to_execute = int(time.time()) - 1
         dagger.service.services.Dagger.app._update_instance = CoroutineMock()
@@ -562,21 +673,29 @@ class TestTasks:
         assert interval_fixture.status.code == TaskStatusEnum.COMPLETED.name
 
     @pytest.mark.asyncio
-    async def test_systemtimer_trigger_aerospike(self, system_timer_fixture, workflow_instance_fixture):
+    async def test_systemtimer_trigger_aerospike(
+        self, system_timer_fixture, workflow_instance_fixture
+    ):
         assert system_timer_fixture.status.code == TaskStatusEnum.NOT_STARTED.name
         mock = asynctest.MagicMock()
         mock.task_ids = ["id1"]
         mock.__aiter__.return_value = [mock]
         dagger.service.services.Dagger.app._store.get_valid_triggers.return_value = mock
         mock_trigger = Trigger({"ID1"}, time.time())
-        dagger.service.services.Dagger.app._store.get_trigger = CoroutineMock(return_value=mock_trigger)
+        dagger.service.services.Dagger.app._store.get_trigger = CoroutineMock(
+            return_value=mock_trigger
+        )
         task_mock = MagicMock()
         task_mock.start = CoroutineMock()
         task_mock.status.code = TaskStatusEnum.EXECUTING.name
-        dagger.service.services.Dagger.app._store.execute_system_timer_task = CoroutineMock()
+        dagger.service.services.Dagger.app._store.execute_system_timer_task = (
+            CoroutineMock()
+        )
         assert system_timer_fixture.get_id() == system_timer_fixture.id
         await system_timer_fixture.start(workflow_instance=workflow_instance_fixture)
-        assert dagger.service.services.Dagger.app._store.execute_system_timer_task.called
+        assert (
+            dagger.service.services.Dagger.app._store.execute_system_timer_task.called
+        )
         with pytest.raises(NotImplementedError):
             await system_timer_fixture.on_message(workflow_instance_fixture, {})
         with pytest.raises(NotImplementedError):
@@ -584,28 +703,44 @@ class TestTasks:
         with pytest.raises(NotImplementedError):
             await system_timer_fixture.get_correlatable_key(MagicMock())
         with pytest.raises(NotImplementedError):
-            await system_timer_fixture.on_complete(workflow_instance=workflow_instance_fixture)
+            await system_timer_fixture.on_complete(
+                workflow_instance=workflow_instance_fixture
+            )
 
     @pytest.fixture()
     def default_process_instance_fixture(self):
         return DefaultProcessTemplateDAGInstance(uuid1())
 
     @pytest.mark.asyncio
-    async def test_process_instance_task(self, default_process_instance_fixture, workflow_instance_fixture):
+    async def test_process_instance_task(
+        self, default_process_instance_fixture, workflow_instance_fixture
+    ):
         default_process_instance_fixture.max_run_duration = 300
-        assert default_process_instance_fixture.status.code == TaskStatusEnum.NOT_STARTED.name
+        assert (
+            default_process_instance_fixture.status.code
+            == TaskStatusEnum.NOT_STARTED.name
+        )
         dagger.service.services.Dagger.app._update_instance = CoroutineMock()
         mock = asynctest.MagicMock()
         mock.start = CoroutineMock()
         mock.merge_local_runtime_parameters = CoroutineMock()
-        dagger.service.services.Dagger.app.get_instance = CoroutineMock(return_value=mock)
+        dagger.service.services.Dagger.app.get_instance = CoroutineMock(
+            return_value=mock
+        )
         dagger.service.services.Dagger.app._store_task_instance = CoroutineMock()
         dagger.service.services.Dagger.app._store_trigger_instance = CoroutineMock()
-        await default_process_instance_fixture.start(workflow_instance=workflow_instance_fixture)
-        assert default_process_instance_fixture.status.code == TaskStatusEnum.EXECUTING.name
+        await default_process_instance_fixture.start(
+            workflow_instance=workflow_instance_fixture
+        )
+        assert (
+            default_process_instance_fixture.status.code
+            == TaskStatusEnum.EXECUTING.name
+        )
         default_process_instance_fixture.on_complete = CoroutineMock()
         await default_process_instance_fixture.notify(
-            status=TaskStatus(code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value),
+            status=TaskStatus(
+                code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+            ),
             workflow_instance=workflow_instance_fixture,
         )
         assert default_process_instance_fixture.on_complete.called
@@ -632,11 +767,15 @@ class TestTasks:
         dagger.service.services.Dagger.app.get_instance.return_value = mock
         mock.start = CoroutineMock()
         mock.merge_local_runtime_parameters = CoroutineMock()
-        await workflow_instance_fixture.start(workflow_instance=workflow_instance_fixture)
+        await workflow_instance_fixture.start(
+            workflow_instance=workflow_instance_fixture
+        )
         assert workflow_instance_fixture.status.code == TaskStatusEnum.EXECUTING.name
         workflow_instance_fixture.on_complete = CoroutineMock()
         await workflow_instance_fixture.notify(
-            status=TaskStatus(code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value),
+            status=TaskStatus(
+                code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+            ),
             workflow_instance=workflow_instance_fixture,
         )
         assert workflow_instance_fixture.on_complete.called
@@ -657,19 +796,29 @@ class TestTasks:
 
     @pytest.mark.asyncio
     async def test_default_monitoring_task_on_complete(self, workflow_instance_fixture):
-        dagger.service.services.Dagger.app._remove_root_template_instance = CoroutineMock()
+        dagger.service.services.Dagger.app._remove_root_template_instance = (
+            CoroutineMock()
+        )
         dagger.service.services.Dagger.app.delete_workflow_on_complete = True
-        await workflow_instance_fixture.on_complete(workflow_instance=workflow_instance_fixture)
+        await workflow_instance_fixture.on_complete(
+            workflow_instance=workflow_instance_fixture
+        )
         assert dagger.service.services.Dagger.app._remove_root_template_instance.called
 
     @pytest.mark.asyncio
     async def test_max_run_duration_monitoring_task_on_complete(
-        self, max_run_duration_monitoring_instance_fixture, default_process_instance_fixture, workflow_instance_fixture
+        self,
+        max_run_duration_monitoring_instance_fixture,
+        default_process_instance_fixture,
+        workflow_instance_fixture,
     ):
-        max_run_duration_monitoring_instance_fixture.get_remaining_tasks = CoroutineMock(return_value=[])
+        max_run_duration_monitoring_instance_fixture.get_remaining_tasks = (
+            CoroutineMock(return_value=[])
+        )
         workflow_instance_fixture.status.code = TaskStatusEnum.EXECUTING.name
         await max_run_duration_monitoring_instance_fixture.process_monitored_task(
-            default_process_instance_fixture, workflow_instance=workflow_instance_fixture
+            default_process_instance_fixture,
+            workflow_instance=workflow_instance_fixture,
         )
         assert max_run_duration_monitoring_instance_fixture.get_remaining_tasks.called
 
@@ -679,18 +828,28 @@ class TestTasks:
     ):
         monitored_task = MagicMock()
         monitored_task.status.code = TaskStatusEnum.COMPLETED.name
-        dagger.service.services.Dagger.app.get_instance = CoroutineMock(return_value=monitored_task)
+        dagger.service.services.Dagger.app.get_instance = CoroutineMock(
+            return_value=monitored_task
+        )
         default_monitoring_instance_fixture.process_monitored_task = CoroutineMock()
         await default_monitoring_instance_fixture.execute(
-            runtime_parameters=workflow_instance_fixture.runtime_parameters, workflow_instance=workflow_instance_fixture
+            runtime_parameters=workflow_instance_fixture.runtime_parameters,
+            workflow_instance=workflow_instance_fixture,
         )
-        assert default_monitoring_instance_fixture.process_monitored_task.called is False
+        assert (
+            default_monitoring_instance_fixture.process_monitored_task.called is False
+        )
 
     @pytest.mark.asyncio
     async def test_default_monitoring_task_on_complete_called(
-        self, default_process_instance_fixture, default_monitoring_instance_fixture, workflow_instance_fixture
+        self,
+        default_process_instance_fixture,
+        default_monitoring_instance_fixture,
+        workflow_instance_fixture,
     ):
-        default_monitoring_instance_fixture.monitored_task_id = default_process_instance_fixture.id
+        default_monitoring_instance_fixture.monitored_task_id = (
+            default_process_instance_fixture.id
+        )
         workflow_instance_fixture.add_task(default_process_instance_fixture)
 
         default_monitoring_instance_fixture.process_monitored_task = CoroutineMock()
@@ -709,9 +868,12 @@ class TestTasks:
     ):
         workflow_instance_fixture.runtime_parameters = {COMPLETE_BY_KEY: 414}
         dagger.service.services.Dagger.app._store_trigger_instance = CoroutineMock()
-        default_monitored_process_template_instance.get_monitoring_task_type = MagicMock(return_value=MagicMock())
+        default_monitored_process_template_instance.get_monitoring_task_type = (
+            MagicMock(return_value=MagicMock())
+        )
         await default_monitored_process_template_instance.execute(
-            runtime_parameters=workflow_instance_fixture.runtime_parameters, workflow_instance=workflow_instance_fixture
+            runtime_parameters=workflow_instance_fixture.runtime_parameters,
+            workflow_instance=workflow_instance_fixture,
         )
         assert dagger.service.services.Dagger.app._store_trigger_instance.called is True
 
@@ -724,12 +886,15 @@ class TestTasks:
         workflow_instance_fixture.runtime_parameters = {COMPLETE_BY_KEY: 414}
         default_monitored_process_template_instance.monitoring_task_id = uuid1()
         await default_monitored_process_template_instance.execute(
-            workflow_instance_fixture.runtime_parameters, workflow_instance=workflow_instance_fixture
+            workflow_instance_fixture.runtime_parameters,
+            workflow_instance=workflow_instance_fixture,
         )
         assert dagger.service.services.Dagger.app._store_task_instance.called is False
 
     @pytest.mark.asyncio
-    async def test_monitored_process_template_instance_on_complete(self, default_monitored_process_template_instance):
+    async def test_monitored_process_template_instance_on_complete(
+        self, default_monitored_process_template_instance
+    ):
         default_monitored_process_template_instance.monitoring_task_id = uuid.uuid1()
         mt = MagicMock()
         mt.on_complete = CoroutineMock()
@@ -738,7 +903,9 @@ class TestTasks:
 
 
 class TestDefaultMonitoringClass(DefaultMonitoringTask):
-    async def process_monitored_task(self, monitored_task: ITask, workflow_instance: ITask) -> None:
+    async def process_monitored_task(
+        self, monitored_task: ITask, workflow_instance: ITask
+    ) -> None:
         pass
 
 
@@ -764,21 +931,27 @@ class TestKafkaAgent:
         # Non-executing task
         task.on_message = CoroutineMock(return_value=True)
         task.on_complete = CoroutineMock()
-        task.status = TaskStatus(code=TaskStatusEnum.NOT_STARTED.name, value=TaskStatusEnum.NOT_STARTED.value)
+        task.status = TaskStatus(
+            code=TaskStatusEnum.NOT_STARTED.name, value=TaskStatusEnum.NOT_STARTED.value
+        )
         task.allow_skip_to = True
         root_template_instance = CoroutineMock()
         skipped_task = KafkaListenerTask(uuid1())
         workflow_instance_fixture.add_task(skipped_task)
         skipped_task.on_complete = CoroutineMock()
         skipped_task.status.code = TaskStatusEnum.EXECUTING.name
-        workflow_instance_fixture.get_remaining_tasks = CoroutineMock(return_value=[skipped_task, task])
+        workflow_instance_fixture.get_remaining_tasks = CoroutineMock(
+            return_value=[skipped_task, task]
+        )
         dagger.service.services.Dagger.app.get_root_template_instance = CoroutineMock(
             return_value=root_template_instance
         )
         generator_mock = MagicMock()
         generator_mock.__aiter__.return_value = [(workflow_instance_fixture, task)]
         agent.app._get_tasks_by_correlatable_key.return_value = generator_mock
-        listener.get_correlatable_keys_from_payload = CoroutineMock(return_value=[("id", "v1"), ("id2", "v2")])
+        listener.get_correlatable_keys_from_payload = CoroutineMock(
+            return_value=[("id", "v1"), ("id2", "v2")]
+        )
         stream = asynctest.MagicMock()
         stream.__aiter__.return_value = [range(1)]
         await agent.process_event(stream)

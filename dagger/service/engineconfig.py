@@ -9,6 +9,7 @@ class StoreEnum(Enum):
     AEROSPIKE = "aerospike://"
     ROCKSDB = "rocksdb://"
 
+
 try:  # pragma: no cover
     import rocksdb
 except ImportError:  # pragma: no cover
@@ -20,7 +21,8 @@ else:
 
     class CompressionType:  # noqa
         """Dummy CompressionType."""
-        lz4_compression = u'lz4_compression'
+
+        lz4_compression = "lz4_compression"
 
 
 class EngineConfig(NamedTuple):
@@ -59,6 +61,7 @@ class AerospikeConfig(NamedTuple):
         if self.KWARGS:
             options[AeroSpikeStore.CLIENT_OPTIONS_KEY].update(**self.KWARGS)
         return options
+
 
 ROCKS_DB_OPTIONS = {
     "write_buffer_size": 16 * 1024 * 1024,

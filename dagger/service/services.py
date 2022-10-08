@@ -9,7 +9,18 @@ import uuid
 import os
 from copy import deepcopy
 from random import Random
-from typing import Any, AsyncGenerator, Callable, Dict, List, Mapping, Optional, Set, MutableMapping, Awaitable
+from typing import (
+    Any,
+    AsyncGenerator,
+    Callable,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    MutableMapping,
+    Awaitable,
+)
 from uuid import UUID
 from weakref import WeakValueDictionary
 
@@ -111,7 +122,9 @@ class Dagger(Service):
         schema_registry_url: str = None,
         message_serializer: MessageSerializer = None,
         delete_workflow_on_complete: bool = False,
-        task_update_callbacks: List[Callable[[ITemplateDAGInstance], Awaitable[None]]] = [],
+        task_update_callbacks: List[
+            Callable[[ITemplateDAGInstance], Awaitable[None]]
+        ] = [],
         **kwargs: Any,
     ) -> None:
         """Initialize an instance of Dagger
@@ -154,15 +167,21 @@ class Dagger(Service):
         super().__init__(beacon=beacon, loop=loop)
         self.app = self
         self.dd_sensor = datadog_sensor
-        self.bootstrap_topic: TopicT = self.faust_app.topic(bootstrap_topic, value_type=str)
+        self.bootstrap_topic: TopicT = self.faust_app.topic(
+            bootstrap_topic, value_type=str
+        )
 
         self.tasks_topic: TopicT = self.faust_app.topic(tasks_topic, value_type=str)
 
         self.task_update_topic: Optional[TopicT] = (
-            self.faust_app.topic(task_update_topic, value_type=str) if task_update_topic else None
+            self.faust_app.topic(task_update_topic, value_type=str)
+            if task_update_topic
+            else None
         )
 
-        self.faust_app.agent(self.tasks_topic, name=self.tasks_topic.get_topic_name())(self._process_tasks_create_event)
+        self.faust_app.agent(self.tasks_topic, name=self.tasks_topic.get_topic_name())(
+            self._process_tasks_create_event
+        )
 
         self.trigger_interval = trigger_interval
 
@@ -182,7 +201,9 @@ class Dagger(Service):
         self.delete_workflow_on_complete = delete_workflow_on_complete
         if schema_registry_url:
             self.schema_registry_client = SchemaRegistryClient(url=schema_registry_url)
-            self.message_serializer = MessageSerializer(schemaregistry_client=self.schema_registry_client)
+            self.message_serializer = MessageSerializer(
+                schemaregistry_client=self.schema_registry_client
+            )
         self.workflows_weak_ref_map = WeakValueDictionary()
         self.task_update_callbacks = task_update_callbacks
         for i in range(Dagger.LOCK_STRIPE_SIZE):
@@ -221,7 +242,12 @@ class Dagger(Service):
             value_serializer="raw",
             web_in_thread=True,
             web_cors_options={
-                "*": ResourceOptions(allow_credentials=True, allow_methods="*", expose_headers="*", allow_headers="*")
+                "*": ResourceOptions(
+                    allow_credentials=True,
+                    allow_methods="*",
+                    expose_headers="*",
+                    allow_headers="*",
+                )
             },
             **self.config.KWARGS,
         )  # mark application as ready for kubernetes
@@ -260,11 +286,17 @@ class Dagger(Service):
     async def _submit_task_on_bootstrap_topic(self, task: ITask):
         for topic_object in self.faust_app.consumer._active_partitions:  # type: ignore
             if topic_object.topic == self.bootstrap_topic.get_topic_name():
-                await self.bootstrap_topic.send(key=str(task.id), partition=topic_object.partition, value=task)
-                logger.info(f"Submitted system task {task.id} type {type(task).__name__}")
+                await self.bootstrap_topic.send(
+                    key=str(task.id), partition=topic_object.partition, value=task
+                )
+                logger.info(
+                    f"Submitted system task {task.id} type {type(task).__name__}"
+                )
 
     @classmethod
-    def create_topic(cls, topic_name: str, key_type: type = str, value_type: type = str) -> TopicT:
+    def create_topic(
+        cls, topic_name: str, key_type: type = str, value_type: type = str
+    ) -> TopicT:
         """Create a Kafka topic using Faust (which will also create a rocksdb table)
 
         Args:
@@ -281,7 +313,9 @@ class Dagger(Service):
             logger.warning(f"Topic {topic_name} is already created")
             topic_instance = Dagger.app.topics[topic_name]
         else:
-            topic_instance = Dagger.app.faust_app.topic(topic_name, key_type=key_type, value_type=value_type)
+            topic_instance = Dagger.app.faust_app.topic(
+                topic_name, key_type=key_type, value_type=value_type
+            )
             Dagger.app.topics[topic_name] = topic_instance
         return topic_instance
 
@@ -323,7 +357,9 @@ class Dagger(Service):
 
         def wrapped(wrapped_fun: RegisterFun):
             logger.info("registering " + process_template_name)
-            Dagger.app.process_templates[process_template_name] = wrapped_fun(process_template_name)
+            Dagger.app.process_templates[process_template_name] = wrapped_fun(
+                process_template_name
+            )
 
         return wrapped
 
@@ -355,8 +391,14 @@ class Dagger(Service):
                     )  # type: ignore
                     task: ITask = None
                     if workflow_instance and isinstance(workflow_instance, ITask):
-                        if workflow_instance.status.code != TaskStatusEnum.COMPLETED.name or (
-                            get_completed and workflow_instance.status.code == TaskStatusEnum.COMPLETED.name
+                        if (
+                            workflow_instance.status.code
+                            != TaskStatusEnum.COMPLETED.name
+                            or (
+                                get_completed
+                                and workflow_instance.status.code
+                                == TaskStatusEnum.COMPLETED.name
+                            )
                         ):
                             task = workflow_instance.get_task(id=lookup_key.task_id)  # type: ignore
                             if task is not None:
@@ -369,7 +411,9 @@ class Dagger(Service):
                         logger.warning(f"None objectType in correletable value key {lookup_key.task_id} value {task}")  # type: ignore
                         task_ids_to_remove.append(lookup_key)
                     elif not isinstance(task, ITask):
-                        logger.error(f"Invalid objectType in kvTable key {lookup_key.task_id} value {task}")
+                        logger.error(
+                            f"Invalid objectType in kvTable key {lookup_key.task_id} value {task}"
+                        )
                 if cor_instance.overflow_key:
                     cor_instance = await self._store.get_table_value(
                         self._store.correletable_keys_table, cor_instance.overflow_key
@@ -382,13 +426,17 @@ class Dagger(Service):
                     lookup_keys=lookup_keys, cor_instances=cor_instance_list
                 )
 
-    async def _store_root_template_instance(self, root_template_instance: ITemplateDAGInstance):
+    async def _store_root_template_instance(
+        self, root_template_instance: ITemplateDAGInstance
+    ):
         """Store instance of root template instance in the datastore.
 
         Args:
             root_template_instance (ITemplateDAGInstance): Instance of root template
         """
-        await self._invoke_store_insert_key_value_with_timer(str(root_template_instance.id), root_template_instance)
+        await self._invoke_store_insert_key_value_with_timer(
+            str(root_template_instance.id), root_template_instance
+        )
 
     async def _invoke_store_insert_key_value_with_timer(self, key: str, value: Record):
         start_time = self.faust_app.loop.time()
@@ -397,14 +445,25 @@ class Dagger(Service):
         if self.dd_sensor:
             self.dd_sensor.client.histogram(metric="insert_key_value", value=end_time)
 
-    async def _store_trigger_instance(self, task_instance: TriggerTask, workflow_instance: ITemplateDAGInstance):
-        await self._store.store_trigger_instance(task_instance=task_instance, wokflow_instance=workflow_instance)
+    async def _store_trigger_instance(
+        self, task_instance: TriggerTask, workflow_instance: ITemplateDAGInstance
+    ):
+        await self._store.store_trigger_instance(
+            task_instance=task_instance, wokflow_instance=workflow_instance
+        )
 
-    async def _insert_correletable_key_task(self, task_instance: ITask, workflow_instance: ITemplateDAGInstance):
+    async def _insert_correletable_key_task(
+        self, task_instance: ITask, workflow_instance: ITemplateDAGInstance
+    ):
         if task_instance.correlatable_key:
-            correletable_key = workflow_instance.runtime_parameters.get(task_instance.correlatable_key, None)
+            correletable_key = workflow_instance.runtime_parameters.get(
+                task_instance.correlatable_key, None
+            )
             await self.update_correletable_key_for_task(
-                task_instance, str(correletable_key), new_task=True, workflow_instance=workflow_instance
+                task_instance,
+                str(correletable_key),
+                new_task=True,
+                workflow_instance=workflow_instance,
             )
 
     async def update_correletable_key_for_task(
@@ -420,9 +479,9 @@ class Dagger(Service):
             itask_instance (ITask): Instance of itask.
             task_instance (str): the key to be updated
         """
-        workflow_instance.sensor_tasks_to_correletable_map[task_instance.get_id()] = CorrelatableMapValue(
-            task_instance.correlatable_key, key
-        )
+        workflow_instance.sensor_tasks_to_correletable_map[
+            task_instance.get_id()
+        ] = CorrelatableMapValue(task_instance.correlatable_key, key)
         if task_instance.correlatable_key and key and task_instance.topic:
             cor_instances: List[CorreletableKeyTasks] = []
             new_key = f"{key}_{task_instance.topic}"
@@ -431,7 +490,9 @@ class Dagger(Service):
                 await self.remove_task_from_correletable_keys_table(
                     task=task_instance, workflow_instance=workflow_instance
                 )
-            cor_instance = await self._store.get_table_value(self._store.correletable_keys_table, new_key)
+            cor_instance = await self._store.get_table_value(
+                self._store.correletable_keys_table, new_key
+            )
             if not cor_instance:
                 cor_instance = CorreletableKeyTasks()
                 cor_instance.lookup_keys = set()
@@ -439,12 +500,16 @@ class Dagger(Service):
                 cor_instance.key = new_key
 
             else:
-                cor_instances = await self.get_correletable_key_instances(cor_instance=cor_instance)
+                cor_instances = await self.get_correletable_key_instances(
+                    cor_instance=cor_instance
+                )
             terminal_cor_instance: CorreletableKeyTasks = cor_instances[-1]
 
             terminal_cor_instance.lookup_keys = set(terminal_cor_instance.lookup_keys)
             await self.chunk_and_store_correlatable_tasks(
-                cor_instance=terminal_cor_instance, value=task_instance.id, workflow_id=workflow_instance.id
+                cor_instance=terminal_cor_instance,
+                value=task_instance.id,
+                workflow_id=workflow_instance.id,
             )
 
     async def chunk_and_store_correlatable_tasks(
@@ -460,16 +525,22 @@ class Dagger(Service):
             new_cor_instance.key = new_chunk_id
             cor_instance.overflow_key = new_chunk_id
             await self._store.set_table_value(
-                self._store.correletable_keys_table, new_cor_instance.key, new_cor_instance
+                self._store.correletable_keys_table,
+                new_cor_instance.key,
+                new_cor_instance,
             )
         else:
             cor_instance.lookup_keys = set(cor_instance.lookup_keys)
             value_to_add = CorreletableLookUpKey(workflow_id, value)
             cor_instance.lookup_keys.add(value_to_add)
 
-        await self._store.set_table_value(self._store.correletable_keys_table, cor_instance.key, cor_instance)
+        await self._store.set_table_value(
+            self._store.correletable_keys_table, cor_instance.key, cor_instance
+        )
 
-    async def get_correletable_key_instances(self, cor_instance: CorreletableKeyTasks) -> List[CorreletableKeyTasks]:
+    async def get_correletable_key_instances(
+        self, cor_instance: CorreletableKeyTasks
+    ) -> List[CorreletableKeyTasks]:
         cor_instances: List[CorreletableKeyTasks] = []
         cor_instances.append(cor_instance)
         while cor_instance and cor_instance.overflow_key:
@@ -483,31 +554,49 @@ class Dagger(Service):
                 logger.warning(f"Correletable key instance not found {overflow_key}")
         return cor_instances
 
-    async def remove_task_from_correletable_keys_table(self, task: ITask, workflow_instance: ITemplateDAGInstance):
+    async def remove_task_from_correletable_keys_table(
+        self, task: ITask, workflow_instance: ITemplateDAGInstance
+    ):
         if workflow_instance.runtime_parameters:
-            current_key = workflow_instance.runtime_parameters.get(task.correlatable_key, None)
-            if task.correlatable_key and current_key and isinstance(task, SensorTask) and getattr(task, "_topic", None):
+            current_key = workflow_instance.runtime_parameters.get(
+                task.correlatable_key, None
+            )
+            if (
+                task.correlatable_key
+                and current_key
+                and isinstance(task, SensorTask)
+                and getattr(task, "_topic", None)
+            ):
                 new_key = f"{current_key}_{task._topic.get_topic_name()}"
-                logger.debug(f"Removing task {task.id} from correletable_keys_table with key {new_key}")
+                logger.debug(
+                    f"Removing task {task.id} from correletable_keys_table with key {new_key}"
+                )
                 cor_instance: CorreletableKeyTasks = await self._store.get_table_value(
                     self._store.correletable_keys_table, new_key
                 )
                 if cor_instance:
-                    cor_instances: List[CorreletableKeyTasks] = await self.get_correletable_key_instances(
+                    cor_instances: List[
+                        CorreletableKeyTasks
+                    ] = await self.get_correletable_key_instances(
                         cor_instance=cor_instance
                     )
                     workflow_task_ids_to_persist: Set[CorreletableLookUpKey] = set()
                     for c_instance in cor_instances:
                         workflow_task_ids_to_persist.update(set(c_instance.lookup_keys))
-                        remove_key = CorreletableLookUpKey(workflow_instance.id, task.id)
+                        remove_key = CorreletableLookUpKey(
+                            workflow_instance.id, task.id
+                        )
                     if remove_key in workflow_task_ids_to_persist:
                         workflow_task_ids_to_persist.remove(remove_key)
                         await self.persist_tasks_ids_for_correletable_keys(
-                            lookup_keys=workflow_task_ids_to_persist, cor_instances=cor_instances
+                            lookup_keys=workflow_task_ids_to_persist,
+                            cor_instances=cor_instances,
                         )
 
     async def persist_tasks_ids_for_correletable_keys(
-        self, lookup_keys: Set[CorreletableKeyTasks], cor_instances: List[CorreletableKeyTasks]
+        self,
+        lookup_keys: Set[CorreletableKeyTasks],
+        cor_instances: List[CorreletableKeyTasks],
     ) -> None:
         workflow_task_ids_list = list(lookup_keys)
         if not cor_instances:
@@ -515,7 +604,9 @@ class Dagger(Service):
             return
         chunks = [
             workflow_task_ids_list[i : i + self.max_correletable_keys_in_values]  # noqa
-            for i in range(0, len(workflow_task_ids_list), self.max_correletable_keys_in_values)
+            for i in range(
+                0, len(workflow_task_ids_list), self.max_correletable_keys_in_values
+            )
         ]  # noqa
 
         if len(chunks) > len(cor_instances):
@@ -527,28 +618,38 @@ class Dagger(Service):
         for chunk in chunks:
             cor_instance = cor_instances[index]
             cor_instance.lookup_keys = set(chunk)
-            await self._store.set_table_value(self._store.correletable_keys_table, cor_instance.key, cor_instance)
+            await self._store.set_table_value(
+                self._store.correletable_keys_table, cor_instance.key, cor_instance
+            )
             index += 1
         prev_cor_instance: CorreletableKeyTasks = cor_instance
         while index < len(cor_instances):
             next_cor_instance: CorreletableKeyTasks = cor_instances[index]
-            await self._store.del_table_value(self._store.correletable_keys_table, next_cor_instance.key)
+            await self._store.del_table_value(
+                self._store.correletable_keys_table, next_cor_instance.key
+            )
             if prev_cor_instance and prev_cor_instance != next_cor_instance:
                 prev_cor_instance.overflow_key = None
                 await self._store.set_table_value(
-                    self._store.correletable_keys_table, prev_cor_instance.key, prev_cor_instance
+                    self._store.correletable_keys_table,
+                    prev_cor_instance.key,
+                    prev_cor_instance,
                 )
             prev_cor_instance = None
             index += 1
 
-    async def _remove_root_template_instance(self, root_template_instance: ITemplateDAGInstance):
+    async def _remove_root_template_instance(
+        self, root_template_instance: ITemplateDAGInstance
+    ):
         """Removes an instance of a root template from the datastore.
 
         Args:
             root_template_instance (ITemplateDAGInstance): Instance of root template.
         """
         await self._store.remove_key_value(str(root_template_instance.get_id()))
-        logger.debug(f"Removed template instance with id: {str(root_template_instance.get_id())}")
+        logger.debug(
+            f"Removed template instance with id: {str(root_template_instance.get_id())}"
+        )
 
     async def _invoke_store_get_value_for_key_with_timer(self, key: str):
         start_time = self.faust_app.loop.time()
@@ -599,7 +700,9 @@ class Dagger(Service):
         """
 
         await self._invoke_store_insert_key_value_with_timer(str(task.id), task)
-        logger.debug(f"State update for ITask with id: {str(task.id)} stored to datastore.")
+        logger.debug(
+            f"State update for ITask with id: {str(task.id)} stored to datastore."
+        )
 
     async def submit(self, task: ITask, *, repartition: bool = True) -> None:
         """Submits an ITask for execution.
@@ -661,7 +764,9 @@ class Dagger(Service):
 
         async for taskjson in stream:
             task = ITask.loads(taskjson)
-            logger.info(f"Task with id: {str(task.get_id())} received on bootstrap topic. Starting...")
+            logger.info(
+                f"Task with id: {str(task.get_id())} received on bootstrap topic. Starting..."
+            )
             await task.start()
 
 
@@ -672,7 +777,10 @@ service_blueprint = Blueprint("service_state")
 class ServiceStateView(View):
     async def get(self, request: Request) -> Response:
         """REST endpoint that is just used to tell when the Dagger worker has started."""
-        return self.text(json.dumps({"is_ready": Dagger.app.started_flag}), content_type="application/json")
+        return self.text(
+            json.dumps({"is_ready": Dagger.app.started_flag}),
+            content_type="application/json",
+        )
 
 
 tasks_blueprint = Blueprint("template_tasks")
@@ -715,7 +823,10 @@ class TemplateProcessView(View):
             self.tasks = list()
             for task in Dagger.app._store.kv_table.values():  # pragma: no cover
                 self.tasks.append(task)
-            return self.text(jsonpickle.encode(self.tasks, unpicklable=False), content_type="application/json")
+            return self.text(
+                jsonpickle.encode(self.tasks, unpicklable=False),
+                content_type="application/json",
+            )
         except Exception as ex:
             logger.warning(f"Error {ex}")
         return None

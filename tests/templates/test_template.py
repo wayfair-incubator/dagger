@@ -37,7 +37,11 @@ class TestDefaultKafkaCommandTaskTemplate:
         app = MagicMock()
         topic = MagicMock()
         next_template = DefaultTaskTemplate(
-            app=app, type=KafkaListenerTask, name="task", task_dag_template=list(), allow_skip_to=False
+            app=app,
+            type=KafkaListenerTask,
+            name="task",
+            task_dag_template=list(),
+            allow_skip_to=False,
         )
         next_template_list = list()
         next_template_list.append(next_template)
@@ -54,7 +58,11 @@ class TestDefaultKafkaCommandTaskTemplate:
         parent_id = uuid.uuid1()
         current_id = uuid.uuid1()
         task = await current_template.create_instance(
-            id=current_id, parent_id=parent_id, parent_name="trigger", partition_key_lookup="containerid", **args
+            id=current_id,
+            parent_id=parent_id,
+            parent_name="trigger",
+            partition_key_lookup="containerid",
+            **args,
         )
         assert task.id == current_id
         assert len(task.next_dags) == 1
@@ -99,7 +107,7 @@ class TestParallelCompositeTaskTemplate:
             parent_name="trigger",
             partition_key_lookup="containerid",
             workflow_instance=workflow_instance_fixture,
-            **args
+            **args,
         )
         assert task.id == current_id
         assert parallel_task_2.create_instance.called
@@ -138,7 +146,7 @@ class TestDefaultTriggerTaskTemplate:
                 parent_name="trigger_process",
                 partition_key_lookup="containerid",
                 workflow_instance=workflow_instance_fixture,
-                **args
+                **args,
             )
         fail_template = DefaultTriggerTaskTemplate(
             app=app,
@@ -155,7 +163,7 @@ class TestDefaultTriggerTaskTemplate:
                 parent_name="trigger_process",
                 partition_key_lookup="containerid",
                 workflow_instance=workflow_instance_fixture,
-                **args
+                **args,
             )
         tte = int(time.time())
         args["cpt"] = tte
@@ -174,7 +182,7 @@ class TestDefaultTriggerTaskTemplate:
             parent_name="trigger_process",
             partition_key_lookup="containerid",
             workflow_instance=workflow_instance_fixture,
-            **args
+            **args,
         )
         assert task.id == current_id
         assert len(task.next_dags) == 0
@@ -215,7 +223,7 @@ class TestDefaultIntervalTaskTemplate:
                 parent_name="trigger_process",
                 partition_key_lookup="containerid",
                 workflow_instance=workflow_instance_fixture,
-                **args
+                **args,
             )
         tte = int(time.time())
         args["cpt"] = tte
@@ -237,7 +245,7 @@ class TestDefaultIntervalTaskTemplate:
                 parent_name="trigger_process",
                 partition_key_lookup="containerid",
                 workflow_instance=workflow_instance_fixture,
-                **args
+                **args,
             )
         args["start"] = int(time.time())
         args["interval"] = 10
@@ -258,7 +266,7 @@ class TestDefaultIntervalTaskTemplate:
             parent_name="trigger_process",
             partition_key_lookup="containerid",
             workflow_instance=workflow_instance_fixture,
-            **args
+            **args,
         )
         assert task.id == current_id
         assert len(task.next_dags) == 0
@@ -280,7 +288,7 @@ class TestDefaultIntervalTaskTemplate:
             parent_name="trigger_process",
             partition_key_lookup="containerid",
             workflow_instance=workflow_instance_fixture,
-            **args
+            **args,
         )
         assert task.id == current_id
         assert len(task.next_dags) == 0
@@ -341,7 +349,11 @@ class TestTriggerTaskTemplateBuilder:
             builder.set_type(ExecutorTask)
         builder.set_type(TriggerTask)
         next_template = MagicMock()
-        trigger_template = builder.set_next(task_template=next_template).set_time_to_execute_lookup_key("cpt").build()
+        trigger_template = (
+            builder.set_next(task_template=next_template)
+            .set_time_to_execute_lookup_key("cpt")
+            .build()
+        )
         assert trigger_template._type == TriggerTask
         assert len(trigger_template.next_task_dag) == 1
 
