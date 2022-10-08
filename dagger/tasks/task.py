@@ -545,7 +545,7 @@ class DecisionTask(ITask[KT, VT]):
         raise NotImplementedError("Decision task does not process get_correlatable_key")
 
     async def evaluate(self, **kwargs: Any) -> Optional[UUID]:
-        num = random.randint(0, 1)
+        num = random.randint(0, 1)  # nosec
         if num == 0:
             return None
         else:
