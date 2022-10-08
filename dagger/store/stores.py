@@ -369,7 +369,7 @@ class RocksDBStore(IStore):
         logger.debug("get_valid_triggers start")
         current_time = int(time.time())
         event = faust.current_event()
-        partition = event.message.partition
+        partition = event.message.partition  # type: ignore
         topic = self.triggers_table._changelog_topic_name()
         tp = TP(topic=topic, partition=partition)
         logger.debug(f"get_valid_triggers function. partition: {str(partition)}.")

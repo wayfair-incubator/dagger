@@ -1,6 +1,6 @@
 import logging
 import traceback
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import aiohttp
 import ddtrace
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class TracingSensor(Sensor):
-    aiohttp_sessions: Dict[str, aiohttp.ClientSession] = None
+    aiohttp_sessions: Optional[Dict[str, aiohttp.ClientSession]] = None
 
     @cached_property
     def app_tracer(self) -> opentracing.Tracer:

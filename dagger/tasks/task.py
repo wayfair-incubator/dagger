@@ -64,17 +64,17 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
     time_submitted: int = 0
     time_completed: int = 0
     lastupdated: int = int(time.time())
-    task_name: str = None
+    task_name: Optional[str] = None
     task_type: str = TaskType.LEAF.name
-    parent_id: UUID = None
+    parent_id: Optional[UUID] = None
     status: TaskStatus = TaskStatus()
     time_created: int = int(time.time())
     next_dags: List[UUID] = list()
-    root_dag: UUID = None
-    message: str = None
+    root_dag: Optional[UUID] = None
+    message: Optional[str] = None
     allow_skip_to: bool = False
     reprocess_on_message: bool = False
-    correlatable_key: KT = None
+    correlatable_key: Optional[KT] = None
 
     def get_id(self) -> UUID:
         return self.id
