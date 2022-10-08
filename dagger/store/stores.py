@@ -5,12 +5,7 @@ import asyncio
 import json
 import logging
 import time
-from typing import (
-    Any,
-    AsyncGenerator,
-    Mapping,
-    Set,
-)
+from typing import Any, AsyncGenerator, Mapping, Set
 
 import aerospike
 import faust.serializers.schemas
