@@ -1,5 +1,3 @@
-from contextvars import Context
-
 import ddtrace
 import opentracing
 import pytest

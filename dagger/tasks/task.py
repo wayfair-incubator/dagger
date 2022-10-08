@@ -2,18 +2,15 @@ from __future__ import annotations
 
 import abc
 import asyncio
-import gc
 import logging
 import random
 import time
 import traceback
 import uuid
-import weakref
 from enum import Enum
-from typing import Any, Dict, Generic, List, Optional, Set, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, Set, Tuple, Type, TypeVar
 from uuid import UUID
 
-import faust
 from faust import App, Record, Topic
 from mode import Service
 
@@ -203,7 +200,7 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
                 )
         return tasks
 
-    async def on_complete(
+    async def on_complete(  # noqa: C901
         self,
         workflow_instance: ITask,
         status: TaskStatus = TaskStatus(
@@ -279,7 +276,7 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
                 logger.info(f"Removed references to root task: {self.id}")
             if subdags_in_non_terminating_state:
                 logger.info(
-                    f"One or more sub dags are still in non terminated state",
+                    "One or more sub dags are still in non terminated state",
                     extra={"root_dag_id": workflow_instance.id},
                 )
 
@@ -705,7 +702,7 @@ class KafkaAgent:
         self.app = app
         self.__task = task
 
-    async def process_event_helper(self, event):
+    async def process_event_helper(self, event):  # noqa: C901
         start_time = self.app.faust_app.loop.time()
         mappings = await self.__task.get_correlatable_keys_from_payload(event)
         processed_task = False

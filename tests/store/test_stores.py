@@ -2,7 +2,6 @@ import asyncio
 import json
 import time
 import uuid
-from copy import deepcopy
 
 import asynctest
 import faust
@@ -12,7 +11,6 @@ from cachetools import TTLCache
 from faust.types import TP
 
 import dagger
-from dagger.service.services import Dagger
 from dagger.store.stores import AerospikeStore, RocksDBStore
 from dagger.tasks.task import (
     DefaultTemplateDAGInstance,

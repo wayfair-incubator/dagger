@@ -1,13 +1,10 @@
 import asyncio
 import json
-import time
 import uuid
 
 import aerospike
 import asynctest
 import faust
-import jsonpickle
-import kafka
 import mode
 import pytest
 from asynctest import CoroutineMock, MagicMock
@@ -25,8 +22,6 @@ from dagger.tasks.task import (
     DefaultTemplateDAGInstance,
     IntervalTask,
     ITask,
-    ITemplateDAGInstance,
-    KafkaCommandTask,
     KafkaListenerTask,
     SensorTask,
     TaskStatus,

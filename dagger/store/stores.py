@@ -8,13 +8,8 @@ import time
 from typing import (
     Any,
     AsyncGenerator,
-    Dict,
-    List,
     Mapping,
-    Optional,
     Set,
-    TypeVar,
-    Union,
 )
 
 import aerospike
@@ -28,13 +23,11 @@ from mode import Service
 from dagger.service.engineconfig import ROCKS_DB_OPTIONS
 from dagger.tasks.task import (
     TERMINAL_STATUSES,
-    CorreletableKeyTasks,
     IntervalTask,
     ITask,
     ITemplateDAGInstance,
     SystemTimerTask,
     TaskStatusEnum,
-    TaskType,
     Trigger,
     TriggerTask,
 )
@@ -378,7 +371,7 @@ class RocksDBStore(IStore):
             return value
 
     async def get_valid_triggers(self) -> AsyncGenerator[Trigger, None]:
-        logger.debug(f"get_valid_triggers start")
+        logger.debug("get_valid_triggers start")
         current_time = int(time.time())
         event = faust.current_event()
         partition = event.message.partition

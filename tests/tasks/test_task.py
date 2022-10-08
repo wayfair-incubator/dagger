@@ -1,17 +1,14 @@
 import time
 import uuid
-from typing import Generic, Type, TypeVar
-from uuid import UUID, uuid1
+from uuid import uuid1
 
 import asynctest
 import jsonpickle
 import pytest
 from asynctest import CoroutineMock, MagicMock
-from faust import Record
 
 import dagger
 import dagger.service.services
-from dagger.service.engineconfig import StoreEnum
 from dagger.tasks.task import (
     COMPLETE_BY_KEY,
     CorrelatableMapValue,
@@ -19,14 +16,12 @@ from dagger.tasks.task import (
     DefaultMonitoringTask,
     DefaultProcessTemplateDAGInstance,
     DefaultTemplateDAGInstance,
-    ExecutorTask,
     IntervalTask,
     ITask,
     KafkaAgent,
     KafkaCommandTask,
     KafkaListenerTask,
     MonitoredProcessTemplateDAGInstance,
-    MonitoringTask,
     ParallelCompositeTask,
     SensorTask,
     SkipOnMaxDurationTask,
@@ -152,7 +147,7 @@ class TestTasks:
             assert child_task1.start.called
             assert child_task2.start.called
             assert dagger.service.services.Dagger.app._update_instance.called
-        except Exception as ex:
+        except Exception:
             pytest.fail("Error should not be thrown")
 
     @pytest.mark.asyncio

@@ -3,11 +3,9 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
 import time
 import traceback
 import uuid
-from copy import deepcopy
 from random import Random
 from typing import (
     Any,
@@ -45,8 +43,6 @@ from dagger.tasks.task import (
     CorrelatableMapValue,
     CorreletableKeyTasks,
     CorreletableLookUpKey,
-    ExecutorTask,
-    IProcessTemplateDAGInstance,
     ITask,
     ITemplateDAGInstance,
     MonitoringTask,
@@ -54,11 +50,9 @@ from dagger.tasks.task import (
     SystemTimerTask,
     TaskLookupKey,
     TaskStatusEnum,
-    Trigger,
     TriggerTask,
 )
 from dagger.templates.template import IProcessTemplateDAG, ITemplateDAG
-from dagger.tracing.utils import TracingSensor
 
 logger = logging.getLogger(__name__)
 RegisterFun = Callable[[Any], None]
@@ -363,7 +357,7 @@ class Dagger(Service):
 
         return wrapped
 
-    async def _get_tasks_by_correlatable_key(
+    async def _get_tasks_by_correlatable_key(  # noqa: C901
         self, lookup_key: TaskLookupKey, get_completed: bool = False
     ) -> AsyncGenerator[Optional[ITask, ITask], None]:  # type: ignore
         """Get a task based on the lookup key associated with the task
@@ -808,7 +802,7 @@ class DagProcessView(View):
             logger.error("Dag not found for given id")
             raise HTTPNotFound()
         except Exception:
-            logger.error(f"Exception occurred while fetching details.", exc_info=True)
+            logger.error("Exception occurred while fetching details.", exc_info=True)
             raise Exception
 
 
