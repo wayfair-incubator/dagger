@@ -12,21 +12,34 @@ from faust import Record
 import dagger
 import dagger.service.services
 from dagger.service.engineconfig import StoreEnum
-from dagger.tasks.task import (COMPLETE_BY_KEY, CorrelatableMapValue,
-                               DecisionTask, DefaultMonitoringTask,
-                               DefaultProcessTemplateDAGInstance,
-                               DefaultTemplateDAGInstance, ExecutorTask,
-                               IntervalTask, ITask, KafkaAgent,
-                               KafkaCommandTask, KafkaListenerTask,
-                               MonitoredProcessTemplateDAGInstance,
-                               MonitoringTask, ParallelCompositeTask,
-                               SensorTask, SkipOnMaxDurationTask,
-                               SystemTimerTask, TaskOperator, TaskStatus,
-                               TaskStatusEnum, Trigger, TriggerTask)
+from dagger.tasks.task import (
+    COMPLETE_BY_KEY,
+    CorrelatableMapValue,
+    DecisionTask,
+    DefaultMonitoringTask,
+    DefaultProcessTemplateDAGInstance,
+    DefaultTemplateDAGInstance,
+    ExecutorTask,
+    IntervalTask,
+    ITask,
+    KafkaAgent,
+    KafkaCommandTask,
+    KafkaListenerTask,
+    MonitoredProcessTemplateDAGInstance,
+    MonitoringTask,
+    ParallelCompositeTask,
+    SensorTask,
+    SkipOnMaxDurationTask,
+    SystemTimerTask,
+    TaskOperator,
+    TaskStatus,
+    TaskStatusEnum,
+    Trigger,
+    TriggerTask,
+)
 
 test = 2 * 1024**3
 test = test
-
 
 
 class TestTasks:

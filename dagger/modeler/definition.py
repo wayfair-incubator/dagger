@@ -8,15 +8,26 @@ from typing import Any, List, Optional, Type
 from uuid import UUID, uuid1
 
 from dagger.service.services import Dagger
-from dagger.tasks.task import (KT, VT, IProcessTemplateDAGInstance, ITask,
-                               ITemplateDAGInstance, ParallelCompositeTask,
-                               TaskOperator, TaskStatus, TaskStatusEnum,
-                               TaskType)
-from dagger.templates.template import (IDynamicProcessTemplateDAG,
-                                       IProcessTemplateDAG,
-                                       IProcessTemplateDAGBuilder,
-                                       ITemplateDAG, ITemplateDAGBuilder,
-                                       TaskTemplate)
+from dagger.tasks.task import (
+    KT,
+    VT,
+    IProcessTemplateDAGInstance,
+    ITask,
+    ITemplateDAGInstance,
+    ParallelCompositeTask,
+    TaskOperator,
+    TaskStatus,
+    TaskStatusEnum,
+    TaskType,
+)
+from dagger.templates.template import (
+    IDynamicProcessTemplateDAG,
+    IProcessTemplateDAG,
+    IProcessTemplateDAGBuilder,
+    ITemplateDAG,
+    ITemplateDAGBuilder,
+    TaskTemplate,
+)
 from dagger.utils.utils import DAGIDGenerator
 
 logger = logging.getLogger(__name__)

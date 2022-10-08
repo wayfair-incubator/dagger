@@ -14,9 +14,16 @@ from faust.types import TP
 import dagger
 from dagger.service.services import Dagger
 from dagger.store.stores import AerospikeStore, RocksDBStore
-from dagger.tasks.task import (DefaultTemplateDAGInstance, ITask,
-                               ITemplateDAGInstance, SystemTimerTask,
-                               TaskStatus, TaskStatusEnum, TaskType, Trigger)
+from dagger.tasks.task import (
+    DefaultTemplateDAGInstance,
+    ITask,
+    ITemplateDAGInstance,
+    SystemTimerTask,
+    TaskStatus,
+    TaskStatusEnum,
+    TaskType,
+    Trigger,
+)
 
 
 class TestAeroSpikeStore:

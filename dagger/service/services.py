@@ -9,8 +9,18 @@ import traceback
 import uuid
 from copy import deepcopy
 from random import Random
-from typing import (Any, AsyncGenerator, Awaitable, Callable, Dict, List,
-                    Mapping, MutableMapping, Optional, Set)
+from typing import (
+    Any,
+    AsyncGenerator,
+    Awaitable,
+    Callable,
+    Dict,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Set,
+)
 from uuid import UUID
 from weakref import WeakValueDictionary
 
@@ -29,15 +39,24 @@ from schema_registry.serializers import MessageSerializer  # type: ignore
 
 from dagger.exceptions.exceptions import TemplateDoesNotExist
 from dagger.executor.executor import ExecutorStrategy, SerialExecutorStrategy
-from dagger.service.engineconfig import (AerospikeConfig, EngineConfig,
-                                         StoreEnum)
+from dagger.service.engineconfig import AerospikeConfig, EngineConfig, StoreEnum
 from dagger.store.stores import AerospikeStore, IStore, RocksDBStore
-from dagger.tasks.task import (CorrelatableMapValue, CorreletableKeyTasks,
-                               CorreletableLookUpKey, ExecutorTask,
-                               IProcessTemplateDAGInstance, ITask,
-                               ITemplateDAGInstance, MonitoringTask,
-                               SensorTask, SystemTimerTask, TaskLookupKey,
-                               TaskStatusEnum, Trigger, TriggerTask)
+from dagger.tasks.task import (
+    CorrelatableMapValue,
+    CorreletableKeyTasks,
+    CorreletableLookUpKey,
+    ExecutorTask,
+    IProcessTemplateDAGInstance,
+    ITask,
+    ITemplateDAGInstance,
+    MonitoringTask,
+    SensorTask,
+    SystemTimerTask,
+    TaskLookupKey,
+    TaskStatusEnum,
+    Trigger,
+    TriggerTask,
+)
 from dagger.templates.template import IProcessTemplateDAG, ITemplateDAG
 from dagger.tracing.utils import TracingSensor
 
