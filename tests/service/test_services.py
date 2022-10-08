@@ -14,26 +14,18 @@ from asynctest import CoroutineMock, MagicMock
 
 import dagger
 from dagger.exceptions.exceptions import TemplateDoesNotExist
-from dagger.service.engineconfig import StoreEnum, EngineConfig, AerospikeConfig
-from dagger.service.services import Dagger, ServiceStateView, TemplateProcessView
+from dagger.service.engineconfig import (AerospikeConfig, EngineConfig,
+                                         StoreEnum)
+from dagger.service.services import (Dagger, ServiceStateView,
+                                     TemplateProcessView)
 from dagger.store.stores import AerospikeStore, IStore
-from dagger.tasks.task import (
-    CorreletableKeyTasks,
-    DefaultProcessTemplateDAGInstance,
-    DefaultTemplateDAGInstance,
-    IntervalTask,
-    ITask,
-    ITemplateDAGInstance,
-    KafkaCommandTask,
-    KafkaListenerTask,
-    TaskStatus,
-    TaskStatusEnum,
-    TriggerTask,
-    Trigger,
-    SensorTask,
-    CorreletableLookUpKey,
-    CorrelatableMapValue,
-)
+from dagger.tasks.task import (CorrelatableMapValue, CorreletableKeyTasks,
+                               CorreletableLookUpKey,
+                               DefaultProcessTemplateDAGInstance,
+                               DefaultTemplateDAGInstance, IntervalTask, ITask,
+                               ITemplateDAGInstance, KafkaCommandTask,
+                               KafkaListenerTask, SensorTask, TaskStatus,
+                               TaskStatusEnum, Trigger, TriggerTask)
 
 
 class TestDagger:

@@ -10,24 +10,14 @@ from uuid import UUID
 from faust import Topic
 from mode import Service
 
-from dagger.exceptions.exceptions import InvalidTaskType, InvalidTriggerTimeForTask
-from dagger.tasks.task import (
-    KT,
-    VT,
-    DecisionTask,
-    IntervalTask,
-    IProcessTemplateDAGInstance,
-    ITask,
-    ITemplateDAGInstance,
-    KafkaAgent,
-    KafkaCommandTask,
-    KafkaListenerTask,
-    TaskStatus,
-    TaskStatusEnum,
-    TriggerTask,
-    TaskOperator,
-    TaskType,
-)
+from dagger.exceptions.exceptions import (InvalidTaskType,
+                                          InvalidTriggerTimeForTask)
+from dagger.tasks.task import (KT, VT, DecisionTask, IntervalTask,
+                               IProcessTemplateDAGInstance, ITask,
+                               ITemplateDAGInstance, KafkaAgent,
+                               KafkaCommandTask, KafkaListenerTask,
+                               TaskOperator, TaskStatus, TaskStatusEnum,
+                               TaskType, TriggerTask)
 from dagger.utils.utils import DAGIDGenerator
 
 

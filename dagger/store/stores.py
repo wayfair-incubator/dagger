@@ -1,46 +1,26 @@
 from __future__ import annotations
 
 import abc
-import json
-
-import jsonpickle
 import asyncio
+import json
 import logging
 import time
-from typing import (
-    Any,
-    AsyncGenerator,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Set,
-    TypeVar,
-    Union,
-)
-
+from typing import (Any, AsyncGenerator, Dict, List, Mapping, Optional, Set,
+                    TypeVar, Union)
 
 import aerospike
+import faust.serializers.schemas
+import jsonpickle
 from aerospike_helpers import expressions as exp
-
 from faust import Record, Table
 from faust.types import TP
-import faust.serializers.schemas
 from mode import Service
 
 from dagger.service.engineconfig import ROCKS_DB_OPTIONS
-from dagger.tasks.task import (
-    ITemplateDAGInstance,
-    IntervalTask,
-    ITask,
-    SystemTimerTask,
-    TaskStatusEnum,
-    TaskType,
-    Trigger,
-    TriggerTask,
-    CorreletableKeyTasks,
-    TERMINAL_STATUSES,
-)
+from dagger.tasks.task import (TERMINAL_STATUSES, CorreletableKeyTasks,
+                               IntervalTask, ITask, ITemplateDAGInstance,
+                               SystemTimerTask, TaskStatusEnum, TaskType,
+                               Trigger, TriggerTask)
 
 logger = logging.getLogger(__name__)
 

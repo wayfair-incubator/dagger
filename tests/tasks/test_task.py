@@ -1,50 +1,32 @@
 import time
 import uuid
-
 from typing import Generic, Type, TypeVar
 from uuid import UUID, uuid1
 
 import asynctest
 import jsonpickle
-
-
 import pytest
-
 from asynctest import CoroutineMock, MagicMock
+from faust import Record
 
 import dagger
 import dagger.service.services
 from dagger.service.engineconfig import StoreEnum
-from dagger.tasks.task import (
-    COMPLETE_BY_KEY,
-    DecisionTask,
-    DefaultMonitoringTask,
-    SkipOnMaxDurationTask,
-    DefaultProcessTemplateDAGInstance,
-    DefaultTemplateDAGInstance,
-    ExecutorTask,
-    IntervalTask,
-    ITask,
-    KafkaAgent,
-    KafkaCommandTask,
-    KafkaListenerTask,
-    MonitoredProcessTemplateDAGInstance,
-    MonitoringTask,
-    SensorTask,
-    SystemTimerTask,
-    TaskStatus,
-    TaskStatusEnum,
-    Trigger,
-    TriggerTask,
-    ParallelCompositeTask,
-    TaskOperator,
-    CorrelatableMapValue,
-)
+from dagger.tasks.task import (COMPLETE_BY_KEY, CorrelatableMapValue,
+                               DecisionTask, DefaultMonitoringTask,
+                               DefaultProcessTemplateDAGInstance,
+                               DefaultTemplateDAGInstance, ExecutorTask,
+                               IntervalTask, ITask, KafkaAgent,
+                               KafkaCommandTask, KafkaListenerTask,
+                               MonitoredProcessTemplateDAGInstance,
+                               MonitoringTask, ParallelCompositeTask,
+                               SensorTask, SkipOnMaxDurationTask,
+                               SystemTimerTask, TaskOperator, TaskStatus,
+                               TaskStatusEnum, Trigger, TriggerTask)
 
 test = 2 * 1024**3
 test = test
 
-from faust import Record
 
 
 class TestTasks:

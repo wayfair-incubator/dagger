@@ -4,31 +4,23 @@ import uuid
 import pytest
 from asynctest import CoroutineMock, MagicMock
 
-from dagger.exceptions.exceptions import InvalidTaskType, InvalidTriggerTimeForTask
-from dagger.tasks.task import (
-    DecisionTask,
-    ExecutorTask,
-    IntervalTask,
-    KafkaCommandTask,
-    KafkaListenerTask,
-    TriggerTask,
-    ParallelCompositeTask,
-    TaskOperator,
-    DefaultTemplateDAGInstance,
-)
-from dagger.templates.template import (
-    DecisionTaskTemplateBuilder,
-    DefaultIntervalTaskTemplate,
-    DefaultKafkaTaskTemplate,
-    DefaultTaskTemplate,
-    DefaultTaskTemplateBuilder,
-    DefaultTriggerTaskTemplate,
-    IntervalTaskTemplateBuilder,
-    KafkaCommandTaskTemplateBuilder,
-    KafkaListenerTaskTemplateBuilder,
-    TriggerTaskTemplateBuilder,
-    ParallelCompositeTaskTemplate,
-)
+from dagger.exceptions.exceptions import (InvalidTaskType,
+                                          InvalidTriggerTimeForTask)
+from dagger.tasks.task import (DecisionTask, DefaultTemplateDAGInstance,
+                               ExecutorTask, IntervalTask, KafkaCommandTask,
+                               KafkaListenerTask, ParallelCompositeTask,
+                               TaskOperator, TriggerTask)
+from dagger.templates.template import (DecisionTaskTemplateBuilder,
+                                       DefaultIntervalTaskTemplate,
+                                       DefaultKafkaTaskTemplate,
+                                       DefaultTaskTemplate,
+                                       DefaultTaskTemplateBuilder,
+                                       DefaultTriggerTaskTemplate,
+                                       IntervalTaskTemplateBuilder,
+                                       KafkaCommandTaskTemplateBuilder,
+                                       KafkaListenerTaskTemplateBuilder,
+                                       ParallelCompositeTaskTemplate,
+                                       TriggerTaskTemplateBuilder)
 
 
 class TestDefaultKafkaCommandTaskTemplate:

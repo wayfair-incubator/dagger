@@ -10,7 +10,8 @@ import traceback
 import uuid
 import weakref
 from enum import Enum
-from typing import Any, Dict, Generic, List, Optional, Set, Tuple, Type, TypeVar, Union
+from typing import (Any, Dict, Generic, List, Optional, Set, Tuple, Type,
+                    TypeVar, Union)
 from uuid import UUID
 
 import faust

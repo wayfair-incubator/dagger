@@ -4,27 +4,16 @@ import pytest
 from asynctest import CoroutineMock, MagicMock
 
 from dagger.modeler.definition import (
-    DefaultTemplateBuilder,
-    ProcessTemplateDAG,
-    ProcessTemplateDagBuilder,
-    TemplateDAG,
-    DynamicProcessTemplateDAG,
-    DynamicProcessTemplateDagBuilder,
-    ParallelCompositeProcessTemplateDagBuilder,
-    ParallelCompositeProcessTemplateDAG,
-)
-from dagger.tasks.task import (
-    DefaultProcessTemplateDAGInstance,
-    DefaultTemplateDAGInstance,
-    TaskStatusEnum,
-    TaskType,
-    TaskOperator,
-    ParallelCompositeTask,
-)
-from dagger.templates.template import (
-    ParallelCompositeTaskTemplateBuilder,
-    ParallelCompositeTaskTemplate,
-)
+    DefaultTemplateBuilder, DynamicProcessTemplateDAG,
+    DynamicProcessTemplateDagBuilder, ParallelCompositeProcessTemplateDAG,
+    ParallelCompositeProcessTemplateDagBuilder, ProcessTemplateDAG,
+    ProcessTemplateDagBuilder, TemplateDAG)
+from dagger.tasks.task import (DefaultProcessTemplateDAGInstance,
+                               DefaultTemplateDAGInstance,
+                               ParallelCompositeTask, TaskOperator,
+                               TaskStatusEnum, TaskType)
+from dagger.templates.template import (ParallelCompositeTaskTemplate,
+                                       ParallelCompositeTaskTemplateBuilder)
 
 
 class TestDefaultTemplateBuilder:

@@ -1,8 +1,7 @@
+import asyncio
 import json
 import time
 import uuid
-
-import asyncio
 from copy import deepcopy
 
 import asynctest
@@ -15,16 +14,9 @@ from faust.types import TP
 import dagger
 from dagger.service.services import Dagger
 from dagger.store.stores import AerospikeStore, RocksDBStore
-from dagger.tasks.task import (
-    ITask,
-    ITemplateDAGInstance,
-    SystemTimerTask,
-    TaskStatus,
-    TaskStatusEnum,
-    TaskType,
-    Trigger,
-    DefaultTemplateDAGInstance,
-)
+from dagger.tasks.task import (DefaultTemplateDAGInstance, ITask,
+                               ITemplateDAGInstance, SystemTimerTask,
+                               TaskStatus, TaskStatusEnum, TaskType, Trigger)
 
 
 class TestAeroSpikeStore:
