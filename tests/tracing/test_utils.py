@@ -1,11 +1,9 @@
-import ddtrace
 import opentracing
 import pytest
 from asynctest import MagicMock
 from faust.utils.tracing import set_current_span
-from multidict import CIMultiDict
 
-from dagger.tracing.utils import AiohttpClientTracer, TracingSensor
+from dagger.tracing.utils import TracingSensor
 
 
 class TestTracerSensor:
@@ -118,19 +116,3 @@ class TestTracerSensor:
         state.get = MagicMock(return_value=span)
         tracer_fixture.on_send_error(MagicMock(), MagicMock(), state)
         assert span.finish.called
-
-
-class TestAiohttpClientTracer:
-    @pytest.mark.asyncio
-    async def test_on_request_start(self):
-        client = AiohttpClientTracer()
-        params = MagicMock()
-        params.headers = CIMultiDict()
-        span = MagicMock()
-        span.context = MagicMock()
-        span.context.dd_origin = "test"
-        span.context.trace_id = "t1"
-        span.context.span_id = "s1"
-        ddtrace.tracer.current_span = MagicMock(return_value=span)
-        await client.on_request_start(MagicMock(), MagicMock(), params)
-        assert len(params.headers) > 0

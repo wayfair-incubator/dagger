@@ -3,10 +3,7 @@ import traceback
 from typing import Any, Dict, Optional
 
 import aiohttp
-import ddtrace
 import opentracing
-from aiohttp import TraceRequestStartParams
-from ddtrace.propagation.http import HTTPPropagator
 from faust import App, EventT, Sensor, StreamT
 from faust.types import TP, Message, PendingMessage, ProducerT, RecordMetadata
 from faust.types.core import OpenHeadersArg, merge_headers
@@ -164,15 +161,3 @@ class TracingSensor(Sensor):
 
     def on_threaded_producer_buffer_processed(self, app: App, size: int) -> None:  # type: ignore
         pass
-
-
-class AiohttpClientTracer:
-    @staticmethod
-    async def on_request_start(
-        session, trace_config_ctx, params: TraceRequestStartParams
-    ):
-        span = ddtrace.tracer.current_span()
-        headers: Dict[Any, Any] = {}
-        propagator = HTTPPropagator()
-        propagator.inject(span.context, headers)
-        params.headers.extend(headers)
