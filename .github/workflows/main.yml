@@ -105,7 +105,6 @@ jobs:
         - name: Install dependencies
           uses: ./.github/actions/install-dependencies
           with:
-            requirements: "true"
             test-requirements: "true"
 
         - name: Run pytest
