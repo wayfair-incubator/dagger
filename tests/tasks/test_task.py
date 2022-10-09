@@ -1,6 +1,6 @@
 import time
 import uuid
-from uuid import uuid1
+from uuid import UUID, uuid1  # noqa: F401
 
 import asynctest
 import jsonpickle
