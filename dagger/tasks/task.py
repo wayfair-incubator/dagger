@@ -192,7 +192,7 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
             return tasks
         if tasks and tasks[-1].get_id() == end_task_id:
             return tasks
-        elif tasks:
+        elif tasks is not None:
             tasks.append(task_instance)
             for next_dag_id in task_instance.next_dags:
                 await self.get_remaining_tasks(
