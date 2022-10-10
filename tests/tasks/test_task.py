@@ -31,7 +31,7 @@ from dagger.tasks.task import (
     TaskStatus,
     TaskStatusEnum,
     Trigger,
-    TriggerTask,
+    TriggerTask, ITemplateDAGInstance,
 )
 
 test = 2 * 1024**3
@@ -895,7 +895,7 @@ class TestTasks:
 
 class TestDefaultMonitoringClass(DefaultMonitoringTask):
     async def process_monitored_task(
-        self, monitored_task: ITask, workflow_instance: ITask
+        self, monitored_task: ITask, workflow_instance: Optional[ITemplateDAGInstance]
     ) -> None:
         pass
 

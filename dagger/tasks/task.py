@@ -412,7 +412,7 @@ class MonitoringTask(TriggerTask[KT, VT], abc.ABC):
 
     @abc.abstractmethod
     async def process_monitored_task(
-        self, monitored_task: ITask, workflow_instance: ITemplateDAGInstance
+        self, monitored_task: ITask, workflow_instance: Optional[ITemplateDAGInstance]
     ) -> None:  # pragma: no cover
         """
         Callback on when business logic has to be executed on the monitored task based on the time condition
@@ -458,7 +458,7 @@ class DefaultMonitoringTask(MonitoringTask[str, str]):
 
 class SkipOnMaxDurationTask(DefaultMonitoringTask):
     async def process_monitored_task(
-        self, monitored_task: ITask, workflow_instance: ITask
+        self, monitored_task: ITask, workflow_instance: Optional[ITemplateDAGInstance]
     ) -> None:  # pragma: no cover
         if monitored_task.status.code == TaskStatusEnum.EXECUTING.name:
             if monitored_task:
