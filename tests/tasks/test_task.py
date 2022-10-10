@@ -1,6 +1,6 @@
 import time
 import uuid
-from typing import Optional
+from typing import Optional  # noqa: F401
 from uuid import UUID, uuid1  # noqa: F401
 
 import asynctest
