@@ -161,9 +161,9 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
         self,
         next_dag_id: UUID,
         workflow_instance: ITask,
-        tasks: List[ITask] = None,
+        tasks: Optional[List[ITask]] = None,
         end_task_id: UUID = None,
-    ) -> List[ITask]:
+    ) -> Optional[List[ITask]]:
         """Get the remaining tasks in the template.
 
         Args:
@@ -187,12 +187,12 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
             await self.get_remaining_tasks(
                 task_instance.root_dag, workflow_instance, tasks, end_task_id
             )
-        if task_instance.get_id() == end_task_id:
+        if tasks and task_instance.get_id() == end_task_id:
             tasks.append(task_instance)
             return tasks
         if tasks and tasks[-1].get_id() == end_task_id:
             return tasks
-        else:
+        elif tasks:
             tasks.append(task_instance)
             for next_dag_id in task_instance.next_dags:
                 await self.get_remaining_tasks(
@@ -330,7 +330,7 @@ class ExecutorTask(ITask[KT, VT], abc.ABC):
 
 
 class TriggerTask(ExecutorTask[KT, VT], abc.ABC):
-    time_to_execute: int = None
+    time_to_execute: Optional[int] = None
 
     async def start(
         self, workflow_instance: ITemplateDAGInstance, ignore_status=True
@@ -364,8 +364,8 @@ class TriggerTask(ExecutorTask[KT, VT], abc.ABC):
 
 
 class IntervalTask(TriggerTask[KT, VT], abc.ABC):
-    time_to_force_complete: int = None  # time in seconds
-    interval_execute_period: int = None  # time in seconds
+    time_to_force_complete: Optional[int] = None  # time in seconds
+    interval_execute_period: Optional[int] = None  # time in seconds
 
     async def start(self, workflow_instance: ITask) -> bool:  # type: ignore
         is_finished = False
@@ -408,7 +408,7 @@ class IntervalTask(TriggerTask[KT, VT], abc.ABC):
 
 
 class MonitoringTask(TriggerTask[KT, VT], abc.ABC):
-    monitored_task_id: UUID = None
+    monitored_task_id: Optional[UUID] = None
 
     @abc.abstractmethod
     async def process_monitored_task(
@@ -438,7 +438,7 @@ class DefaultMonitoringTask(MonitoringTask[str, str]):
     async def execute(
         self,
         runtime_parameters: Dict[str, str],
-        workflow_instance: ITemplateDAGInstance = None,
+        workflow_instance: Optional[ITemplateDAGInstance] = None,
     ) -> None:
         logger.info(
             f"Executing DefaultMonitoringTask {self.id} monitoring for {self.monitored_task_id}"
