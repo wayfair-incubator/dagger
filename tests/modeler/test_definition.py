@@ -69,7 +69,7 @@ class TestProcessTemplateDagBuilder:
 
 class TestProcessTemplateDAG:
     @pytest.fixture()
-    async def template_fixture(self):
+    def template_fixture(self):
         app = MagicMock()
         app._store_process_instance = CoroutineMock()
         app.tasks_topic.send = CoroutineMock()
