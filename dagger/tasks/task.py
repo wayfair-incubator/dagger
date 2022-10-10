@@ -412,7 +412,7 @@ class MonitoringTask(TriggerTask[KT, VT], abc.ABC):
 
     @abc.abstractmethod
     async def process_monitored_task(
-        self, monitored_task: ITask, workflow_instance: ITask
+        self, monitored_task: ITask, workflow_instance: ITemplateDAGInstance
     ) -> None:  # pragma: no cover
         """
         Callback on when business logic has to be executed on the monitored task based on the time condition
@@ -438,7 +438,7 @@ class DefaultMonitoringTask(MonitoringTask[str, str]):
     async def execute(
         self,
         runtime_parameters: Dict[str, str],
-        workflow_instance: Optional[ITemplateDAGInstance] = None,
+        workflow_instance: ITemplateDAGInstance = None,
     ) -> None:
         logger.info(
             f"Executing DefaultMonitoringTask {self.id} monitoring for {self.monitored_task_id}"
@@ -475,16 +475,17 @@ class SkipOnMaxDurationTask(DefaultMonitoringTask):
                 skipped_task_status = TaskStatus(
                     code=TaskStatusEnum.SKIPPED.name, value=TaskStatusEnum.SKIPPED.value
                 )
-                for dag in all_prev_dags[:-1]:
-                    if dag.status.code in [
-                        TaskStatusEnum.EXECUTING.value,
-                        TaskStatusEnum.NOT_STARTED.value,
-                    ]:
-                        await dag.on_complete(
-                            status=skipped_task_status,
-                            workflow_instance=workflow_instance,
-                            iterate=False,
-                        )
+                if all_prev_dags:
+                    for dag in all_prev_dags[:-1]:
+                        if dag.status.code in [
+                            TaskStatusEnum.EXECUTING.value,
+                            TaskStatusEnum.NOT_STARTED.value,
+                        ]:
+                            await dag.on_complete(
+                                status=skipped_task_status,
+                                workflow_instance=workflow_instance,
+                                iterate=False,
+                            )
                 await monitored_task.on_complete(
                     workflow_instance=workflow_instance, status=skipped_task_status
                 )
@@ -836,11 +837,11 @@ class KafkaAgent:
 
 
 class KafkaCommandTask(ExecutorTask[KT, VT], abc.ABC):
-    topic: str = None
+    topic: Optional[str] = None
 
 
 class KafkaListenerTask(SensorTask[KT, VT], abc.ABC):
-    topic: str = None
+    topic: Optional[str] = None
 
     def get_correlatable_key(self, payload: Any) -> TaskLookupKey:
         return payload
@@ -904,7 +905,7 @@ class ParallelCompositeTask(ITask[KT, VT], abc.ABC):
     task_type: str = TaskType.PARALLEL_COMPOSITE.name
     parallel_child_task_list: Set[UUID] = set()
     operator_type: str = TaskOperator.JOIN_ALL.name
-    process_name: str = None
+    process_name: Optional[str] = None
 
     async def stop(self) -> None:
         pass
