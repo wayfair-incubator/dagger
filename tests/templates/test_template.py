@@ -205,7 +205,7 @@ class TestDefaultIntervalTaskTemplate:
         parent_id = uuid.uuid1()
         current_id = uuid.uuid1()
         workflow_instance_fixture.runtime_parameters = {}
-        workflow_instance_fixture.runtime_parameters["start"] = time.time()
+        tte = workflow_instance_fixture.runtime_parameters["start"] = int(time.time())
         fail_template = DefaultIntervalTaskTemplate(
             app=app,
             type=IntervalTask,
@@ -225,7 +225,6 @@ class TestDefaultIntervalTaskTemplate:
                 workflow_instance=workflow_instance_fixture,
                 **args,
             )
-        tte = int(time.time())
         args["cpt"] = tte
         workflow_instance_fixture.runtime_parameters["cpt"] = tte
         fail_template = DefaultIntervalTaskTemplate(

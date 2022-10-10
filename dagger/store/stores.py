@@ -7,10 +7,10 @@ import logging
 import time
 from typing import Any, AsyncGenerator, Mapping, Set
 
-import aerospike
-import faust.serializers.schemas
-import jsonpickle
-from aerospike_helpers import expressions as exp
+import aerospike  # type: ignore
+import faust.serializers.schemas  # type: ignore
+import jsonpickle  # type: ignore
+from aerospike_helpers import expressions as exp  # type: ignore
 from faust import Record, Table
 from faust.types import TP
 from mode import Service
@@ -54,7 +54,11 @@ class IStore:
 
         if self.app.task_update_topic:  # type: ignore
             update_key_lookup = value.partition_key_lookup
-            update_key = value.runtime_parameters.get(update_key_lookup, None)
+            update_key = (
+                value.runtime_parameters.get(update_key_lookup, None)
+                if update_key_lookup
+                else None
+            )
             payload = jsonpickle.encode(value.asdict())
             future = await self.app.task_update_topic.send(key=update_key, value=payload)  # type: ignore
             await future
@@ -358,7 +362,7 @@ class RocksDBStore(IStore):
             return self.triggers_table.get(key, None)
         else:
             event = faust.current_event()
-            partition = event.message.partition
+            partition = event.message.partition  # type: ignore
             db = self.triggers_table.data._db_for_partition(partition)
             value = db.get(str(key).encode())
             if value:
@@ -386,7 +390,7 @@ class RocksDBStore(IStore):
                     )
                     break
                 trigger: Trigger = Trigger.loads(json.loads(item[1]))
-                if trigger.trigger_time <= int(current_time):
+                if trigger.trigger_time and trigger.trigger_time <= int(current_time):
                     yield trigger
                 else:
                     break

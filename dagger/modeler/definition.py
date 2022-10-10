@@ -7,6 +7,7 @@ import uuid
 from typing import Any, List, Optional, Type
 from uuid import UUID, uuid1
 
+from dagger.exceptions.exceptions import TaskInvalidState
 from dagger.service.services import Dagger
 from dagger.tasks.task import (
     KT,
@@ -73,7 +74,7 @@ class ProcessTemplateDAG(IProcessTemplateDAG):
         app: Dagger,
         name: str,
         process_type: Type[ITask[KT, VT]],
-        root_task_dag: TaskTemplate,
+        root_task_dag: Optional[TaskTemplate],
         max_run_duration: int,
     ) -> None:
         super().__init__(
@@ -286,7 +287,7 @@ class DynamicProcessTemplateDAG(IDynamicProcessTemplateDAG):
         **kwargs: Any,
     ) -> IProcessTemplateDAGInstance[KT, VT]:
 
-        head_process: List[IProcessTemplateDAG] = None
+        head_process: List[IProcessTemplateDAG] = []
         if len(self._dynamic_process_builders) > 0:
             head_process = self.build_and_link_processes(
                 self._dynamic_process_builders, self.next_process_dag
@@ -304,7 +305,7 @@ class DynamicProcessTemplateDAG(IDynamicProcessTemplateDAG):
                 workflow_instance=workflow_instance,
                 **kwargs,
             )
-        return None
+        raise TaskInvalidState()
 
 
 class TemplateDAG(ITemplateDAG):
@@ -319,7 +320,7 @@ class TemplateDAG(ITemplateDAG):
             [IProcessTemplateDAG]: Process Template if found, else None
         """
         #   get the root dag
-        process_template = self.root_process_dag
+        process_template: Optional[IProcessTemplateDAG] = self.root_process_dag
         found = False
         while process_template and not found:
             #  if root dag is the one for which we want  to set multiple processes
@@ -414,7 +415,7 @@ class TemplateDAG(ITemplateDAG):
             DAGIDGenerator.generate_dag_id_from_seed(seed) if seed else uuid.uuid1()
         )
         kwargs = {} if template_instance else kwargs
-        process_instance = await self.root_process_dag.create_instance(
+        process_instance = await self.root_process_dag.create_instance(  # type: ignore
             id=dag_id,
             parent_id=template_instance.id,
             parent_name=template_instance.template_name,

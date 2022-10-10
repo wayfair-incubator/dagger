@@ -29,10 +29,17 @@ class SerialExecutorStrategy(ExecutorStrategy):
                 code=TaskStatusEnum.SUBMITTED.name, value=TaskStatusEnum.SUBMITTED.value
             )
             if repartition:
+                key_value = (
+                    task_template.runtime_parameters.get(
+                        task_template.partition_key_lookup, None
+                    )
+                    if task_template
+                    and task_template.runtime_parameters
+                    and task_template.partition_key_lookup
+                    else None
+                )
                 await self.app.tasks_topic.send(  # type: ignore
-                    key=task_template.runtime_parameters[
-                        task_template.partition_key_lookup
-                    ],
+                    key=key_value,
                     value=task_template,
                 )
             else:

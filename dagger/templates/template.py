@@ -86,14 +86,14 @@ class IProcessTemplateDAG:
         app: Service,
         name: str,
         process_type: Type[ITask],
-        root_task_dag: TaskTemplate,
+        root_task_dag: Optional[TaskTemplate],
         max_run_duration: int,
     ) -> None:
         self.next_process_dag = next_process_dag
         self.app = app
         self.name = name
         self.process_type = process_type
-        self.root_task_dag = root_task_dag
+        self.root_task_dag = root_task_dag  # type: ignore
         self.max_run_duration = max_run_duration
 
     @abc.abstractmethod
@@ -387,19 +387,18 @@ class DefaultTriggerTaskTemplate(DefaultTaskTemplate):
         workflow_instance: ITemplateDAGInstance = None,
         **kwargs: Any,
     ) -> ITask:
-        if (
-            self.time_to_execute_lookup_key is None
-            or workflow_instance.runtime_parameters.get(
+        time_to_execute = (
+            workflow_instance.runtime_parameters.get(
                 self.time_to_execute_lookup_key, None
             )
-            is None
-        ):
+            if workflow_instance
+            else None
+        )
+        if self.time_to_execute_lookup_key is None or time_to_execute is None:
             raise InvalidTriggerTimeForTask(f"Task in invalid state {id}")
         task_instance = self._type(
             id=id,
-            time_to_execute=workflow_instance.runtime_parameters[
-                self.time_to_execute_lookup_key
-            ],
+            time_to_execute=time_to_execute,
             parent_id=parent_id,
         )
         return await super()._setup_instance(
@@ -455,43 +454,49 @@ class DefaultIntervalTaskTemplate(DefaultTaskTemplate):
         workflow_instance: ITemplateDAGInstance = None,
         **kwargs,
     ) -> ITask:
-        if (
-            self.time_to_execute_lookup_key
-            and workflow_instance.runtime_parameters.get(
+        time_to_execute_lookup_key_runtime = (
+            workflow_instance.runtime_parameters.get(
                 self.time_to_execute_lookup_key, None
             )
-            is None
+            if workflow_instance
+            else None
+        )
+        time_to_force_complete_lookup_key_runtime = (
+            workflow_instance.runtime_parameters.get(
+                self.time_to_force_complete_lookup_key, None
+            )
+            if workflow_instance
+            else None
+        )
+        interval_execute_period_key_runtime = (
+            workflow_instance.runtime_parameters.get(
+                self.interval_execute_period_key, None
+            )
+            if workflow_instance
+            else None
+        )
+        if (
+            self.time_to_execute_lookup_key
+            and time_to_execute_lookup_key_runtime is None
         ):
             raise InvalidTriggerTimeForTask(f"Task in invalid state {id}")
         if (
             self.time_to_force_complete_lookup_key is None
-            or workflow_instance.runtime_parameters.get(
-                self.time_to_force_complete_lookup_key, None
-            )
-            is None
+            or time_to_force_complete_lookup_key_runtime is None
         ):
             raise InvalidTriggerTimeForTask(f"Task in invalid state {id}")
         if (
             self.interval_execute_period_key is None
-            or workflow_instance.runtime_parameters.get(
-                self.interval_execute_period_key, None
-            )
-            is None
+            or interval_execute_period_key_runtime is None
         ):
             raise InvalidTriggerTimeForTask(f"Task in invalid state {id}")
         task_instance = self._type(
             id=id,
-            time_to_execute=workflow_instance.runtime_parameters[
-                self.time_to_force_complete_lookup_key
-            ]
+            time_to_execute=time_to_execute_lookup_key_runtime
             if self.time_to_execute_lookup_key
             else None,
-            time_to_force_complete=workflow_instance.runtime_parameters[
-                self.time_to_force_complete_lookup_key
-            ],
-            interval_execute_period=workflow_instance.runtime_parameters[
-                self.interval_execute_period_key
-            ],
+            time_to_force_complete=time_to_force_complete_lookup_key_runtime,
+            interval_execute_period=interval_execute_period_key_runtime,
             parent_id=parent_id,
         )
         if workflow_instance:
@@ -567,7 +572,8 @@ class ParallelCompositeTaskTemplate(DefaultTaskTemplate):
         task_instance.operator_type = self.parallel_operator_type.name
         task_instance.allow_skip_to = self.allow_skip_to
         task_instance.reprocess_on_message = self.reprocess_on_message
-        workflow_instance.add_task(task=task_instance)
+        if workflow_instance:
+            workflow_instance.add_task(task=task_instance)
         for next_task_template in self.next_task_dag:
             dag_id = (
                 DAGIDGenerator.generate_dag_id_from_seed(seed) if seed else uuid.uuid1()
@@ -790,7 +796,6 @@ class TriggerTaskTemplateBuilder(DefaultTaskTemplateBuilder):
 
 
 class IntervalTaskTemplateBuilder(TriggerTaskTemplateBuilder):
-    _time_to_execute_key: Optional[str] = None
     _time_to_force_complete_key: str
     _interval_execute_period_key: str
 

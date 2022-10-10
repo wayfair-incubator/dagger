@@ -108,7 +108,7 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
         ...
 
     async def notify(
-        self, status: TaskStatus, workflow_instance: ITask
+        self, status: TaskStatus, workflow_instance: Optional[ITemplateDAGInstance]
     ) -> None:  # pragma: no cover
         """If not completed, runs the steps required for completion by calling on_complete()."""
         if self.status.code != status.code:
@@ -154,7 +154,7 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
 
     @abc.abstractmethod
     async def start(
-        self, workflow_instance: ITemplateDAGInstance
+        self, workflow_instance: Optional[ITemplateDAGInstance]
     ) -> None:  # pragma: no cover
         """Starts the ITask."""
         ...
@@ -179,7 +179,7 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
         if next_dag_id == workflow_instance.id:
             task_instance = workflow_instance
         else:
-            task_instance = workflow_instance.get_task(id=next_dag_id)
+            task_instance = workflow_instance.get_task(id=next_dag_id)  # type: ignore
         if not task_instance:
             logger.warning(
                 f"Could not delete instance of itask with id: '{next_dag_id}' as it does not exist. Skipping."
@@ -242,7 +242,7 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
                 return await next_dag_instance.start(
                     workflow_instance=workflow_instance
                 )
-        if next_task_submitted is False and self.parent_id:
+        if next_task_submitted is False and self.parent_id and workflow_instance:
             parent_node = workflow_instance.get_task(id=self.parent_id)
             if parent_node:
                 parent_node.time_completed = self.time_completed
@@ -253,7 +253,7 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
                 logger.error(
                     f"Unable to retrieve parent node for task with id: {str(self.get_id())}"
                 )
-        elif self.task_type == TaskType.ROOT.name:
+        elif self.task_type == TaskType.ROOT.name and workflow_instance:
             subdags_in_non_terminating_state = False
             logger.debug(f"Executing root dag cleanup {str(workflow_instance.id)}")
             for task in workflow_instance.tasks.values():
@@ -276,7 +276,7 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
             if dagger.service.services.Dagger.app.delete_workflow_on_complete:  # type: ignore
                 await dagger.service.services.Dagger.app._remove_root_template_instance(self)  # type: ignore
                 logger.info(f"Removed references to root task: {self.id}")
-            if subdags_in_non_terminating_state:
+            if subdags_in_non_terminating_state and workflow_instance:
                 logger.info(
                     "One or more sub dags are still in non terminated state",
                     extra={"root_dag_id": workflow_instance.id},
@@ -285,7 +285,9 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
 
 class ExecutorTask(ITask[KT, VT], abc.ABC):
     async def start(
-        self, workflow_instance: ITemplateDAGInstance, ignore_status: bool = False
+        self,
+        workflow_instance: Optional[ITemplateDAGInstance],
+        ignore_status: bool = False,
     ) -> None:
         # pre-execute
         if self.status.code in [
@@ -295,7 +297,9 @@ class ExecutorTask(ITask[KT, VT], abc.ABC):
             return await self.on_complete(
                 status=self.status, workflow_instance=workflow_instance
             )
-        if ignore_status or self.status.code == TaskStatusEnum.NOT_STARTED.name:
+        if (
+            ignore_status or self.status.code == TaskStatusEnum.NOT_STARTED.name
+        ) and workflow_instance:
             self.status = TaskStatus(
                 code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
             )
@@ -335,7 +339,7 @@ class TriggerTask(ExecutorTask[KT, VT], abc.ABC):
     time_to_execute: Optional[int] = None
 
     async def start(
-        self, workflow_instance: ITemplateDAGInstance, ignore_status=True
+        self, workflow_instance: Optional[ITemplateDAGInstance], ignore_status=True
     ) -> None:
         await asyncio.sleep(0)
         if self.status.code == TaskStatusEnum.NOT_STARTED.name:
@@ -369,7 +373,7 @@ class IntervalTask(TriggerTask[KT, VT], abc.ABC):
     time_to_force_complete: Optional[int] = None  # time in seconds
     interval_execute_period: Optional[int] = None  # time in seconds
 
-    async def start(self, workflow_instance: ITemplateDAGInstance) -> bool:  # type: ignore
+    async def start(self, workflow_instance: Optional[ITemplateDAGInstance]) -> bool:  # type: ignore
         is_finished = False
         if self.status.code == TaskStatusEnum.NOT_STARTED.name:
             self.status = TaskStatus(
@@ -379,7 +383,9 @@ class IntervalTask(TriggerTask[KT, VT], abc.ABC):
             await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
         if self.time_to_execute and int(time.time()) < self.time_to_execute:
             return False
-        if not self.time_to_execute or int(time.time()) >= self.time_to_execute:
+        if (
+            not self.time_to_execute or int(time.time()) >= self.time_to_execute
+        ) and workflow_instance:
             logger.info(
                 f"Interval task {self.id} executed on interval of {self.interval_execute_period} "
             )
@@ -494,14 +500,14 @@ class SkipOnMaxDurationTask(DefaultMonitoringTask):
 
 
 class DecisionTask(ITask[KT, VT]):
-    async def start(self, workflow_instance: ITemplateDAGInstance) -> None:
+    async def start(self, workflow_instance: Optional[ITemplateDAGInstance]) -> None:
         # pre-execute
         if self.status.code in [
             TaskStatusEnum.COMPLETED.name,
             TaskStatusEnum.SKIPPED.name,
         ]:
             return await self.on_complete(workflow_instance=workflow_instance)
-        if self.status.code == TaskStatusEnum.NOT_STARTED.name:
+        if self.status.code == TaskStatusEnum.NOT_STARTED.name and workflow_instance:
             self.status = TaskStatus(
                 code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
             )
@@ -597,9 +603,11 @@ class SystemTask(ExecutorTask[str, str]):
         raise NotImplementedError("SystemTask task does not process on_complete")
 
     async def start(
-        self, workflow_instance: ITemplateDAGInstance, ignore_status=True
+        self, workflow_instance: Optional[ITemplateDAGInstance], ignore_status=True
     ) -> None:
-        if ignore_status or self.status.code == TaskStatusEnum.NOT_STARTED.name:
+        if (
+            ignore_status or self.status.code == TaskStatusEnum.NOT_STARTED.name
+        ) and workflow_instance:
             self.status = TaskStatus(
                 code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
             )
@@ -629,7 +637,7 @@ class SystemTimerTask(SystemTask):
 class SensorTask(ITask[KT, VT], abc.ABC):
     match_only_one: bool = False
 
-    async def start(self, workflow_instance: ITemplateDAGInstance) -> None:
+    async def start(self, workflow_instance: Optional[ITemplateDAGInstance]) -> None:
         # pre-execute
         if self.status.code in [
             TaskStatusEnum.COMPLETED.name,
@@ -857,7 +865,7 @@ class INonLeafNodeTask(ITask[KT, VT], abc.ABC):
     async def stop(self) -> None:
         pass
 
-    async def start(self, workflow_instance: ITemplateDAGInstance) -> None:
+    async def start(self, workflow_instance: Optional[ITemplateDAGInstance]) -> None:
         if self.status.code in [
             TaskStatusEnum.COMPLETED.name,
             TaskStatusEnum.SKIPPED.name,
@@ -868,7 +876,7 @@ class INonLeafNodeTask(ITask[KT, VT], abc.ABC):
         if (
             self.status.code == TaskStatusEnum.NOT_STARTED.name
             or self.status.code == TaskStatusEnum.SUBMITTED.name
-        ):
+        ) and workflow_instance:
             await self.execute(
                 runtime_parameters=workflow_instance.runtime_parameters,
                 workflow_instance=workflow_instance,
@@ -877,7 +885,9 @@ class INonLeafNodeTask(ITask[KT, VT], abc.ABC):
         logger.debug(
             f"Starting task {self.task_name} with root dag id {self.root_dag}, parent task id {self.parent_id}, and task id {self.id}"
         )
-        first_dag_instance = workflow_instance.get_task(id=self.root_dag)
+        first_dag_instance = (
+            workflow_instance.get_task(id=self.root_dag) if workflow_instance else None
+        )
         if first_dag_instance:
             await first_dag_instance.start(workflow_instance=workflow_instance)
         else:
@@ -914,7 +924,7 @@ class ParallelCompositeTask(ITask[KT, VT], abc.ABC):
     async def stop(self) -> None:
         pass
 
-    async def start(self, workflow_instance: ITemplateDAGInstance) -> None:
+    async def start(self, workflow_instance: Optional[ITemplateDAGInstance]) -> None:
         await asyncio.sleep(0)
         if self.status.code in TERMINAL_STATUSES:
             return await self.on_complete(
@@ -923,7 +933,7 @@ class ParallelCompositeTask(ITask[KT, VT], abc.ABC):
         if (
             self.status.code == TaskStatusEnum.NOT_STARTED.name
             or self.status.code == TaskStatusEnum.SUBMITTED.name
-        ):
+        ) and workflow_instance:
             self.status = TaskStatus(
                 code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
             )
@@ -955,7 +965,9 @@ class ParallelCompositeTask(ITask[KT, VT], abc.ABC):
         self.time_submitted = int(time.time())
 
     async def notify(
-        self, status: TaskStatus, workflow_instance: ITask = None
+        self,
+        status: TaskStatus,
+        workflow_instance: Optional[ITemplateDAGInstance] = None,
     ) -> None:  # pragma: no cover
         """If not completed, runs the steps required for completion by calling on_complete()."""
         atleast_one = False
@@ -986,8 +998,8 @@ class ParallelCompositeTask(ITask[KT, VT], abc.ABC):
 
 
 class IProcessTemplateDAGInstance(INonLeafNodeTask[KT, VT], abc.ABC):
-    process_name: str = None
-    max_run_duration_monitor_task_id: UUID = None
+    process_name: Optional[str] = None
+    max_run_duration_monitor_task_id: Optional[UUID] = None
     max_run_duration: int = 0
 
 
@@ -997,21 +1009,24 @@ class CorrelatableMapValue(Record):
 
 
 class ITemplateDAGInstance(INonLeafNodeTask[KT, VT], abc.ABC):
-    template_name: str = None
-    partition_key_lookup: str = None
+    template_name: Optional[str] = None
+    partition_key_lookup: Optional[str] = None
     task_type = TaskType.ROOT.name
     tasks: Dict[UUID, ITask] = {}
     sensor_tasks_to_correletable_map: Dict[UUID, CorrelatableMapValue] = {}
-    runtime_parameters: Dict[str, VT] = None
+    runtime_parameters: Dict[str, VT] = {}
     update_count: int = 0
 
     def add_task(self, task: ITask):
         self.tasks[task.id] = task
 
-    def get_task(self, id: UUID) -> Optional[ITask]:
+    def get_task(self, id: Optional[UUID]) -> Optional[ITask]:
         if id == self.id:
             return self
-        return self.tasks.get(id, None)
+        if id:
+            return self.tasks.get(id, None)
+        else:
+            return None
 
     async def _update_global_runtime_parameters(self) -> None:
 
@@ -1035,7 +1050,7 @@ class ITemplateDAGInstance(INonLeafNodeTask[KT, VT], abc.ABC):
 class DefaultProcessTemplateDAGInstance(IProcessTemplateDAGInstance[str, str]):
     async def on_complete(
         self,
-        workflow_instance: ITemplateDAGInstance,
+        workflow_instance: Optional[ITemplateDAGInstance],
         status: TaskStatus = TaskStatus(
             code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
         ),
@@ -1057,15 +1072,23 @@ class DefaultProcessTemplateDAGInstance(IProcessTemplateDAGInstance[str, str]):
         )
 
     async def execute(
-        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+        self,
+        runtime_parameters: Dict[str, str],
+        workflow_instance: Optional[ITemplateDAGInstance] = None,
     ) -> None:
         await super().execute(
             runtime_parameters=runtime_parameters, workflow_instance=workflow_instance
         )
         await self.setup_max_run_duration(wokflow_instance=workflow_instance)
 
-    async def setup_max_run_duration(self, wokflow_instance: ITask) -> None:
-        if hasattr(self, "max_run_duration") and self.max_run_duration != 0:
+    async def setup_max_run_duration(
+        self, wokflow_instance: Optional[ITemplateDAGInstance]
+    ) -> None:
+        if (
+            hasattr(self, "max_run_duration")
+            and self.max_run_duration != 0
+            and wokflow_instance
+        ):
             max_run_duration_monitor_task: ITask = SkipOnMaxDurationTask(
                 id=uuid.uuid1(),
                 monitored_task_id=self.id,
@@ -1111,7 +1134,7 @@ class DefaultProcessTemplateDAGInstance(IProcessTemplateDAGInstance[str, str]):
 class MonitoredProcessTemplateDAGInstance(
     DefaultProcessTemplateDAGInstance, IMonitoredTask
 ):
-    monitoring_task_id: UUID = None
+    monitoring_task_id: Optional[UUID] = None
 
     async def on_complete(
         self,
@@ -1122,8 +1145,8 @@ class MonitoredProcessTemplateDAGInstance(
         iterate: bool = True,
     ) -> None:
         """Sets the status of the ITask to completed and starts the next ITask if there is one."""
-        if self.monitoring_task_id:
-            monitoring_task: ITask = workflow_instance.get_task(
+        if self.monitoring_task_id and workflow_instance:
+            monitoring_task: Optional[ITask] = workflow_instance.get_task(
                 id=self.monitoring_task_id
             )
             if monitoring_task:
@@ -1135,17 +1158,25 @@ class MonitoredProcessTemplateDAGInstance(
         )
 
     async def execute(
-        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+        self,
+        runtime_parameters: Dict[str, str],
+        workflow_instance: Optional[ITemplateDAGInstance] = None,
     ) -> None:
         await super().execute(
             runtime_parameters=runtime_parameters, workflow_instance=workflow_instance
         )
         await self.setup_monitoring_task(workflow_instance=workflow_instance)
 
-    async def setup_monitoring_task(self, workflow_instance: ITask) -> None:
-        wait_time = workflow_instance.runtime_parameters.get(COMPLETE_BY_KEY, None)
+    async def setup_monitoring_task(
+        self, workflow_instance: Optional[ITemplateDAGInstance]
+    ) -> None:
+        wait_time = (
+            workflow_instance.runtime_parameters.get(COMPLETE_BY_KEY, None)
+            if workflow_instance
+            else None
+        )
         if wait_time:
-            if self.monitoring_task_id is None:
+            if self.monitoring_task_id is None and workflow_instance:
                 monitoring_task: ITask = self.get_monitoring_task_type()(
                     id=uuid.uuid1(),
                     monitored_task_id=self.id,
@@ -1195,11 +1226,11 @@ class DefaultTemplateDAGInstance(ITemplateDAGInstance[str, str]):
 
 
 class Trigger(Record, serializer="raw"):  # type: ignore
-    trigger_time: int = int(time.time())
-    id: UUID = None
-    workflow_id: UUID = None
+    trigger_time: Optional[int] = int(time.time())
+    id: Optional[UUID] = None
+    workflow_id: Optional[UUID] = None
 
-    def get_trigger_key(self) -> Tuple[UUID, UUID]:
+    def get_trigger_key(self) -> Tuple[Optional[UUID], Optional[UUID]]:
         return self.workflow_id, self.id
 
 
@@ -1211,4 +1242,4 @@ class CorreletableLookUpKey(Record, serializer="raw"):  # type: ignore
 class CorreletableKeyTasks(Record, serializer="raw"):  # type: ignore
     lookup_keys: Set[CorreletableLookUpKey] = set()
     overflow_key: Optional[str] = None
-    key: str = None
+    key: Optional[str] = None
