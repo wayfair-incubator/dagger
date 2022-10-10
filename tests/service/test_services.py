@@ -448,7 +448,7 @@ class TestDagger:
         assert cor_instance.overflow_key is not None
 
     @pytest.fixture
-    async def correletable_table_fixture(self, workflow_instance_fixture):
+    def correletable_table_fixture(self, workflow_instance_fixture):
 
         c1: CorreletableKeyTasks = CorreletableKeyTasks()
         c1.key = "ck1_topic1"

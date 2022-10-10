@@ -141,7 +141,7 @@ class TestDynamicProcessTemplateDAG:
         return template
 
     @pytest.fixture()
-    async def template_fixture(self, dynamic_template_fixture):
+    def template_fixture(self, dynamic_template_fixture):
         app = MagicMock()
         app._store_process_instance = CoroutineMock()
         process_dag = MagicMock()
@@ -238,7 +238,7 @@ class TestDynamicProcessTemplateDAG:
 
 class TestParallelCompositeProcessTemplateDAG:
     @pytest.fixture()
-    async def dynamic_parallel_composite_fixture(self):
+    def dynamic_parallel_composite_fixture(self):
         app = MagicMock()
         app._store_process_instance = CoroutineMock()
         app.tasks_topic.send = CoroutineMock()
@@ -354,7 +354,7 @@ class TestParallelCompositeTemplateDagBuilder:
 
 class TestTemplateDAG:
     @pytest.fixture()
-    async def template_fixture(self):
+    def template_fixture(self):
         app = MagicMock()
         app._store_process_instance = CoroutineMock()
         process_dag_template = MagicMock()
