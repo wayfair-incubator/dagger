@@ -153,7 +153,7 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
         return [await self.get_correlatable_key_from_payload(payload=payload)]
 
     @abc.abstractmethod
-    async def start(self, workflow_instance: ITask) -> None:  # pragma: no cover
+    async def start(self, workflow_instance: ITemplateDAGInstance) -> None:  # pragma: no cover
         """Starts the ITask."""
         ...
 
@@ -283,7 +283,7 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
 
 class ExecutorTask(ITask[KT, VT], abc.ABC):
     async def start(
-        self, workflow_instance: ITask, ignore_status: bool = False
+        self, workflow_instance: ITemplateDAGInstance, ignore_status: bool = False
     ) -> None:
         # pre-execute
         if self.status.code in [
@@ -367,7 +367,7 @@ class IntervalTask(TriggerTask[KT, VT], abc.ABC):
     time_to_force_complete: Optional[int] = None  # time in seconds
     interval_execute_period: Optional[int] = None  # time in seconds
 
-    async def start(self, workflow_instance: ITask) -> bool:  # type: ignore
+    async def start(self, workflow_instance: ITemplateDAGInstance) -> bool:  # type: ignore
         is_finished = False
         if self.status.code == TaskStatusEnum.NOT_STARTED.name:
             self.status = TaskStatus(
@@ -492,7 +492,7 @@ class SkipOnMaxDurationTask(DefaultMonitoringTask):
 
 
 class DecisionTask(ITask[KT, VT]):
-    async def start(self, workflow_instance: ITask) -> None:
+    async def start(self, workflow_instance: ITemplateDAGInstance) -> None:
         # pre-execute
         if self.status.code in [
             TaskStatusEnum.COMPLETED.name,
@@ -594,7 +594,7 @@ class SystemTask(ExecutorTask[str, str]):
         """
         raise NotImplementedError("SystemTask task does not process on_complete")
 
-    async def start(self, workflow_instance: ITask, ignore_status=True) -> None:
+    async def start(self, workflow_instance: ITemplateDAGInstance, ignore_status=True) -> None:
         if ignore_status or self.status.code == TaskStatusEnum.NOT_STARTED.name:
             self.status = TaskStatus(
                 code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
@@ -625,7 +625,7 @@ class SystemTimerTask(SystemTask):
 class SensorTask(ITask[KT, VT], abc.ABC):
     match_only_one: bool = False
 
-    async def start(self, workflow_instance: ITask) -> None:
+    async def start(self, workflow_instance: ITemplateDAGInstance) -> None:
         # pre-execute
         if self.status.code in [
             TaskStatusEnum.COMPLETED.name,
@@ -853,7 +853,7 @@ class INonLeafNodeTask(ITask[KT, VT], abc.ABC):
     async def stop(self) -> None:
         pass
 
-    async def start(self, workflow_instance: ITask) -> None:
+    async def start(self, workflow_instance: ITemplateDAGInstance) -> None:
         if self.status.code in [
             TaskStatusEnum.COMPLETED.name,
             TaskStatusEnum.SKIPPED.name,
@@ -910,7 +910,7 @@ class ParallelCompositeTask(ITask[KT, VT], abc.ABC):
     async def stop(self) -> None:
         pass
 
-    async def start(self, workflow_instance: ITask) -> None:
+    async def start(self, workflow_instance: ITemplateDAGInstance) -> None:
         await asyncio.sleep(0)
         if self.status.code in TERMINAL_STATUSES:
             return await self.on_complete(
