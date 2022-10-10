@@ -160,7 +160,7 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
     async def get_remaining_tasks(
         self,
         next_dag_id: UUID,
-        workflow_instance: ITask,
+        workflow_instance: ITemplateDAGInstance,
         tasks: Optional[List[ITask]] = None,
         end_task_id: UUID = None,
     ) -> Optional[List[ITask]]:
@@ -202,7 +202,7 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
 
     async def on_complete(  # noqa: C901
         self,
-        workflow_instance: ITask,
+        workflow_instance: Optional[ITemplateDAGInstance],
         status: TaskStatus = TaskStatus(
             code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
         ),
@@ -353,7 +353,7 @@ class TriggerTask(ExecutorTask[KT, VT], abc.ABC):
 
     async def on_complete(
         self,
-        workflow_instance: ITask,
+        workflow_instance: Optional[ITemplateDAGInstance],
         status: TaskStatus = TaskStatus(
             code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
         ),
@@ -423,7 +423,7 @@ class MonitoringTask(TriggerTask[KT, VT], abc.ABC):
 
     async def on_complete(
         self,
-        workflow_instance: ITask,
+        workflow_instance: Optional[ITemplateDAGInstance],
         status: TaskStatus = TaskStatus(
             code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
         ),
@@ -461,7 +461,7 @@ class SkipOnMaxDurationTask(DefaultMonitoringTask):
         self, monitored_task: ITask, workflow_instance: Optional[ITemplateDAGInstance]
     ) -> None:  # pragma: no cover
         if monitored_task.status.code == TaskStatusEnum.EXECUTING.name:
-            if monitored_task:
+            if monitored_task and workflow_instance:
                 logger.info(
                     f"Process: {monitored_task.process_name} with id: {monitored_task.id} did not finish before it's timeout. Skipping."
                 )
@@ -581,7 +581,7 @@ class SystemTask(ExecutorTask[str, str]):
 
     async def on_complete(
         self,
-        workflow_instance: ITask,
+        workflow_instance: Optional[ITemplateDAGInstance],
         status: TaskStatus = TaskStatus(
             code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
         ),
@@ -1111,7 +1111,7 @@ class MonitoredProcessTemplateDAGInstance(
 
     async def on_complete(
         self,
-        workflow_instance: ITask,
+        workflow_instance: Optional[ITemplateDAGInstance],
         status: TaskStatus = TaskStatus(
             code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
         ),
