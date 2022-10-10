@@ -153,7 +153,9 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
         return [await self.get_correlatable_key_from_payload(payload=payload)]
 
     @abc.abstractmethod
-    async def start(self, workflow_instance: ITemplateDAGInstance) -> None:  # pragma: no cover
+    async def start(
+        self, workflow_instance: ITemplateDAGInstance
+    ) -> None:  # pragma: no cover
         """Starts the ITask."""
         ...
 
@@ -594,7 +596,9 @@ class SystemTask(ExecutorTask[str, str]):
         """
         raise NotImplementedError("SystemTask task does not process on_complete")
 
-    async def start(self, workflow_instance: ITemplateDAGInstance, ignore_status=True) -> None:
+    async def start(
+        self, workflow_instance: ITemplateDAGInstance, ignore_status=True
+    ) -> None:
         if ignore_status or self.status.code == TaskStatusEnum.NOT_STARTED.name:
             self.status = TaskStatus(
                 code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
