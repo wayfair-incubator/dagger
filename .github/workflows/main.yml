@@ -89,7 +89,7 @@ jobs:
             test-requirements: "true"
 
         - name: Run mypy
-          run: mypy dagger tests
+          run: mypy dagger
 
   test:
     runs-on: ubuntu-latest
