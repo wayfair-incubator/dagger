@@ -19,6 +19,7 @@ from dagger.tasks.task import (
     DefaultTemplateDAGInstance,
     IntervalTask,
     ITask,
+    ITemplateDAGInstance,
     KafkaAgent,
     KafkaCommandTask,
     KafkaListenerTask,
@@ -31,7 +32,7 @@ from dagger.tasks.task import (
     TaskStatus,
     TaskStatusEnum,
     Trigger,
-    TriggerTask, ITemplateDAGInstance,
+    TriggerTask,
 )
 
 test = 2 * 1024**3
