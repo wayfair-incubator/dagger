@@ -92,9 +92,12 @@ runtime_parameters['customer_name']= `EXAMPLE_CUSTOMER`
 runtime_parameters['order_number'] = 'EXAMPLE_ORDER' 
 template_instance = await template.create_instance(uuid1(), runtime_parameters)
 ```
+
 To begin execution of the DAG instance created above
 
-        await workflow_engine.submit(template_instance)
+```python
+await workflow_engine.submit(template_instance)
+```
 
 This begins the actual execution of the tasks created by the template definition and executes them in the sequence as
 defined in the template. The engine currently supports the following types of tasks:

@@ -1,4 +1,4 @@
 # Maintainers
 
 - [Vikram Patki](https://github.com/patkivikram)
-  - [Aditya Vaderiyattil](https://github.com/appu1232)
+- [Aditya Vaderiyattil](https://github.com/appu1232)
