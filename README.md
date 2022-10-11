@@ -1,20 +1,13 @@
-
-# Dagger
-
-
 [![Release](https://img.shields.io/github/v/release/wayfair-incubator/dagger?display_name=tag)](CHANGELOG.md)
 [![Lint](https://github.com/wayfair-incubator/dagger/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/wayfair-incubator/dagger/actions/workflows/lint.yml)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![Maintainer](https://img.shields.io/badge/Maintainer-Wayfair-7F187F)](https://wayfair.github.io)
 
-
-## About The Project
+# Dagger
 
 **Dagger** is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous and
 synchronous long-running business logic in a scalable and resilient way.
-
 Dagger requires Python 3.7 or later for the new `async/await`_ syntax, and variable type annotations.
-
 Here's an example of how to use the library to build and run a workflow:
 
 ```python
