@@ -7,10 +7,10 @@
 
 ## About The Project
 
-**Dagger** is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous and synchronous long-running business logic in a scalable and resilient way.
+**Dagger** is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous and
+synchronous long-running business logic in a scalable and resilient way.
 
-Dagger requires Python 3.7 or later for the new `async/await`_ syntax,
-and variable type annotations.
+Dagger requires Python 3.7 or later for the new `async/await`_ syntax, and variable type annotations.
 
 Here's an example of how to use the library to build and run a workflow:
 
@@ -74,11 +74,10 @@ def order_template(template_name: str) -> ITemplateDAG:
 workflow_engine.main()
 ```
 
-The ``register_template`` decorator defines a "DAG processor" that essentially
-defines the various processes and child tasks the DAG executes. In the example above the code
-creates a named template ``OrderWorkflow``  and associates a ``PAYMENT`` process with 2 child
-tasks ``PAYMENT_LISTENER`` and ``PAYMENT_COMMAND``. The ``SHIPPING`` process follows with similarly
-named topics and processes and the template defines the root process and links them in a DAG (Directed
+The ``register_template`` decorator defines a "DAG processor" that essentially defines the various processes and child
+tasks the DAG executes. In the example above the code creates a named template ``OrderWorkflow``  and associates
+a ``PAYMENT`` process with 2 child tasks ``PAYMENT_LISTENER`` and ``PAYMENT_COMMAND``. The ``SHIPPING`` process follows
+with similarly named topics and processes and the template defines the root process and links them in a DAG (Directed
 Acyclic Graph) structure
 
 The application can define as many DAG'S it needs to model using the ``register_template``
@@ -96,13 +95,13 @@ To begin execution of the DAG instance created above
 
         await workflow_engine.submit(template_instance)
 
-This begins the actual execution of the tasks created by the template definition and executes them in the sequence as defined
-in the template. The engine currently supports the following types of tasks:
+This begins the actual execution of the tasks created by the template definition and executes them in the sequence as
+defined in the template. The engine currently supports the following types of tasks:
 
 ## KafkaCommandTask
 
-This task is used to send a request/message on a Kafka Topic defined using the template builder. This type of task is a child task in the
-execution graph and can be extended by implementing the method
+This task is used to send a request/message on a Kafka Topic defined using the template builder. This type of task is a
+child task in the execution graph and can be extended by implementing the method
 
         @abc.abstractmethod
         async def execute(self) -> None:
@@ -110,9 +109,10 @@ execution graph and can be extended by implementing the method
 
 ## KafkaListenerTask
 
-This task waits/halts the execution of the DAG until a message is received on the defined Kafka topic(in the template definition). Each task is created using the
-DAG builder defines a durable key to correlate each received message on the topic against listener tasks. The Engine handles the complexity of invoking the
-appropriate task instance based on the key in the payload.
+This task waits/halts the execution of the DAG until a message is received on the defined Kafka topic(in the template
+definition). Each task is created using the DAG builder defines a durable key to correlate each received message on the
+topic against listener tasks. The Engine handles the complexity of invoking the appropriate task instance based on the
+key in the payload.
 
 A listener task needs to implement the following methods
 
@@ -124,9 +124,9 @@ A listener task needs to implement the following methods
          async def get_correlatable_key(self, payload: Any) -> TaskLookupKey: 
             ...
 
-The get_correlatable_key method extracts the key by parsing the payload received on the Kafka topic. Using this key the DAGGER looks up the
-appropriate task from the list of tasks waiting on this event and invokes `on_message` on each one of them. The default implementation of this task
-just sets this task and `COMPLETED`
+The get_correlatable_key method extracts the key by parsing the payload received on the Kafka topic. Using this key the
+DAGGER looks up the appropriate task from the list of tasks waiting on this event and invokes `on_message` on each one
+of them. The default implementation of this task just sets this task and `COMPLETED`
 
 The engine provides the flexibility to implement any other type of listener task by implementing the following interface
 
@@ -158,13 +158,14 @@ A trigger task needs to implement the following method
         async def execute(self) -> None:
             ...
 
-The engine provides a `TriggerTaskTemplateBuilder` helper to model the task in the DAG. The `set_time_to_execute_lookup_key` on this builder is used
-to define the key to lookup the trigger time provided in the runtime parameters of the task
+The engine provides a `TriggerTaskTemplateBuilder` helper to model the task in the DAG.
+The `set_time_to_execute_lookup_key` on this builder is used to define the key to lookup the trigger time provided in
+the runtime parameters of the task
 
 ## DecisionTask
 
-This type of task is similar to the `case..switch` statement in a programming language. It returns the next task to execute
-based on the execution logic. A decision task needs to implement
+This type of task is similar to the `case..switch` statement in a programming language. It returns the next task to
+execute based on the execution logic. A decision task needs to implement
 
     @abc.abstractmethod
     async def evaluate(self, **kwargs: Any) -> Optional[UUID]:
@@ -176,7 +177,8 @@ The Engine provides a `DecisionTaskTemplateBuilder` to model a decision task in 
 
 ## RESTful API
 
-The framework provides a RESTFul API to retrieve the status of root task instances. Root task is the instance created using the `TaskTemplate`
+The framework provides a RESTFul API to retrieve the status of root task instances. Root task is the instance created
+using the `TaskTemplate`
 which then has multiple, chained ProcessTasks and child tasks(KafkaCommand and KafkaListener tasks)
 
     http://<hostname>:6066/tasks/instances
@@ -250,9 +252,9 @@ which then has multiple, chained ProcessTasks and child tasks(KafkaCommand and K
             "time_submitted": 1573767698
         }]
 
-Dagger supports any type of stream data: bytes, Unicode and serialized
-structures, but also comes with "Models" that use modern Python
-syntax to describe how keys and values in streams are serialized. For more details on supported models refer to
+Dagger supports any type of stream data: bytes, Unicode and serialized structures, but also comes with "Models" that use
+modern Python syntax to describe how keys and values in streams are serialized. For more details on supported models
+refer to
 <https://faust.readthedocs.io/en/latest/userguide/models.html>
 
 ## OpenTelemetry
@@ -266,35 +268,33 @@ Dagger is
 **Simple**
 ============
 
-Dagger is extremely easy to use. To get started applications need to install this library, define a DAG using
-the default templates or extending them based on the use case, creating instances of these DAG's and scheduling them for
-execution. The library hides all the complexity of producing and consuming from Kafka, maintaining Kafka Streams topology processing and also persistence
-and recovery of created tasks
+Dagger is extremely easy to use. To get started applications need to install this library, define a DAG using the
+default templates or extending them based on the use case, creating instances of these DAG's and scheduling them for
+execution. The library hides all the complexity of producing and consuming from Kafka, maintaining Kafka Streams
+topology processing and also persistence and recovery of created tasks
 
 **Highly Available**
 ============
 
-Dagger is highly available and can survive network problems and server
-crashes.  In the case of node failure, it can automatically recover the state store(representing task data)
+Dagger is highly available and can survive network problems and server crashes. In the case of node failure, it can
+automatically recover the state store(representing task data)
 or failover to a standby node
 
 **Distributed**
 ============
 
- Start more instances of your application as needed to distribute the load on the system
+Start more instances of your application as needed to distribute the load on the system
 
 **Fast**
 ============
 
-A single-core  worker instance can already process tens of thousands
-of tasks every second. Dagger uses a fast key-value lookup store based on
-rocksDB replicated to kafka topics for fault tolerance
+A single-core worker instance can already process tens of thousands of tasks every second. Dagger uses a fast key-value
+lookup store based on rocksDB replicated to kafka topics for fault tolerance
 
 Installation
 ============
 
-You can install dagger  via the Wayfair artifactory
-or from source.
+You can install dagger via the Wayfair artifactory or from source.
 
 To install using `pip`:
 
@@ -343,11 +343,14 @@ dagger supports kafka with version >= 0.10.
 
 ## Roadmap
 
-See the [open issues](https://github.com/wayfair-incubator/dagger/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/wayfair-incubator/dagger/issues) for a list of proposed features (and known
+issues).
 
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**. For detailed contributing guidelines, please see [CONTRIBUTING.md](CONTRIBUTING.md)
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any
+contributions you make are **greatly appreciated**. For detailed contributing guidelines, please
+see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## License
 
