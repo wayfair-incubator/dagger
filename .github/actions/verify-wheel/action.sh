@@ -15,5 +15,5 @@ echo "Installing package"
 pip install ${APP_DIR}/${WHEEL_LOCATION}/*.whl
 
 echo "-----------------------------"
-echo "Attempting to import package"
+echo "Attempting to import package ${GITHUB_ACTION_PATH}"
 python "${GITHUB_ACTION_PATH}/test_module_import.py" "${MODULE_NAME}"
