@@ -14,7 +14,7 @@ Dagger requires Python 3.7 or later for the new `async/await`_ syntax, and varia
 
 Here's an example of how to use the library to build and run a workflow:
 
-```
+```python
 import logging
 from uuid import uuid1
 from dagger.service.services import Dagger
@@ -85,12 +85,13 @@ decorator. process-engine populates all the DAG templates in the codebase decora
 
 Here's and example of how to create an instance of a specific DAG:
 
-        template = workflow_engine.get_template('BulkTemplate')
-        runtime_parameters:Dict[str, str] = dict()
-        runtime_parameters['customer_name']= `EXAMPLE_CUSTOMER`
-        runtime_parameters['order_number'] = 'EXAMPLE_ORDER' 
-        template_instance = await template.create_instance(uuid1(), runtime_parameters)
-
+```python
+template = workflow_engine.get_template('BulkTemplate')
+runtime_parameters:Dict[str, str] = dict()
+runtime_parameters['customer_name']= `EXAMPLE_CUSTOMER`
+runtime_parameters['order_number'] = 'EXAMPLE_ORDER' 
+template_instance = await template.create_instance(uuid1(), runtime_parameters)
+```
 To begin execution of the DAG instance created above
 
         await workflow_engine.submit(template_instance)
