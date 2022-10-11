@@ -313,6 +313,7 @@ lookup store based on rocksDB replicated to kafka topics for fault tolerance
 You can install dagger via the Wayfair artifactory or from source.
 
 To install using `pip`:
+
 ```shell
 pip install py-dagger
 ```
