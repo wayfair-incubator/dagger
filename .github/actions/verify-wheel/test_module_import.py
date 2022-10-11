@@ -12,4 +12,3 @@ try:
 except Exception as e:
     print(f"Error importing module {module_name}: {e}")
     sys.exit(1)
-print(f"Imported {module_name} version {module.__version__}")
