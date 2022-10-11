@@ -1,10 +1,12 @@
 
 # Dagger
 
+
 [![Release](https://img.shields.io/github/v/release/wayfair-incubator/dagger?display_name=tag)](CHANGELOG.md)
 [![Lint](https://github.com/wayfair-incubator/dagger/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/wayfair-incubator/dagger/actions/workflows/lint.yml)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![Maintainer](https://img.shields.io/badge/Maintainer-Wayfair-7F187F)](https://wayfair.github.io)
+
 
 ## About The Project
 
@@ -286,24 +288,24 @@ implementation and set the flag enable_telemetry while initializing dagger
 
 ## Dagger is
 
-## Simple
+### Simple
 
 Dagger is extremely easy to use. To get started applications need to install this library, define a DAG using the
 default templates or extending them based on the use case, creating instances of these DAG's and scheduling them for
 execution. The library hides all the complexity of producing and consuming from Kafka, maintaining Kafka Streams
 topology processing and also persistence and recovery of created tasks
 
-## Highly Available
+### Highly Available
 
 Dagger is highly available and can survive network problems and server crashes. In the case of node failure, it can
 automatically recover the state store(representing task data)
 or failover to a standby node
 
-## Distributed
+### Distributed
 
 Start more instances of your application as needed to distribute the load on the system
 
-## Fast
+### Fast
 
 A single-core worker instance can already process tens of thousands of tasks every second. Dagger uses a fast key-value
 lookup store based on rocksDB replicated to kafka topics for fault tolerance
@@ -322,11 +324,11 @@ dagger has a dependency on `faust` for kafka stream processing
 
 ## FAQ
 
-## Which version of python is supported?
+### Which version of python is supported?
 
 dagger supports python version >= 3.7
 
-## What kafka versions are supported?
+### What kafka versions are supported?
 
 dagger supports kafka with version >= 0.10.
 
