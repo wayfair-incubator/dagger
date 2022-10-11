@@ -1,3 +1,4 @@
+
 # Dagger
 
 [![Release](https://img.shields.io/github/v/release/wayfair-incubator/dagger?display_name=tag)](CHANGELOG.md)
@@ -107,9 +108,11 @@ defined in the template. The engine currently supports the following types of ta
 This task is used to send a request/message on a Kafka Topic defined using the template builder. This type of task is a
 child task in the execution graph and can be extended by implementing the method
 
-        @abc.abstractmethod
-        async def execute(self) -> None:
-            ...
+```python
+@abc.abstractmethod
+async def execute(self) -> None:
+    ...
+```
 
 ## KafkaListenerTask
 
@@ -120,13 +123,16 @@ key in the payload.
 
 A listener task needs to implement the following methods
 
-         @abc.abstractmethod
-         async def on_message(self, *args: Any, **kwargs: Any) -> None :
-            ...
-            
-         @abc.abstractmethod
-         async def get_correlatable_key(self, payload: Any) -> TaskLookupKey: 
-            ...
+```python
+
+ @abc.abstractmethod
+ async def on_message(self, *args: Any, **kwargs: Any) -> None :
+    ...
+    
+ @abc.abstractmethod
+ async def get_correlatable_key(self, payload: Any) -> TaskLookupKey: 
+    ...
+```
 
 The get_correlatable_key method extracts the key by parsing the payload received on the Kafka topic. Using this key the
 DAGGER looks up the appropriate task from the list of tasks waiting on this event and invokes `on_message` on each one
@@ -134,7 +140,9 @@ of them. The default implementation of this task just sets this task and `COMPLE
 
 The engine provides the flexibility to implement any other type of listener task by implementing the following interface
 
-    class SensorTask(ITask[KT, VT]):
+```python
+class SensorTask(ITask[KT, VT]):
+```
 
 along with a custom `TaskTemplateBuilder`
 
