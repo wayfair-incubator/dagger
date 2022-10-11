@@ -313,21 +313,19 @@ lookup store based on rocksDB replicated to kafka topics for fault tolerance
 You can install dagger via the Wayfair artifactory or from source.
 
 To install using `pip`:
-
-    pip install py-dagger
+```shell
+pip install py-dagger
+```
 
 dagger has a dependency on `faust` for kafka stream processing
 
 ## FAQ
 
-
-Which version of python is supported?
----------------------------------------
+## Which version of python is supported?
 
 dagger supports python version >= 3.7
 
-What kafka versions are supported?
----------------------------------------
+## What kafka versions are supported?
 
 dagger supports kafka with version >= 0.10.
 
