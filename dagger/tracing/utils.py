@@ -3,15 +3,15 @@ import traceback
 from typing import Any, Dict, Optional
 
 import aiohttp
-import opentracing
+import opentracing  # type: ignore
 from faust import App, EventT, Sensor, StreamT
 from faust.types import TP, Message, PendingMessage, ProducerT, RecordMetadata
 from faust.types.core import OpenHeadersArg, merge_headers
 from faust.utils.tracing import current_span, set_current_span
-from mode.utils.compat import want_str
-from mode.utils.objects import cached_property
+from mode.utils.compat import want_str  # type: ignore
+from mode.utils.objects import cached_property  # type: ignore
 from opentracing import Format
-from opentracing.ext import tags
+from opentracing.ext import tags  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +109,7 @@ class TracingSensor(Sensor):
             span = opentracing.start_child_span(parent_span, f"produce-to-{topic}")
             header_map = dict(message.headers) if message.headers else {}
             span.set_tag("kafka-headers", header_map)
-            self.trace_inject_headers(span, message.headers)
+            self.trace_inject_headers(span, message.headers)  # type: ignore
             span.__enter__()
             return {"span": span}
         return {"span": None}

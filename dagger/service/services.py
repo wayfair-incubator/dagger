@@ -23,7 +23,7 @@ from uuid import UUID
 from weakref import WeakValueDictionary
 
 import faust
-import jsonpickle
+import jsonpickle  # type: ignore
 import mode
 from aiohttp.web import HTTPNotFound
 from faust import App, Monitor, Record, Sensor, Topic, TopicT
@@ -31,7 +31,7 @@ from faust.sensors.datadog import DatadogMonitor
 from faust.types.web import ResourceOptions
 from faust.web import Blueprint, Request, Response, View
 from mode import Service
-from mode.utils.types.trees import NodeT
+from mode.utils.types.trees import NodeT  # type: ignore
 from schema_registry.client import SchemaRegistryClient  # type: ignore
 from schema_registry.serializers import MessageSerializer  # type: ignore
 
@@ -66,7 +66,7 @@ class Dagger(Service):
     message_serializer: MessageSerializer
     dd_sensor: Optional[Monitor]
     config: EngineConfig
-    aerospike_config: AerospikeConfig
+    aerospike_config: Optional[AerospikeConfig]
     bootstrap_topic: TopicT
     tasks_topic: TopicT
     task_update_topic: Optional[TopicT]
@@ -93,7 +93,7 @@ class Dagger(Service):
     def __init__(
         self,
         *,
-        broker: str = None,
+        broker: str,
         datadir: str = None,
         store: str = StoreEnum.AEROSPIKE.value,
         application_name: str = "dagger",
@@ -302,7 +302,7 @@ class Dagger(Service):
             TopicT: Instance of Faust Topic
         """
         logger.info(f"Creating topic {topic_name}")
-        topic_instance: TopicT = None
+        topic_instance: Optional[TopicT] = None
         if topic_name in Dagger.app.topics:
             logger.warning(f"Topic {topic_name} is already created")
             topic_instance = Dagger.app.topics[topic_name]
@@ -337,7 +337,7 @@ class Dagger(Service):
 
         def wrapped(wrapped_fun: RegisterFun):
             logger.info("registering " + template_name)
-            Dagger.app.template_dags[template_name] = wrapped_fun(template_name)
+            Dagger.app.template_dags[template_name] = wrapped_fun(template_name)  # type: ignore
 
         return wrapped
 
@@ -351,7 +351,7 @@ class Dagger(Service):
 
         def wrapped(wrapped_fun: RegisterFun):
             logger.info("registering " + process_template_name)
-            Dagger.app.process_templates[process_template_name] = wrapped_fun(
+            Dagger.app.process_templates[process_template_name] = wrapped_fun(  # type: ignore
                 process_template_name
             )
 
@@ -368,7 +368,9 @@ class Dagger(Service):
         Returns:
             Optional[ITask, ITask]: Instance of workflow task  and the SensorTask
         """
-        cor_instance: CorreletableKeyTasks = await self._store.get_table_value(
+        cor_instance: Optional[
+            CorreletableKeyTasks
+        ] = await self._store.get_table_value(
             self._store.correletable_keys_table, str(lookup_key[1])
         )
         cor_instance_list: List[CorreletableKeyTasks] = []
@@ -383,7 +385,7 @@ class Dagger(Service):
                     workflow_instance = await self._invoke_store_get_value_for_key_with_timer(
                         str(lookup_key.workflow_id)  # type: ignore
                     )  # type: ignore
-                    task: ITask = None
+                    task: Optional[ITask] = None
                     if workflow_instance and isinstance(workflow_instance, ITask):
                         if (
                             workflow_instance.status.code
@@ -473,10 +475,15 @@ class Dagger(Service):
             itask_instance (ITask): Instance of itask.
             task_instance (str): the key to be updated
         """
-        workflow_instance.sensor_tasks_to_correletable_map[
+        workflow_instance.sensor_tasks_to_correletable_map[  # type: ignore
             task_instance.get_id()
         ] = CorrelatableMapValue(task_instance.correlatable_key, key)
-        if task_instance.correlatable_key and key and task_instance.topic:
+        if (
+            task_instance.correlatable_key
+            and key
+            and task_instance.topic
+            and workflow_instance
+        ):
             cor_instances: List[CorreletableKeyTasks] = []
             new_key = f"{key}_{task_instance.topic}"
             logger.debug(f"updating correlatable key {new_key}")
@@ -552,8 +559,10 @@ class Dagger(Service):
         self, task: ITask, workflow_instance: ITemplateDAGInstance
     ):
         if workflow_instance.runtime_parameters:
-            current_key = workflow_instance.runtime_parameters.get(
-                task.correlatable_key, None
+            current_key = (
+                workflow_instance.runtime_parameters.get(task.correlatable_key, None)
+                if task.correlatable_key
+                else None
             )
             if (
                 task.correlatable_key
@@ -616,7 +625,7 @@ class Dagger(Service):
                 self._store.correletable_keys_table, cor_instance.key, cor_instance
             )
             index += 1
-        prev_cor_instance: CorreletableKeyTasks = cor_instance
+        prev_cor_instance: Optional[CorreletableKeyTasks] = cor_instance
         while index < len(cor_instances):
             next_cor_instance: CorreletableKeyTasks = cor_instances[index]
             await self._store.del_table_value(
@@ -650,13 +659,14 @@ class Dagger(Service):
         random: Random = Random()
         random.seed(str(key))
         partition: int = random.randint(0, Dagger.LOCK_STRIPE_SIZE)  # nosec
-        async with self.asyncio_locks.get(partition):
-            value = self.workflows_weak_ref_map.get(key, None)
-            if value:
-                return value
-            value = await self._store.get_value_for_key(key)
-            if value is not None:
-                self.workflows_weak_ref_map[key] = value
+        if self.asyncio_locks and self.asyncio_locks.get(partition):
+            async with self.asyncio_locks.get(partition):  # type: ignore
+                value = self.workflows_weak_ref_map.get(key, None)
+                if value:
+                    return value
+                value = await self._store.get_value_for_key(key)
+                if value is not None:
+                    self.workflows_weak_ref_map[key] = value
         end_time = self.faust_app.loop.time() - start_time
         if self.dd_sensor:
             self.dd_sensor.client.histogram(metric="get_value_for_key", value=end_time)
@@ -817,10 +827,10 @@ class TemplateProcessView(View):
             self.tasks = list()
             for task in Dagger.app._store.kv_table.values():  # pragma: no cover
                 self.tasks.append(task)
-            return self.text(
-                jsonpickle.encode(self.tasks, unpicklable=False),
-                content_type="application/json",
-            )
+
         except Exception as ex:
             logger.warning(f"Error {ex}")
-        return None
+        return self.text(
+            jsonpickle.encode(self.tasks, unpicklable=False),
+            content_type="application/json",
+        )
