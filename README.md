@@ -146,19 +146,22 @@ class SensorTask(ITask[KT, VT]):
 
 along with a custom `TaskTemplateBuilder`
 
-    class TaskTemplateBuilder:
-    app: Service
+```python
+class TaskTemplateBuilder:
+app: Service
 
-    def __init__(self, app: Service) -> None :
-        self.app = app
+def __init__(self, app: Service) -> None :
+    self.app = app
 
-    @abc.abstractmethod
-    def set_type(self, task_type:Type[ITask]) -> TaskTemplateBuilder:
-        ...
+@abc.abstractmethod
+def set_type(self, task_type:Type[ITask]) -> TaskTemplateBuilder:
+    ...
 
-    @abc.abstractmethod
-    def build(self) -> TaskTemplate:
-        ...
+@abc.abstractmethod
+def build(self) -> TaskTemplate:
+    ...
+
+```
 
 ## TriggerTask
 
@@ -166,9 +169,11 @@ This task waits/halts the execution of the DAG until current time >= the trigger
 
 A trigger task needs to implement the following method
 
-        @abc.abstractmethod
-        async def execute(self) -> None:
-            ...
+```python
+@abc.abstractmethod
+async def execute(self) -> None:
+    ...
+```
 
 The engine provides a `TriggerTaskTemplateBuilder` helper to model the task in the DAG.
 The `set_time_to_execute_lookup_key` on this builder is used to define the key to lookup the trigger time provided in
@@ -179,9 +184,11 @@ the runtime parameters of the task
 This type of task is similar to the `case..switch` statement in a programming language. It returns the next task to
 execute based on the execution logic. A decision task needs to implement
 
-    @abc.abstractmethod
-    async def evaluate(self, **kwargs: Any) -> Optional[UUID]:
-        ...
+```python
+@abc.abstractmethod
+async def evaluate(self, **kwargs: Any) -> Optional[UUID]:
+    ...
+```
 
 This method returns the UUID of the next task to execute in the execution path
 
@@ -193,6 +200,7 @@ The framework provides a RESTFul API to retrieve the status of root task instanc
 using the `TaskTemplate`
 which then has multiple, chained ProcessTasks and child tasks(KafkaCommand and KafkaListener tasks)
 
+```json
     http://<hostname>:6066/tasks/instances
 
     [
@@ -263,6 +271,8 @@ which then has multiple, chained ProcessTasks and child tasks(KafkaCommand and K
             "time_created": 1573767624,
             "time_submitted": 1573767698
         }]
+
+```
 
 Dagger supports any type of stream data: bytes, Unicode and serialized structures, but also comes with "Models" that use
 modern Python syntax to describe how keys and values in streams are serialized. For more details on supported models
