@@ -418,7 +418,7 @@ class TemplateDAG(ITemplateDAG):
         process_instance = await self.root_process_dag.create_instance(  # type: ignore
             id=dag_id,
             parent_id=template_instance.id,
-            parent_name=template_instance.template_name,
+            parent_name=template_instance.template_name,  # type: ignore
             partition_key_lookup=partition_key_lookup,
             repartition=repartition,
             seed=seed,
