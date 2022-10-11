@@ -284,37 +284,31 @@ refer to
 Dagger has support for open telemetry. To enable open telemetry the client application has to initialise the tracer
 implementation and set the flag enable_telemetry while initializing dagger
 
-Dagger is
-===========
+## Dagger is
 
-**Simple**
-============
+## Simple
 
 Dagger is extremely easy to use. To get started applications need to install this library, define a DAG using the
 default templates or extending them based on the use case, creating instances of these DAG's and scheduling them for
 execution. The library hides all the complexity of producing and consuming from Kafka, maintaining Kafka Streams
 topology processing and also persistence and recovery of created tasks
 
-**Highly Available**
-============
+## Highly Available
 
 Dagger is highly available and can survive network problems and server crashes. In the case of node failure, it can
 automatically recover the state store(representing task data)
 or failover to a standby node
 
-**Distributed**
-============
+## Distributed
 
 Start more instances of your application as needed to distribute the load on the system
 
-**Fast**
-============
+## Fast
 
 A single-core worker instance can already process tens of thousands of tasks every second. Dagger uses a fast key-value
 lookup store based on rocksDB replicated to kafka topics for fault tolerance
 
-Installation
-============
+## Installation
 
 You can install dagger via the Wayfair artifactory or from source.
 
@@ -322,36 +316,10 @@ To install using `pip`:
 
     pip install py-dagger
 
-processingengine has a dependency on `faust` for kafka stream processing
+dagger has a dependency on `faust` for kafka stream processing
 
-Development Setup
-============
+## FAQ
 
-Clone the git repo to your machine.
-
-    git clone git@github.csnzoo.com:shared/dagger.git
-
-Create a virtual environment for the process engine project
-
-    cd ./dagger
-    python3 -m venv env
-
-Install the project requirements in your newly created virtual environment.
-
-    $ source env/bin/activate
-    (env)$ pip install -r requirements.txt
-    (env)$ pip install -r requirements-test.txt
-
-Run docker-compose to see if your installation is in a good state
-
-    docker-compose up
-
-Don't forget to set your IDE's interpreter to use the Python instance in the virtual environment you just setup.
-
-PyCharm: Prefences->Project->Project Interpreter
-
-FAQ
-===
 
 Which version of python is supported?
 ---------------------------------------
