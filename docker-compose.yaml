@@ -1,0 +1,71 @@
+version: '3.5'
+services:
+  dagger_test_app:
+    tty: true
+    build: .
+    container_name: dagger_test_app
+    depends_on:
+      - zookeeper
+      - kafka
+      - aerospike
+    command: [ "./wait-for-it.sh", "kafka:29092", "--", "python3", "-m", "integration_tests.test_app",
+             "worker", "-l", "info" ]
+    environment:
+      - KAFKA_BOOSTRAP_SERVER_NAME=kafka
+      - KAFKA_BOOSTRAP_SERVER_PORT=9092
+      - SCHEMA_REGISTRY_URL=http://schema-registry-server:8081
+      - SCHEMA_REGISTRY_SERVER=schema-registry-server
+      - SCHEMA_REGISTRY_SERVER_PORT=8081
+      - AEROSPIKE_HOST=aerospike
+    ports:
+      - "6066:6066"
+    volumes:
+      - ./:/app
+    networks:
+      - dagger_py
+
+  zookeeper:
+    image: "confluentinc/cp-zookeeper"
+    hostname: zookeeper
+    environment:
+    - ZOOKEEPER_CLIENT_PORT=2181
+    - ZOOKEEPER_TICK_TIME=2000
+    - ZOOKEEPER_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+    - ZOOKEEPER_TRANSACTION_STATE_LOG_MIN_ISR=1
+    ports:
+    - 52181:2181
+    networks:
+      - dagger_py
+
+  kafka:
+    # pinned due to https://github.com/confluentinc/kafka-images/issues/127
+    image: confluentinc/cp-kafka:7.0.0
+    hostname: kafka
+    container_name: kafka
+    ports:
+    - 9092:9092
+    depends_on:
+    - zookeeper
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_LISTENERS=LISTENER_LOCAL://0.0.0.0:9092,LISTENER_DOCKER://0.0.0.0:29092,PLAINTEXT://0.0.0.0:9093
+      - KAFKA_ADVERTISED_LISTENERS=LISTENER_LOCAL://localhost:9092,LISTENER_DOCKER://kafka:29092,PLAINTEXT://kafka:9093
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=LISTENER_LOCAL:PLAINTEXT,LISTENER_DOCKER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_BROKER_ID=0
+      - KAFKA_INTER_BROKER_LISTENER_NAME=LISTENER_DOCKER
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=100
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+    networks:
+      - dagger_py
+
+  aerospike:
+    image: aerospike/aerospike-server
+    volumes:
+      - $PWD:/opt/aerospike/etc
+    networks:
+      - dagger_py
+networks:
+  dagger_py:

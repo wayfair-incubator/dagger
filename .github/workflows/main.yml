@@ -41,7 +41,7 @@ jobs:
           test-requirements: "true"
 
       - name: Run black
-        run: black --check dagger tests
+        run: black --check dagger tests integration_tests
 
   flake8:
     runs-on: ubuntu-latest
@@ -129,59 +129,59 @@ jobs:
         with:
           package-import-name: "dagger"
 
-  validate-doc-examples:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-      
-      - name: Validate docs
-        run: ./docker/validate_docs.sh
-
-  build-docs:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-
-      - uses: actions/setup-python@v4.2.0
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        uses: ./.github/actions/install-dependencies
-        with:
-          requirements: "true"
-          docs-requirements: "true"
-
-      - name: Build Docs
-        run: mkdocs build --strict
-
-      - name: Upload coverage results artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: docs-site
-          path: site/
-
-  update-dev-docs:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-
-      - uses: actions/setup-python@v4.2.0
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        uses: ./.github/actions/install-dependencies
-        with:
-          requirements: "true"
-          docs-requirements: "true"
-
-      - name: Push documentation changes
-        uses: ./.github/actions/publish-docs-with-mike
-        with:
-          version_name: dev
+#  validate-doc-examples:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Check out code
+#        uses: actions/checkout@v3
+#
+#      - name: Validate docs
+#        run: ./docker/validate_docs.sh
+#
+#  build-docs:
+#    runs-on: ubuntu-latest
+#    if: github.event_name == 'pull_request'
+#    steps:
+#      - name: Check out code
+#        uses: actions/checkout@v3
+#
+#      - uses: actions/setup-python@v4.2.0
+#        with:
+#          python-version: ${{ env.PYTHON_VERSION }}
+#
+#      - name: Install dependencies
+#        uses: ./.github/actions/install-dependencies
+#        with:
+#          requirements: "true"
+#          docs-requirements: "true"
+#
+#      - name: Build Docs
+#        run: mkdocs build --strict
+#
+#      - name: Upload coverage results artifact
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: docs-site
+#          path: site/
+#
+#  update-dev-docs:
+#    runs-on: ubuntu-latest
+#    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#    steps:
+#      - name: Check out code
+#        uses: actions/checkout@v3
+#
+#      - uses: actions/setup-python@v4.2.0
+#        with:
+#          python-version: ${{ env.PYTHON_VERSION }}
+#
+#      - name: Install dependencies
+#        uses: ./.github/actions/install-dependencies
+#        with:
+#          requirements: "true"
+#          docs-requirements: "true"
+#
+#      - name: Push documentation changes
+#        uses: ./.github/actions/publish-docs-with-mike
+#        with:
+#          version_name: dev

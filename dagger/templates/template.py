@@ -796,6 +796,7 @@ class TriggerTaskTemplateBuilder(DefaultTaskTemplateBuilder):
 
 
 class IntervalTaskTemplateBuilder(TriggerTaskTemplateBuilder):
+    _time_to_execute_key: Optional[str] = None
     _time_to_force_complete_key: str
     _interval_execute_period_key: str
 
