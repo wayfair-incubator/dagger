@@ -53,7 +53,7 @@ def order_template(template_name: str) -> ITemplateDAG:
     payment_process_builder.set_root_task(payment_command_task_template)
     payment_process_builder.set_type(DefaultProcessTemplateDAGInstance)
 
-    # Build more processes like above
+    # Build more processes like above and link them
 
     [...]
 
