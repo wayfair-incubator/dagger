@@ -817,7 +817,7 @@ class IntervalTaskTemplateBuilder(TriggerTaskTemplateBuilder):
             app=self.app,
             type=self._type,
             name=self.name,
-            time_to_execute_key=self._time_to_execute_key,
+            time_to_execute_key=self._time_to_execute_key,  # type: ignore
             time_to_force_complete_key=self._time_to_force_complete_key,
             interval_execute_period_key=self._interval_execute_period_key,
             task_dag_templates=self.task_dags,
