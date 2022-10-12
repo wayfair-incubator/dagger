@@ -1,38 +1,33 @@
 import asyncio
 import json
-import time
 import uuid
 
 import aerospike
 import asynctest
 import faust
-import jsonpickle
-import kafka
 import mode
 import pytest
 from asynctest import CoroutineMock, MagicMock
 
 import dagger
 from dagger.exceptions.exceptions import TemplateDoesNotExist
-from dagger.service.engineconfig import StoreEnum, EngineConfig, AerospikeConfig
+from dagger.service.engineconfig import AerospikeConfig, EngineConfig, StoreEnum
 from dagger.service.services import Dagger, ServiceStateView, TemplateProcessView
 from dagger.store.stores import AerospikeStore, IStore
 from dagger.tasks.task import (
+    CorrelatableMapValue,
     CorreletableKeyTasks,
+    CorreletableLookUpKey,
     DefaultProcessTemplateDAGInstance,
     DefaultTemplateDAGInstance,
     IntervalTask,
     ITask,
-    ITemplateDAGInstance,
-    KafkaCommandTask,
     KafkaListenerTask,
+    SensorTask,
     TaskStatus,
     TaskStatusEnum,
-    TriggerTask,
     Trigger,
-    SensorTask,
-    CorreletableLookUpKey,
-    CorrelatableMapValue,
+    TriggerTask,
 )
 
 
@@ -61,7 +56,9 @@ class TestDagger:
             enable_changelog=False,
         )
         dagger.kafka_broker_list = ["test"]
-        dagger.bootstrap_topic.get_topic_name = MagicMock(return_value="bootstrap_topic")
+        dagger.bootstrap_topic.get_topic_name = MagicMock(
+            return_value="bootstrap_topic"
+        )
         return dagger
 
     @pytest.mark.asyncio
@@ -141,7 +138,9 @@ class TestDagger:
             assert True
 
     @pytest.mark.asyncio
-    async def test_process_engine_get_task_by_key_found(self, pe_fixture, workflow_instance_fixture):
+    async def test_process_engine_get_task_by_key_found(
+        self, pe_fixture, workflow_instance_fixture
+    ):
         mock = MagicMock()
         mock.__aiter__.return_value = range(1)
         cor_instance = CorreletableKeyTasks()
@@ -154,8 +153,12 @@ class TestDagger:
         workflow_instance_fixture.add_task(task)
         task.status.code = TaskStatusEnum.EXECUTING.name
         pe_fixture._store.get_table_value = CoroutineMock(return_value=cor_instance)
-        pe_fixture._invoke_store_get_value_for_key_with_timer = CoroutineMock(return_value=workflow_instance_fixture)
-        async for wf, ret_value in pe_fixture._get_tasks_by_correlatable_key(MagicMock()):
+        pe_fixture._invoke_store_get_value_for_key_with_timer = CoroutineMock(
+            return_value=workflow_instance_fixture
+        )
+        async for wf, ret_value in pe_fixture._get_tasks_by_correlatable_key(
+            MagicMock()
+        ):
             assert ret_value is task
 
     @pytest.mark.asyncio
@@ -166,7 +169,9 @@ class TestDagger:
         assert pe_fixture._store.insert_key_value.called
 
     @pytest.mark.asyncio
-    async def test_process_engine__store_task_instance(self, pe_fixture, workflow_instance_fixture):
+    async def test_process_engine__store_task_instance(
+        self, pe_fixture, workflow_instance_fixture
+    ):
         pe_fixture._store.insert_key_value = CoroutineMock()
         pe_fixture._store.insert_trigger = CoroutineMock()
         pe_fixture.update_correletable_key_for_task = CoroutineMock()
@@ -176,13 +181,17 @@ class TestDagger:
         workflow_instance_fixture.runtime_parameters = dict()
         workflow_instance_fixture.runtime_parameters[123] = 123
         faust.current_event = MagicMock()
-        await pe_fixture._insert_correletable_key_task(listener_task, workflow_instance_fixture)
+        await pe_fixture._insert_correletable_key_task(
+            listener_task, workflow_instance_fixture
+        )
         assert pe_fixture.update_correletable_key_for_task.called
         assert not pe_fixture._store.insert_trigger.called
         trigger_task = TriggerTask(CoroutineMock())
         trigger_task.time_to_execute = 123
         pe_fixture._store.insert_trigger = CoroutineMock()
-        await pe_fixture._store_trigger_instance(trigger_task, workflow_instance=workflow_instance_fixture)
+        await pe_fixture._store_trigger_instance(
+            trigger_task, workflow_instance=workflow_instance_fixture
+        )
         assert pe_fixture._store.insert_trigger.called
         trigger_task = IntervalTask(CoroutineMock())
         trigger_task.time_to_execute = 123
@@ -192,7 +201,9 @@ class TestDagger:
     @pytest.mark.asyncio
     async def test_process_engine_get_instance(self, pe_fixture):
         task = MagicMock()
-        pe_fixture._invoke_store_get_value_for_key_with_timer = CoroutineMock(return_value=task)
+        pe_fixture._invoke_store_get_value_for_key_with_timer = CoroutineMock(
+            return_value=task
+        )
         ret_val = await pe_fixture.get_instance("123")
         assert ret_val == task
 
@@ -230,7 +241,9 @@ class TestDagger:
         assert worker.execute_from_commandline.called
 
     @pytest.mark.asyncio
-    async def test_process_engine__process_tasks_create_event_template(self, pe_fixture):
+    async def test_process_engine__process_tasks_create_event_template(
+        self, pe_fixture
+    ):
         pe_fixture._store_root_template_instance = CoroutineMock()
         pe_fixture._store_process_instance = CoroutineMock()
         pe_fixture._store_task_instance = CoroutineMock()
@@ -248,11 +261,15 @@ class TestDagger:
         assert not pe_fixture._store_task_instance.called
 
     @pytest.mark.asyncio
-    async def test_process_engine__process_tasks_create_event_process(self, pe_fixture: Dagger):
+    async def test_process_engine__process_tasks_create_event_process(
+        self, pe_fixture: Dagger
+    ):
         pe_fixture._store_root_template_instance = CoroutineMock()
         stream = MagicMock()
         stream.__aiter__.return_value = range(1)
-        ITask.loads = MagicMock(return_value=DefaultProcessTemplateDAGInstance(uuid.uuid1()))
+        ITask.loads = MagicMock(
+            return_value=DefaultProcessTemplateDAGInstance(uuid.uuid1())
+        )
         await pe_fixture._process_tasks_create_event(stream)
         assert not pe_fixture._store_root_template_instance.called
 
@@ -263,7 +280,9 @@ class TestDagger:
         stream = MagicMock()
         stream.__aiter__.return_value = range(1)
         mock_task = KafkaListenerTask(uuid.uuid1())
-        mock_task.status = TaskStatus(TaskStatusEnum.NOT_STARTED.name, TaskStatusEnum.NOT_STARTED.value)
+        mock_task.status = TaskStatus(
+            TaskStatusEnum.NOT_STARTED.name, TaskStatusEnum.NOT_STARTED.value
+        )
         ITask.loads = MagicMock(return_value=mock_task)
         pe_fixture.update_correletable_key_for_task = CoroutineMock()
         await pe_fixture._process_tasks_create_event(stream)
@@ -281,7 +300,9 @@ class TestDagger:
         assert listener.start.called
 
     @pytest.mark.asyncio
-    async def test_process_engine_update_correletable_key(self, pe_fixture: Dagger, workflow_instance_fixture):
+    async def test_process_engine_update_correletable_key(
+        self, pe_fixture: Dagger, workflow_instance_fixture
+    ):
         listener = KafkaListenerTask(uuid.uuid1())
         listener.correlatable_key = "k1"
         workflow_instance_fixture.runtime_parameters = dict()
@@ -292,7 +313,9 @@ class TestDagger:
         pe_fixture._store.correletable_keys_table = dict()
         pe_fixture._store.set_table_value = CoroutineMock()
         pe_fixture.remove_task_from_correletable_keys_table = CoroutineMock()
-        await pe_fixture.update_correletable_key_for_task(listener, None, workflow_instance=workflow_instance_fixture)
+        await pe_fixture.update_correletable_key_for_task(
+            listener, None, workflow_instance=workflow_instance_fixture
+        )
         assert not pe_fixture.remove_task_from_correletable_keys_table.called
         await pe_fixture.update_correletable_key_for_task(
             listener, "value", workflow_instance=workflow_instance_fixture
@@ -301,7 +324,10 @@ class TestDagger:
         assert pe_fixture._store.set_table_value.called
         pe_fixture.remove_task_from_correletable_keys_table = MagicMock()
         await pe_fixture.update_correletable_key_for_task(
-            listener, "value", new_task=True, workflow_instance=workflow_instance_fixture
+            listener,
+            "value",
+            new_task=True,
+            workflow_instance=workflow_instance_fixture,
         )
         assert not pe_fixture.remove_task_from_correletable_keys_table.called
 
@@ -313,7 +339,9 @@ class TestDagger:
         assert pe_fixture._store.remove_key_value.called
 
     @pytest.mark.asyncio
-    async def test_store_trigger_instance_aerospike(self, pe_fixture: Dagger, workflow_instance_fixture):
+    async def test_store_trigger_instance_aerospike(
+        self, pe_fixture: Dagger, workflow_instance_fixture
+    ):
         pe_fixture.config = EngineConfig(
             BROKER="test",
             DATADIR="datadir",
@@ -331,20 +359,28 @@ class TestDagger:
         pe_fixture._store.get_trigger = CoroutineMock(return_value=None)
         pe_fixture._store.insert_trigger = CoroutineMock()
         pe_fixture._store.store_trigger_instance = CoroutineMock()
-        await pe_fixture._store_trigger_instance(trigger_instance, workflow_instance=workflow_instance_fixture)
+        await pe_fixture._store_trigger_instance(
+            trigger_instance, workflow_instance=workflow_instance_fixture
+        )
         assert pe_fixture._store.store_trigger_instance.called
 
     @pytest.mark.asyncio
-    async def test_get_tasks_by_correlatable_key_task_not_found(self, pe_fixture: Dagger, workflow_instance_fixture):
+    async def test_get_tasks_by_correlatable_key_task_not_found(
+        self, pe_fixture: Dagger, workflow_instance_fixture
+    ):
         cr_tasks = CorreletableKeyTasks()
         task_id = uuid.uuid1()
         lookup_key = CorreletableLookUpKey(workflow_instance_fixture.id, task_id)
         cr_tasks.lookup_keys = set()
         cr_tasks.lookup_keys.add(lookup_key)
         pe_fixture._store.del_table_value = CoroutineMock()
-        pe_fixture._store.get_value_for_key = CoroutineMock(return_value=workflow_instance_fixture)
+        pe_fixture._store.get_value_for_key = CoroutineMock(
+            return_value=workflow_instance_fixture
+        )
         pe_fixture._store.get_table_value = CoroutineMock(return_value=cr_tasks)
-        async for _, _ in pe_fixture._get_tasks_by_correlatable_key(lookup_key=("k", "v")):
+        async for _, _ in pe_fixture._get_tasks_by_correlatable_key(
+            lookup_key=("k", "v")
+        ):
             assert False
         assert pe_fixture._store.del_table_value.called
 
@@ -370,7 +406,9 @@ class TestDagger:
         assert db_options == aero_opts
 
     @pytest.mark.asyncio
-    async def test_chunk_and_store_correlatable_tasks_no_overflow(self, pe_fixture: Dagger, workflow_instance_fixture):
+    async def test_chunk_and_store_correlatable_tasks_no_overflow(
+        self, pe_fixture: Dagger, workflow_instance_fixture
+    ):
         pe_fixture.max_correletable_keys_in_values = 2
         cor_instance: CorreletableKeyTasks = CorreletableKeyTasks()
         cor_instance.key = "key"
@@ -380,13 +418,17 @@ class TestDagger:
         cor_instance.lookup_keys.add(lookup_key)
         pe_fixture._store.set_table_value = CoroutineMock()
         await pe_fixture.chunk_and_store_correlatable_tasks(
-            cor_instance=cor_instance, value=uuid.uuid1(), workflow_id=workflow_instance_fixture.id
+            cor_instance=cor_instance,
+            value=uuid.uuid1(),
+            workflow_id=workflow_instance_fixture.id,
         )
         assert pe_fixture._store.set_table_value.call_count == 1
         assert cor_instance.overflow_key is None
 
     @pytest.mark.asyncio
-    async def test_chunk_and_store_correlatable_tasks_overflow(self, pe_fixture: Dagger, workflow_instance_fixture):
+    async def test_chunk_and_store_correlatable_tasks_overflow(
+        self, pe_fixture: Dagger, workflow_instance_fixture
+    ):
         pe_fixture.max_correletable_keys_in_values = 2
         cor_instance: CorreletableKeyTasks = CorreletableKeyTasks()
         cor_instance.key = "key"
@@ -398,13 +440,15 @@ class TestDagger:
         cor_instance.lookup_keys.add(lookup_key2)
         pe_fixture._store.set_table_value = CoroutineMock()
         await pe_fixture.chunk_and_store_correlatable_tasks(
-            cor_instance=cor_instance, value=uuid.uuid1(), workflow_id=workflow_instance_fixture.id
+            cor_instance=cor_instance,
+            value=uuid.uuid1(),
+            workflow_id=workflow_instance_fixture.id,
         )
         assert pe_fixture._store.set_table_value.call_count == 2
         assert cor_instance.overflow_key is not None
 
     @pytest.fixture
-    async def correletable_table_fixture(self, workflow_instance_fixture):
+    def correletable_table_fixture(self, workflow_instance_fixture):
 
         c1: CorreletableKeyTasks = CorreletableKeyTasks()
         c1.key = "ck1_topic1"
@@ -441,63 +485,95 @@ class TestDagger:
         workflow_instance_fixture.add_task(mock_task)
 
         workflow_instance_fixture.runtime_parameters = dict()
-        workflow_instance_fixture.runtime_parameters = {mock_task.correlatable_key: "ck1"}
+        workflow_instance_fixture.runtime_parameters = {
+            mock_task.correlatable_key: "ck1"
+        }
         workflow_instance_fixture.sensor_tasks_to_correletable_map = dict()
-        workflow_instance_fixture.sensor_tasks_to_correletable_map[mock_task.id] = CorrelatableMapValue(
-            mock_task.correlatable_key, "ck1"
-        )
+        workflow_instance_fixture.sensor_tasks_to_correletable_map[
+            mock_task.id
+        ] = CorrelatableMapValue(mock_task.correlatable_key, "ck1")
 
         await pe_fixture.update_correletable_key_for_task(
-            task_instance=mock_task, key="ck1", new_task=True, workflow_instance=workflow_instance_fixture
+            task_instance=mock_task,
+            key="ck1",
+            new_task=True,
+            workflow_instance=workflow_instance_fixture,
         )
         assert len(pe_fixture._store.correletable_keys_table) == 3
-        c1: CorreletableKeyTasks = pe_fixture._store.correletable_keys_table["ck1_topic1"]
-        c2: CorreletableKeyTasks = pe_fixture._store.correletable_keys_table[c1.overflow_key]
+        c1: CorreletableKeyTasks = pe_fixture._store.correletable_keys_table[
+            "ck1_topic1"
+        ]
+        c2: CorreletableKeyTasks = pe_fixture._store.correletable_keys_table[
+            c1.overflow_key
+        ]
         assert c2.key == c1.overflow_key
-        c3: CorreletableKeyTasks = pe_fixture._store.correletable_keys_table[c2.overflow_key]
+        c3: CorreletableKeyTasks = pe_fixture._store.correletable_keys_table[
+            c2.overflow_key
+        ]
         assert c3.key == c2.overflow_key
         assert c3.overflow_key is None
 
         await pe_fixture.update_correletable_key_for_task(
-            task_instance=mock_task, key="ck2", new_task=False, workflow_instance=workflow_instance_fixture
+            task_instance=mock_task,
+            key="ck2",
+            new_task=False,
+            workflow_instance=workflow_instance_fixture,
         )
         assert len(pe_fixture._store.correletable_keys_table) == 3
-        c1: CorreletableKeyTasks = pe_fixture._store.correletable_keys_table["ck1_topic1"]
-        c2: CorreletableKeyTasks = pe_fixture._store.correletable_keys_table[c1.overflow_key]
+        c1: CorreletableKeyTasks = pe_fixture._store.correletable_keys_table[
+            "ck1_topic1"
+        ]
+        c2: CorreletableKeyTasks = pe_fixture._store.correletable_keys_table[
+            c1.overflow_key
+        ]
         assert c2.key == c1.overflow_key
         assert c2.overflow_key is None
-        c3: CorreletableKeyTasks = pe_fixture._store.correletable_keys_table["ck2_topic1"]
+        c3: CorreletableKeyTasks = pe_fixture._store.correletable_keys_table[
+            "ck2_topic1"
+        ]
         assert c3.key == "ck2_topic1"
         assert c3.overflow_key is None
         assert len(c3.lookup_keys) == 1
 
     @pytest.mark.asyncio
-    async def test_persist_tasks_ids_empty_cor_instances(self, pe_fixture: Dagger, correletable_table_fixture):
+    async def test_persist_tasks_ids_empty_cor_instances(
+        self, pe_fixture: Dagger, correletable_table_fixture
+    ):
         pe_fixture._store = IStore(pe_fixture)
         pe_fixture.max_correletable_keys_in_values = 2
         current_task_id = uuid.uuid1()
         tasks_ids = [current_task_id]
-        await pe_fixture.persist_tasks_ids_for_correletable_keys(lookup_keys=tasks_ids, cor_instances=[])
+        await pe_fixture.persist_tasks_ids_for_correletable_keys(
+            lookup_keys=tasks_ids, cor_instances=[]
+        )
         assert current_task_id in tasks_ids
 
     @pytest.mark.asyncio
-    async def test_persist_tasks_ids_more_chunks(self, pe_fixture: Dagger, correletable_table_fixture):
+    async def test_persist_tasks_ids_more_chunks(
+        self, pe_fixture: Dagger, correletable_table_fixture
+    ):
         pe_fixture._store = IStore(pe_fixture)
         pe_fixture.max_correletable_keys_in_values = 2
         current_task_id = uuid.uuid1()
         tasks_ids = [current_task_id, uuid.uuid1(), uuid.uuid1()]
-        await pe_fixture.persist_tasks_ids_for_correletable_keys(lookup_keys=tasks_ids, cor_instances=[MagicMock()])
+        await pe_fixture.persist_tasks_ids_for_correletable_keys(
+            lookup_keys=tasks_ids, cor_instances=[MagicMock()]
+        )
         assert len(tasks_ids) == 3
 
     @pytest.mark.asyncio
-    async def test_persist_tasks_ids_success(self, pe_fixture: Dagger, correletable_table_fixture):
+    async def test_persist_tasks_ids_success(
+        self, pe_fixture: Dagger, correletable_table_fixture
+    ):
         pe_fixture._store = IStore(pe_fixture)
         pe_fixture.max_correletable_keys_in_values = 2
         pe_fixture._store.correletable_keys_table = correletable_table_fixture
         ck = []
         for value in correletable_table_fixture.values():
             ck.append(value)
-        await pe_fixture.persist_tasks_ids_for_correletable_keys(lookup_keys=[], cor_instances=ck)
+        await pe_fixture.persist_tasks_ids_for_correletable_keys(
+            lookup_keys=[], cor_instances=ck
+        )
         assert len(correletable_table_fixture) == 0
 
 
@@ -530,7 +606,8 @@ class TestTemplateProcessView:
         def iterable_items(**kwargs):
             dumped_dict = MagicMock()
             dumped_dict.__iter__.return_value = [
-                [json.dumps(item[0]), json.dumps(item[1])] for item in store_data_fixture.items()
+                [json.dumps(item[0]), json.dumps(item[1])]
+                for item in store_data_fixture.items()
             ]
             return dumped_dict
 

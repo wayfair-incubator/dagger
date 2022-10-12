@@ -1,9 +1,7 @@
+import asyncio
 import json
 import time
 import uuid
-
-import asyncio
-from copy import deepcopy
 
 import asynctest
 import faust
@@ -13,9 +11,9 @@ from cachetools import TTLCache
 from faust.types import TP
 
 import dagger
-from dagger.service.services import Dagger
 from dagger.store.stores import AerospikeStore, RocksDBStore
 from dagger.tasks.task import (
+    DefaultTemplateDAGInstance,
     ITask,
     ITemplateDAGInstance,
     SystemTimerTask,
@@ -23,7 +21,6 @@ from dagger.tasks.task import (
     TaskStatusEnum,
     TaskType,
     Trigger,
-    DefaultTemplateDAGInstance,
 )
 
 
@@ -61,7 +58,9 @@ class TestAeroSpikeStore:
         trigger.task_ids = None
         store.del_table_value = CoroutineMock()
         await store.remove_trigger(key=trigger)
-        store.del_table_value.assert_called_with(table=store.triggers_table, key=trigger.get_trigger_key())
+        store.del_table_value.assert_called_with(
+            table=store.triggers_table, key=trigger.get_trigger_key()
+        )
 
     @pytest.mark.asyncio
     async def test_del_table_value_called(self, store: AerospikeStore):
@@ -70,7 +69,9 @@ class TestAeroSpikeStore:
         store.del_value = MagicMock()
 
         await store.del_table_value(table=store.kv_table, key="k1")
-        store.app.loop.run_in_executor.assert_called_with(None, store.del_value, store.kv_table, "k1")
+        store.app.loop.run_in_executor.assert_called_with(
+            None, store.del_value, store.kv_table, "k1"
+        )
         assert store.kv_table.on_key_del.called
 
     @pytest.mark.asyncio
@@ -82,7 +83,9 @@ class TestAeroSpikeStore:
         store.app.task_update_callbacks = [callback_method]
         # Set mocks
         old_value = ITemplateDAGInstance(uuid.uuid1())
-        old_value.status = TaskStatus(code=TaskStatusEnum.NOT_STARTED.name, value=TaskStatusEnum.NOT_STARTED.value)
+        old_value.status = TaskStatus(
+            code=TaskStatusEnum.NOT_STARTED.name, value=TaskStatusEnum.NOT_STARTED.value
+        )
         old_value.runtime_parameters = dict()
         store.get_table_value = CoroutineMock(return_value=old_value)
         mock_future = asyncio.Future()
@@ -92,7 +95,9 @@ class TestAeroSpikeStore:
         store.app.task_update_topic.send = CoroutineMock(return_value=mock_future)
 
         value = ITemplateDAGInstance(uuid.uuid1())
-        value.status = TaskStatus(code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value)
+        value.status = TaskStatus(
+            code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+        )
         value.task_type = TaskType.SUB_DAG.name
         value.runtime_parameters = dict()
         await store.insert_key_value(key=value.id, value=value)
@@ -108,13 +113,17 @@ class TestAeroSpikeStore:
 
         store.get_table_value = CoroutineMock(return_value=value)
         updated_value = ITemplateDAGInstance(uuid.uuid1())
-        updated_value.status = TaskStatus(code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value)
+        updated_value.status = TaskStatus(
+            code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+        )
         updated_value.task_type = TaskType.SUB_DAG.name
         updated_value.runtime_parameters = {"hu_id": "EX8886661"}
         await store.insert_key_value(key=updated_value.id, value=updated_value)
         assert store.app.task_update_topic.send.called
         assert store.set_table_value.called
-        store.set_table_value.assert_called_with(store.kv_table, updated_value.id, updated_value)
+        store.set_table_value.assert_called_with(
+            store.kv_table, updated_value.id, updated_value
+        )
 
         # Reset mocks
         store.app.task_update_topic.send = CoroutineMock(return_value=mock_future)
@@ -130,12 +139,16 @@ class TestAeroSpikeStore:
         store.set_table_value = CoroutineMock()
 
         old_value = ITemplateDAGInstance(uuid.uuid1())
-        old_value.status = TaskStatus(code=TaskStatusEnum.NOT_STARTED.name, value=TaskStatusEnum.NOT_STARTED.value)
+        old_value.status = TaskStatus(
+            code=TaskStatusEnum.NOT_STARTED.name, value=TaskStatusEnum.NOT_STARTED.value
+        )
         old_value.task_type = TaskType.ROOT.name
         old_value.runtime_parameters = dict()
 
         value = ITemplateDAGInstance(uuid.uuid1())
-        value.status = TaskStatus(code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value)
+        value.status = TaskStatus(
+            code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+        )
         value.task_type = TaskType.ROOT.name
         value.runtime_parameters = {"changed_value": "changed_value"}
         store.get_table_value = CoroutineMock(return_value=updated_value)
@@ -210,7 +223,9 @@ class TestAeroSpikeStore:
         value.id = "id1"
         store.triggers_table.data.BIN_KEY = "key"
         store.triggers_table.data.client.query = MagicMock(return_value=query)
-        query.results = MagicMock(return_value=[(MagicMock(), MagicMock(), {"key": value})])
+        query.results = MagicMock(
+            return_value=[(MagicMock(), MagicMock(), {"key": value})]
+        )
         query.is_done = MagicMock(return_type=True)
         store.triggers_table.data._decode_value = MagicMock(return_value=value)
         ret = list()
@@ -275,14 +290,18 @@ class TestAeroSpikeStore:
         assert timer_task.execute.called
 
     @pytest.mark.asyncio
-    async def test_process_trigger_task_complete(self, store, workflow_instance_fixture):
+    async def test_process_trigger_task_complete(
+        self, store, workflow_instance_fixture
+    ):
         trigger = MagicMock()
         store.remove_trigger = CoroutineMock()
         await store.process_trigger_task_complete(trigger, workflow_instance_fixture)
         assert store.remove_trigger.assert_awaited_once
 
     @pytest.mark.asyncio
-    async def test_exec_timer_task(self, store, system_timer_fixture, workflow_instance_fixture):
+    async def test_exec_timer_task(
+        self, store, system_timer_fixture, workflow_instance_fixture
+    ):
         assert system_timer_fixture.status.code == TaskStatusEnum.NOT_STARTED.name
         mock_trigger_task = Trigger({"ID1"}, time.time())
 
@@ -336,11 +355,13 @@ class TestRocksDBStore:
             dumped_dict = MagicMock()
             if encode:
                 dumped_dict.__iter__.return_value = [
-                    [item[0].encode(), codec.dumps(item[1])] for item in store_data_fixture.items()
+                    [item[0].encode(), codec.dumps(item[1])]
+                    for item in store_data_fixture.items()
                 ]
             else:
                 dumped_dict.__iter__.return_value = [
-                    [codec.dumps(item[0]), codec.dumps(item[1])] for item in store_data_fixture.items()
+                    [codec.dumps(item[0]), codec.dumps(item[1])]
+                    for item in store_data_fixture.items()
                 ]
             return dumped_dict
 
@@ -369,13 +390,14 @@ class TestRocksDBStore:
         mock_event.message.partition = 0
         faust.current_event = MagicMock(return_value=mock_event)
         asyncio.sleep = CoroutineMock()
-        store.app.faust_app.assignor.assigned_actives = MagicMock(return_value=[TP(topic="test", partition=0)])
+        store.app.faust_app.assignor.assigned_actives = MagicMock(
+            return_value=[TP(topic="test", partition=0)]
+        )
         expected_outputs = [mock_trigger1, mock_trigger2]
         async for sub in store.get_valid_triggers():
             assert sub in expected_outputs
             expected_outputs.remove(sub)
         assert len(expected_outputs) == 0
-
 
     @pytest.mark.asyncio
     async def test_insert_remove_key_value(self, store):
@@ -395,7 +417,6 @@ class TestRocksDBStore:
         await store.remove_key_value(str(task.id))
         assert store.kv_table.get(str(task.id)) is None
 
-
     @pytest.mark.asyncio
     async def test_insert_remove_trigger(self, store: RocksDBStore):
         store.triggers_table = dict()
@@ -404,8 +425,6 @@ class TestRocksDBStore:
         assert store.triggers_table[mock_trigger1.get_trigger_key()] == mock_trigger1
         await store.remove_trigger(mock_trigger1)
         assert store.triggers_table.get(mock_trigger1.get_trigger_key()) is None
-
-
 
     @pytest.mark.asyncio
     async def test_store_trigger_instance(self, store):
@@ -422,4 +441,3 @@ class TestRocksDBStore:
         store.remove_trigger = CoroutineMock()
         await store.process_trigger_task_complete(MagicMock(), MagicMock())
         assert store.remove_trigger.called
-

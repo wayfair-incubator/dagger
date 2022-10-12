@@ -22,11 +22,11 @@ from dagger.tasks.task import (
     KafkaAgent,
     KafkaCommandTask,
     KafkaListenerTask,
+    TaskOperator,
     TaskStatus,
     TaskStatusEnum,
-    TriggerTask,
-    TaskOperator,
     TaskType,
+    TriggerTask,
 )
 from dagger.utils.utils import DAGIDGenerator
 
@@ -40,7 +40,11 @@ class ITemplateDAG:
     template_type: Type[ITemplateDAGInstance]
 
     def __init__(
-        self, dag: IProcessTemplateDAG, name: str, app: Service, template_type: Type[ITemplateDAGInstance]
+        self,
+        dag: IProcessTemplateDAG,
+        name: str,
+        app: Service,
+        template_type: Type[ITemplateDAGInstance],
     ) -> None:
         self.app = app
         self.root_process_dag = dag
@@ -49,13 +53,21 @@ class ITemplateDAG:
 
     @abc.abstractmethod
     async def create_instance(
-        self, id: UUID, partition_key_lookup: str, *, repartition: bool = True, seed: random.Random = None, **kwargs
+        self,
+        id: UUID,
+        partition_key_lookup: str,
+        *,
+        repartition: bool = True,
+        seed: random.Random = None,
+        **kwargs,
     ) -> ITemplateDAGInstance:  # pragma: no cover
         """Method for creating an instance of a template"""
         ...
 
     @abc.abstractmethod
-    def set_dynamic_builders_for_process_template(self, name: str, process_template_builders):
+    def set_dynamic_builders_for_process_template(
+        self, name: str, process_template_builders
+    ):
         ...
 
 
@@ -74,14 +86,14 @@ class IProcessTemplateDAG:
         app: Service,
         name: str,
         process_type: Type[ITask],
-        root_task_dag: TaskTemplate,
+        root_task_dag: Optional[TaskTemplate],
         max_run_duration: int,
     ) -> None:
         self.next_process_dag = next_process_dag
         self.app = app
         self.name = name
         self.process_type = process_type
-        self.root_task_dag = root_task_dag
+        self.root_task_dag = root_task_dag  # type: ignore
         self.max_run_duration = max_run_duration
 
     @abc.abstractmethod
@@ -101,11 +113,15 @@ class IProcessTemplateDAG:
         ...
 
     @abc.abstractmethod
-    def set_dynamic_process_builders(self, process_template_builders) -> None:  # pragma: no cover
+    def set_dynamic_process_builders(
+        self, process_template_builders
+    ) -> None:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    def set_parallel_process_template_dags(self, parallel_process_templates) -> None:  # pragma: no cover
+    def set_parallel_process_template_dags(
+        self, parallel_process_templates
+    ) -> None:  # pragma: no cover
         """Method to set child_process_task_templates
 
         Args:
@@ -122,7 +138,11 @@ class IDynamicProcessTemplateDAG(IProcessTemplateDAG):
     name: str
 
     def __init__(
-        self, next_process_dags: List[IProcessTemplateDAG], app: Service, name: str, max_run_duration: int
+        self,
+        next_process_dags: List[IProcessTemplateDAG],
+        app: Service,
+        name: str,
+        max_run_duration: int,
     ) -> None:
         self.next_process_dag = next_process_dags
         self.app = app
@@ -150,7 +170,9 @@ class IDynamicProcessTemplateDAG(IProcessTemplateDAG):
     def set_parallel_process_template_dags(
         self, parallel_process_templates: List[IProcessTemplateDAG]
     ) -> None:  # pragma: no cover
-        raise NotImplementedError("IDynamicProcessTemplateDAG does not implement this method")
+        raise NotImplementedError(
+            "IDynamicProcessTemplateDAG does not implement this method"
+        )
 
 
 class TaskTemplate:
@@ -244,7 +266,9 @@ class DefaultTaskTemplate(TaskTemplate):
             ITask: Instance of ITask.
         """
         task_instance.time_created = int(time.time())
-        task_instance.status = TaskStatus(code=TaskStatusEnum.NOT_STARTED.name, value=TaskStatusEnum.NOT_STARTED.value)
+        task_instance.status = TaskStatus(
+            code=TaskStatusEnum.NOT_STARTED.name, value=TaskStatusEnum.NOT_STARTED.value
+        )
         task_instance.task_name = f"{parent_name}.{self.name}"
         task_instance.next_dags = list()
         task_instance.allow_skip_to = self.allow_skip_to
@@ -252,7 +276,9 @@ class DefaultTaskTemplate(TaskTemplate):
         if workflow_instance:
             workflow_instance.add_task(task=task_instance)
         for next_task_template in self.next_task_dag:
-            dag_id = DAGIDGenerator.generate_dag_id_from_seed(seed) if seed else uuid.uuid1()
+            dag_id = (
+                DAGIDGenerator.generate_dag_id_from_seed(seed) if seed else uuid.uuid1()
+            )
             next_task_instance = await next_task_template.create_instance(
                 dag_id,
                 parent_id=parent_id,
@@ -311,7 +337,9 @@ class DefaultKafkaTaskTemplate(DefaultTaskTemplate):
         **kwargs: Any,
     ) -> ITask:
         self.app.add_topic(self.topic.get_topic_name(), self.topic)  # type: ignore
-        task_instance = self._type(id=id, topic=self.topic.get_topic_name(), parent_id=parent_id)
+        task_instance = self._type(
+            id=id, topic=self.topic.get_topic_name(), parent_id=parent_id
+        )
         return await super()._setup_instance(
             task_instance,
             parent_id=parent_id,
@@ -339,7 +367,11 @@ class DefaultTriggerTaskTemplate(DefaultTaskTemplate):
         allow_skip_to: bool,
     ) -> None:
         super().__init__(
-            app=app, type=type, name=name, task_dag_template=task_dag_templates, allow_skip_to=allow_skip_to
+            app=app,
+            type=type,
+            name=name,
+            task_dag_template=task_dag_templates,
+            allow_skip_to=allow_skip_to,
         )
         self.time_to_execute_lookup_key = time_to_execute_key
 
@@ -355,14 +387,18 @@ class DefaultTriggerTaskTemplate(DefaultTaskTemplate):
         workflow_instance: ITemplateDAGInstance = None,
         **kwargs: Any,
     ) -> ITask:
-        if (
-            self.time_to_execute_lookup_key is None
-            or workflow_instance.runtime_parameters.get(self.time_to_execute_lookup_key, None) is None
-        ):
+        time_to_execute = (
+            workflow_instance.runtime_parameters.get(
+                self.time_to_execute_lookup_key, None
+            )
+            if workflow_instance
+            else None
+        )
+        if self.time_to_execute_lookup_key is None or time_to_execute is None:
             raise InvalidTriggerTimeForTask(f"Task in invalid state {id}")
         task_instance = self._type(
             id=id,
-            time_to_execute=workflow_instance.runtime_parameters[self.time_to_execute_lookup_key],
+            time_to_execute=time_to_execute,
             parent_id=parent_id,
         )
         return await super()._setup_instance(
@@ -396,7 +432,11 @@ class DefaultIntervalTaskTemplate(DefaultTaskTemplate):
         allow_skip_to: bool,
     ) -> None:
         super().__init__(
-            app=app, type=type, name=name, task_dag_template=task_dag_templates, allow_skip_to=allow_skip_to
+            app=app,
+            type=type,
+            name=name,
+            task_dag_template=task_dag_templates,
+            allow_skip_to=allow_skip_to,
         )
         self.time_to_execute_lookup_key = time_to_execute_key
         self.time_to_force_complete_lookup_key = time_to_force_complete_key
@@ -414,28 +454,49 @@ class DefaultIntervalTaskTemplate(DefaultTaskTemplate):
         workflow_instance: ITemplateDAGInstance = None,
         **kwargs,
     ) -> ITask:
+        time_to_execute_lookup_key_runtime = (
+            workflow_instance.runtime_parameters.get(
+                self.time_to_execute_lookup_key, None
+            )
+            if workflow_instance
+            else None
+        )
+        time_to_force_complete_lookup_key_runtime = (
+            workflow_instance.runtime_parameters.get(
+                self.time_to_force_complete_lookup_key, None
+            )
+            if workflow_instance
+            else None
+        )
+        interval_execute_period_key_runtime = (
+            workflow_instance.runtime_parameters.get(
+                self.interval_execute_period_key, None
+            )
+            if workflow_instance
+            else None
+        )
         if (
             self.time_to_execute_lookup_key
-            and workflow_instance.runtime_parameters.get(self.time_to_execute_lookup_key, None) is None
+            and time_to_execute_lookup_key_runtime is None
         ):
             raise InvalidTriggerTimeForTask(f"Task in invalid state {id}")
         if (
             self.time_to_force_complete_lookup_key is None
-            or workflow_instance.runtime_parameters.get(self.time_to_force_complete_lookup_key, None) is None
+            or time_to_force_complete_lookup_key_runtime is None
         ):
             raise InvalidTriggerTimeForTask(f"Task in invalid state {id}")
         if (
             self.interval_execute_period_key is None
-            or workflow_instance.runtime_parameters.get(self.interval_execute_period_key, None) is None
+            or interval_execute_period_key_runtime is None
         ):
             raise InvalidTriggerTimeForTask(f"Task in invalid state {id}")
         task_instance = self._type(
             id=id,
-            time_to_execute=workflow_instance.runtime_parameters[self.time_to_force_complete_lookup_key]
+            time_to_execute=time_to_execute_lookup_key_runtime
             if self.time_to_execute_lookup_key
             else None,
-            time_to_force_complete=workflow_instance.runtime_parameters[self.time_to_force_complete_lookup_key],
-            interval_execute_period=workflow_instance.runtime_parameters[self.interval_execute_period_key],
+            time_to_force_complete=time_to_force_complete_lookup_key_runtime,
+            interval_execute_period=interval_execute_period_key_runtime,
             parent_id=parent_id,
         )
         if workflow_instance:
@@ -501,7 +562,9 @@ class ParallelCompositeTaskTemplate(DefaultTaskTemplate):
             ITask: Instance of ITask.
         """
         task_instance.time_created = int(time.time())
-        task_instance.status = TaskStatus(code=TaskStatusEnum.NOT_STARTED.name, value=TaskStatusEnum.NOT_STARTED.value)
+        task_instance.status = TaskStatus(
+            code=TaskStatusEnum.NOT_STARTED.name, value=TaskStatusEnum.NOT_STARTED.value
+        )
         task_instance.task_name = f"{parent_name}.{self.name}"
         task_instance.next_dags = list()
         task_instance.task_type = TaskType.PARALLEL_COMPOSITE.name
@@ -509,9 +572,12 @@ class ParallelCompositeTaskTemplate(DefaultTaskTemplate):
         task_instance.operator_type = self.parallel_operator_type.name
         task_instance.allow_skip_to = self.allow_skip_to
         task_instance.reprocess_on_message = self.reprocess_on_message
-        workflow_instance.add_task(task=task_instance)
+        if workflow_instance:
+            workflow_instance.add_task(task=task_instance)
         for next_task_template in self.next_task_dag:
-            dag_id = DAGIDGenerator.generate_dag_id_from_seed(seed) if seed else uuid.uuid1()
+            dag_id = (
+                DAGIDGenerator.generate_dag_id_from_seed(seed) if seed else uuid.uuid1()
+            )
             next_task_instance = await next_task_template.create_instance(
                 id=dag_id,
                 parent_id=parent_id,
@@ -524,7 +590,9 @@ class ParallelCompositeTaskTemplate(DefaultTaskTemplate):
             )
             task_instance.next_dags.append(next_task_instance.id)
         for next_task_template in self.child_task_templates:
-            dag_id = DAGIDGenerator.generate_dag_id_from_seed(seed) if seed else uuid.uuid1()
+            dag_id = (
+                DAGIDGenerator.generate_dag_id_from_seed(seed) if seed else uuid.uuid1()
+            )
             next_task_instance = await next_task_template.create_instance(
                 id=dag_id,
                 parent_id=task_instance.id,
@@ -555,7 +623,9 @@ class TaskTemplateBuilder:
         self.reprocess_on_message = False
 
     @abc.abstractmethod
-    def set_type(self, task_type: Type[ITask]) -> TaskTemplateBuilder:  # pragma: no cover
+    def set_type(
+        self, task_type: Type[ITask]
+    ) -> TaskTemplateBuilder:  # pragma: no cover
         """Set the type of task."""
         ...
 
@@ -564,12 +634,16 @@ class TaskTemplateBuilder:
         """Set the type of task."""
         ...
 
-    def set_next(self, task_template: TaskTemplate) -> TaskTemplateBuilder:  # pragma: no cover
+    def set_next(
+        self, task_template: TaskTemplate
+    ) -> TaskTemplateBuilder:  # pragma: no cover
         """Set the next task."""
         self.task_dags.append(task_template)
         return self
 
-    def set_allow_skip_to(self, allow_skip_to: bool) -> TaskTemplateBuilder:  # pragma: no cover
+    def set_allow_skip_to(
+        self, allow_skip_to: bool
+    ) -> TaskTemplateBuilder:  # pragma: no cover
         """Set whether or not this task is allowed to be executed out of order (skipped to)"""
         self.allow_skip_to = allow_skip_to
         return self
@@ -588,7 +662,9 @@ class DefaultTaskTemplateBuilder(TaskTemplateBuilder):
         super().__init__(app)
 
     def set_type(self, task_type: Type[ITask[KT, VT]]) -> TaskTemplateBuilder:
-        if issubclass(task_type, KafkaListenerTask) or issubclass(task_type, KafkaCommandTask):
+        if issubclass(task_type, KafkaListenerTask) or issubclass(
+            task_type, KafkaCommandTask
+        ):
             raise InvalidTaskType(f"Invalid task type {task_type}")
         self._type = task_type
         return self
@@ -612,9 +688,13 @@ class ParallelCompositeTaskTemplateBuilder(DefaultTaskTemplateBuilder):
     parallel_tasks_templates: List[TaskTemplate]
     operator: TaskOperator
 
-    def __init__(self, app: Service, no_of_parallel_tasks: int, task_template: TaskTemplate) -> None:
+    def __init__(
+        self, app: Service, no_of_parallel_tasks: int, task_template: TaskTemplate
+    ) -> None:
         super().__init__(app)
-        self.parallel_tasks_templates = self.get_parallel_tasks_templates(no_of_parallel_tasks, task_template)
+        self.parallel_tasks_templates = self.get_parallel_tasks_templates(
+            no_of_parallel_tasks, task_template
+        )
         self.operator = TaskOperator.JOIN_ALL
 
     def add_parallel_task(self, task_template: TaskTemplate) -> TaskTemplateBuilder:
@@ -716,24 +796,28 @@ class TriggerTaskTemplateBuilder(DefaultTaskTemplateBuilder):
 
 
 class IntervalTaskTemplateBuilder(TriggerTaskTemplateBuilder):
-    _time_to_execute_key: Optional[str] = None
+    _time_to_execute_key: Optional[str] = None  # type: ignore
     _time_to_force_complete_key: str
     _interval_execute_period_key: str
 
-    def set_interval_execute_period_lookup_key(self, key: str) -> IntervalTaskTemplateBuilder:
+    def set_interval_execute_period_lookup_key(
+        self, key: str
+    ) -> IntervalTaskTemplateBuilder:
         self._interval_execute_period_key = key
         return self
 
-    def set_time_to_force_complete_lookup_key(self, key: str) -> IntervalTaskTemplateBuilder:
+    def set_time_to_force_complete_lookup_key(
+        self, key: str
+    ) -> IntervalTaskTemplateBuilder:
         self._time_to_force_complete_key = key
         return self
 
     def build(self) -> TaskTemplate:
-        return DefaultIntervalTaskTemplate(
+        return DefaultIntervalTaskTemplate(  # type: ignore
             app=self.app,
             type=self._type,
             name=self.name,
-            time_to_execute_key=self._time_to_execute_key,
+            time_to_execute_key=self._time_to_execute_key,  # type: ignore
             time_to_force_complete_key=self._time_to_force_complete_key,
             interval_execute_period_key=self._interval_execute_period_key,
             task_dag_templates=self.task_dags,
@@ -762,7 +846,9 @@ class KafkaListenerTaskTemplateBuilder(DefaultTaskTemplateBuilder):
     def set_concurrency(self, concurrency: int):
         self._concurrency = concurrency
 
-    def set_reprocess_on_message(self, reprocess_on_message: bool) -> TaskTemplateBuilder:  # pragma: no cover
+    def set_reprocess_on_message(
+        self, reprocess_on_message: bool
+    ) -> TaskTemplateBuilder:  # pragma: no cover
         """Set whether or not this task should reprocess on_message if a correlated message is reprocessed."""
         self.reprocess_on_message = reprocess_on_message
         return self
@@ -796,7 +882,9 @@ class IProcessTemplateDAGBuilder:
         self.next_process_dag = list()
 
     @abc.abstractmethod
-    def set_root_task(self, task: TaskTemplate) -> IProcessTemplateDAGBuilder:  # pragma: no cover
+    def set_root_task(
+        self, task: TaskTemplate
+    ) -> IProcessTemplateDAGBuilder:  # pragma: no cover
         """Set the first task in the process.
 
         Args:
@@ -808,7 +896,9 @@ class IProcessTemplateDAGBuilder:
         ...
 
     @abc.abstractmethod
-    def set_next_process(self, task: IProcessTemplateDAG) -> IProcessTemplateDAGBuilder:  # pragma: no cover
+    def set_next_process(
+        self, task: IProcessTemplateDAG
+    ) -> IProcessTemplateDAGBuilder:  # pragma: no cover
         """Set the next process.
 
         Args:
@@ -820,7 +910,9 @@ class IProcessTemplateDAGBuilder:
         ...
 
     @abc.abstractmethod
-    def set_name(self, process_name: str) -> IProcessTemplateDAGBuilder:  # pragma: no cover
+    def set_name(
+        self, process_name: str
+    ) -> IProcessTemplateDAGBuilder:  # pragma: no cover
         """Sets the name of the process.
 
         Args:
@@ -832,7 +924,9 @@ class IProcessTemplateDAGBuilder:
         ...
 
     @abc.abstractmethod
-    def set_type(self, process_type: Type[ITask]) -> IProcessTemplateDAGBuilder:  # pragma: no cover
+    def set_type(
+        self, process_type: Type[ITask]
+    ) -> IProcessTemplateDAGBuilder:  # pragma: no cover
         """Sets the type of the process.
 
         Args:
@@ -856,7 +950,9 @@ class ITemplateDAGBuilder:
         self.app = app
 
     @abc.abstractmethod
-    def set_root(self, template: IProcessTemplateDAG) -> ITemplateDAGBuilder:  # pragma: no cover
+    def set_root(
+        self, template: IProcessTemplateDAG
+    ) -> ITemplateDAGBuilder:  # pragma: no cover
         """Sets the first process in the template.
 
         Args:
@@ -885,7 +981,9 @@ class ITemplateDAGBuilder:
         ...
 
     @abc.abstractmethod
-    def set_type(self, template_type: Type[ITemplateDAGInstance]) -> ITemplateDAGBuilder:  # pragma: no cover
+    def set_type(
+        self, template_type: Type[ITemplateDAGInstance]
+    ) -> ITemplateDAGBuilder:  # pragma: no cover
         """Sets the type of the process.
 
         Args:

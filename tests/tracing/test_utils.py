@@ -1,13 +1,9 @@
-from contextvars import Context
-
-import ddtrace
 import opentracing
 import pytest
 from asynctest import MagicMock
 from faust.utils.tracing import set_current_span
-from multidict import CIMultiDict
 
-from dagger.tracing.utils import AiohttpClientTracer, TracingSensor
+from dagger.tracing.utils import TracingSensor
 
 
 class TestTracerSensor:
@@ -41,7 +37,9 @@ class TestTracerSensor:
         assert tracer_fixture.app_tracer is not None
 
     @pytest.mark.asyncio
-    async def test_on_message_in_with_context(self, tracer_fixture: TracingSensor, topic_fixture):
+    async def test_on_message_in_with_context(
+        self, tracer_fixture: TracingSensor, topic_fixture
+    ):
         tracer_fixture.app_tracer.extract = MagicMock()
         tracer_fixture.app_tracer.start_span = MagicMock()
         message = MagicMock()
@@ -51,7 +49,9 @@ class TestTracerSensor:
         assert tracer_fixture.app_tracer.extract.called
 
     @pytest.mark.asyncio
-    async def test_on_message_without_context(self, tracer_fixture: TracingSensor, topic_fixture):
+    async def test_on_message_without_context(
+        self, tracer_fixture: TracingSensor, topic_fixture
+    ):
         tracer_fixture.app_tracer.extract = MagicMock()
         tracer_fixture.app_tracer.start_span = MagicMock()
         message = MagicMock()
@@ -61,14 +61,18 @@ class TestTracerSensor:
         assert not tracer_fixture.app_tracer.extract.called
 
     @pytest.mark.asyncio
-    async def test_on_stream_event_in(self, tracer_fixture: TracingSensor, event_fixture):
+    async def test_on_stream_event_in(
+        self, tracer_fixture: TracingSensor, event_fixture
+    ):
         stream = MagicMock()
         opentracing.start_child_span = MagicMock()
         tracer_fixture.on_stream_event_in(MagicMock(), 10, stream, event_fixture)
         assert opentracing.start_child_span.called
 
     @pytest.mark.asyncio
-    async def test_on_stream_event_out(self, tracer_fixture: TracingSensor, topic_fixture, event_fixture):
+    async def test_on_stream_event_out(
+        self, tracer_fixture: TracingSensor, topic_fixture, event_fixture
+    ):
         stream = MagicMock()
         span = MagicMock()
         span.finish = MagicMock()
@@ -90,7 +94,10 @@ class TestTracerSensor:
     async def test_on_send_initiated(self, tracer_fixture: TracingSensor):
         set_current_span(MagicMock())
         opentracing.start_child_span = MagicMock(return_value=MagicMock())
-        assert tracer_fixture.on_send_initiated(MagicMock(), "test", MagicMock(), 10, 10) is not None
+        assert (
+            tracer_fixture.on_send_initiated(MagicMock(), "test", MagicMock(), 10, 10)
+            is not None
+        )
 
     @pytest.mark.asyncio
     async def test_on_send_completed(self, tracer_fixture: TracingSensor):
@@ -109,19 +116,3 @@ class TestTracerSensor:
         state.get = MagicMock(return_value=span)
         tracer_fixture.on_send_error(MagicMock(), MagicMock(), state)
         assert span.finish.called
-
-
-class TestAiohttpClientTracer:
-    @pytest.mark.asyncio
-    async def test_on_request_start(self):
-        client = AiohttpClientTracer()
-        params = MagicMock()
-        params.headers = CIMultiDict()
-        span = MagicMock()
-        span.context = MagicMock()
-        span.context.dd_origin = "test"
-        span.context.trace_id = "t1"
-        span.context.span_id = "s1"
-        ddtrace.tracer.current_span = MagicMock(return_value=span)
-        await client.on_request_start(MagicMock(), MagicMock(), params)
-        assert len(params.headers) > 0

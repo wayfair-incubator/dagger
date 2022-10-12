@@ -2,15 +2,16 @@ import typing
 from enum import Enum
 from typing import Any, NamedTuple
 
-from faust.stores.aerospike import AeroSpikeStore
+from faust.stores.aerospike import AeroSpikeStore  # type: ignore
 
 
 class StoreEnum(Enum):
     AEROSPIKE = "aerospike://"
     ROCKSDB = "rocksdb://"
 
+
 try:  # pragma: no cover
-    import rocksdb
+    import rocksdb  # type: ignore
 except ImportError:  # pragma: no cover
     rocksdb = None  # noqa
 
@@ -20,14 +21,15 @@ else:
 
     class CompressionType:  # noqa
         """Dummy CompressionType."""
-        lz4_compression = u'lz4_compression'
+
+        lz4_compression = "lz4_compression"
 
 
 class EngineConfig(NamedTuple):
     """Engine Config NamedTuple"""
 
     BROKER: str
-    DATADIR: str
+    DATADIR: typing.Optional[str]
     STORE: str
     APPLICATION_NAME: str
     PACKAGE_NAME: str
@@ -59,6 +61,7 @@ class AerospikeConfig(NamedTuple):
         if self.KWARGS:
             options[AeroSpikeStore.CLIENT_OPTIONS_KEY].update(**self.KWARGS)
         return options
+
 
 ROCKS_DB_OPTIONS = {
     "write_buffer_size": 16 * 1024 * 1024,

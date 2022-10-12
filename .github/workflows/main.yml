@@ -41,7 +41,7 @@ jobs:
           test-requirements: "true"
 
       - name: Run black
-        run: black --check dagger tests
+        run: black --check dagger tests integration_tests
 
   flake8:
     runs-on: ubuntu-latest
@@ -70,7 +70,6 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
         with:
-          requirements: "true"
           test-requirements: "true"
 
       - name: Run isort
@@ -90,7 +89,7 @@ jobs:
             test-requirements: "true"
 
         - name: Run mypy
-          run: mypy dagger tests
+          run: mypy dagger
 
   test:
     runs-on: ubuntu-latest
@@ -112,28 +111,6 @@ jobs:
         - name: Run pytest
           run: pytest --cov-report xml:coverage-${{ matrix.python-version }}.xml --junitxml=test-results-${{ matrix.python-version }}.xml
 
-        - name: Upload pytest test results artifact
-          uses: actions/upload-artifact@v3
-          with:
-            name: pytest-results-${{ matrix.python-version }}
-            path: test-results-${{ matrix.python-version }}.xml
-          # Use always() to always run this step to publish test results when there are test failures
-          if: ${{ always() }}
-
-        - name: Upload coverage results artifact
-          uses: actions/upload-artifact@v3
-          with:
-            name: pytest-coverage-${{ matrix.python-version }}
-            path: coverage-${{ matrix.python-version }}.xml
-          # Use always() to always run this step to publish test results when there are test failures
-          if: ${{ always() }}
-
-        - name: Publish coverage results to Codecov
-          uses: codecov/codecov-action@v3.1.1
-          with:
-            file: coverage-${{ matrix.python-version }}.xml
-            fail_ci_if_error: true
-
   verify-wheel:
     runs-on: ubuntu-latest
     strategy:
@@ -152,59 +129,59 @@ jobs:
         with:
           package-import-name: "dagger"
 
-  validate-doc-examples:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-      
-      - name: Validate docs
-        run: ./docker/validate_docs.sh
-
-  build-docs:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-
-      - uses: actions/setup-python@v4.2.0
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        uses: ./.github/actions/install-dependencies
-        with:
-          requirements: "true"
-          docs-requirements: "true"
-
-      - name: Build Docs
-        run: mkdocs build --strict
-
-      - name: Upload coverage results artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: docs-site
-          path: site/
-
-  update-dev-docs:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-
-      - uses: actions/setup-python@v4.2.0
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        uses: ./.github/actions/install-dependencies
-        with:
-          requirements: "true"
-          docs-requirements: "true"
-
-      - name: Push documentation changes
-        uses: ./.github/actions/publish-docs-with-mike
-        with:
-          version_name: dev
+#  validate-doc-examples:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Check out code
+#        uses: actions/checkout@v3
+#
+#      - name: Validate docs
+#        run: ./docker/validate_docs.sh
+#
+#  build-docs:
+#    runs-on: ubuntu-latest
+#    if: github.event_name == 'pull_request'
+#    steps:
+#      - name: Check out code
+#        uses: actions/checkout@v3
+#
+#      - uses: actions/setup-python@v4.2.0
+#        with:
+#          python-version: ${{ env.PYTHON_VERSION }}
+#
+#      - name: Install dependencies
+#        uses: ./.github/actions/install-dependencies
+#        with:
+#          requirements: "true"
+#          docs-requirements: "true"
+#
+#      - name: Build Docs
+#        run: mkdocs build --strict
+#
+#      - name: Upload coverage results artifact
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: docs-site
+#          path: site/
+#
+#  update-dev-docs:
+#    runs-on: ubuntu-latest
+#    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#    steps:
+#      - name: Check out code
+#        uses: actions/checkout@v3
+#
+#      - uses: actions/setup-python@v4.2.0
+#        with:
+#          python-version: ${{ env.PYTHON_VERSION }}
+#
+#      - name: Install dependencies
+#        uses: ./.github/actions/install-dependencies
+#        with:
+#          requirements: "true"
+#          docs-requirements: "true"
+#
+#      - name: Push documentation changes
+#        uses: ./.github/actions/publish-docs-with-mike
+#        with:
+#          version_name: dev

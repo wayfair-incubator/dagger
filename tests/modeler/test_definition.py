@@ -5,23 +5,26 @@ from asynctest import CoroutineMock, MagicMock
 
 from dagger.modeler.definition import (
     DefaultTemplateBuilder,
+    DynamicProcessTemplateDAG,
+    DynamicProcessTemplateDagBuilder,
+    ParallelCompositeProcessTemplateDAG,
+    ParallelCompositeProcessTemplateDagBuilder,
     ProcessTemplateDAG,
     ProcessTemplateDagBuilder,
     TemplateDAG,
-    DynamicProcessTemplateDAG,
-    DynamicProcessTemplateDagBuilder,
-    ParallelCompositeProcessTemplateDagBuilder,
-    ParallelCompositeProcessTemplateDAG,
 )
 from dagger.tasks.task import (
     DefaultProcessTemplateDAGInstance,
     DefaultTemplateDAGInstance,
+    ParallelCompositeTask,
+    TaskOperator,
     TaskStatusEnum,
     TaskType,
-    TaskOperator,
-    ParallelCompositeTask,
 )
-from dagger.templates.template import ParallelCompositeTaskTemplateBuilder, ParallelCompositeTaskTemplate
+from dagger.templates.template import (
+    ParallelCompositeTaskTemplate,
+    ParallelCompositeTaskTemplateBuilder,
+)
 
 
 class TestDefaultTemplateBuilder:
@@ -66,19 +69,23 @@ class TestProcessTemplateDagBuilder:
 
 class TestProcessTemplateDAG:
     @pytest.fixture()
-    async def template_fixture(self):
+    def template_fixture(self):
         app = MagicMock()
         app._store_process_instance = CoroutineMock()
         app.tasks_topic.send = CoroutineMock()
         next_template_dag = MagicMock()
         next_template_dag_return_instance = MagicMock()
         next_template_dag_return_instance.id = "next_id"
-        next_template_dag.create_instance = CoroutineMock(return_value=next_template_dag_return_instance)
+        next_template_dag.create_instance = CoroutineMock(
+            return_value=next_template_dag_return_instance
+        )
         list = [next_template_dag]
         root_task_dag = MagicMock()
         root_task_dag_create_instance = MagicMock()
         root_task_dag_create_instance.id = "root_id"
-        root_task_dag.create_instance = CoroutineMock(return_value=root_task_dag_create_instance)
+        root_task_dag.create_instance = CoroutineMock(
+            return_value=root_task_dag_create_instance
+        )
         template = ProcessTemplateDAG(
             next_process_dag=list,
             app=app,
@@ -117,53 +124,82 @@ class TestDynamicProcessTemplateDAG:
         terminal_template_dag = MagicMock()
         next_template_dag_return_instance = MagicMock()
         next_template_dag_return_instance.id = "D"
-        terminal_template_dag.create_instance = CoroutineMock(return_value=next_template_dag_return_instance)
+        terminal_template_dag.create_instance = CoroutineMock(
+            return_value=next_template_dag_return_instance
+        )
         list = [terminal_template_dag]
 
         root_task_dag = MagicMock()
         root_task_dag_create_instance = MagicMock()
         root_task_dag_create_instance.id = "root_id"
-        root_task_dag.create_instance = CoroutineMock(return_value=root_task_dag_create_instance)
-        template = DynamicProcessTemplateDAG(next_process_dag=list, app=app, name="dynamic", max_run_duration=0)
+        root_task_dag.create_instance = CoroutineMock(
+            return_value=root_task_dag_create_instance
+        )
+        template = DynamicProcessTemplateDAG(
+            next_process_dag=list, app=app, name="dynamic", max_run_duration=0
+        )
         return template
 
     @pytest.fixture()
-    async def template_fixture(self, dynamic_template_fixture):
+    def template_fixture(self, dynamic_template_fixture):
         app = MagicMock()
         app._store_process_instance = CoroutineMock()
         process_dag = MagicMock()
         process_dag.id = "p1"
         app.tasks_topic.send = CoroutineMock()
         template = TemplateDAG(
-            dag=dynamic_template_fixture, app=app, name="TEST1", template_type=DefaultTemplateDAGInstance
+            dag=dynamic_template_fixture,
+            app=app,
+            name="TEST1",
+            template_type=DefaultTemplateDAGInstance,
         )
         return template
 
     @pytest.mark.asyncio
-    async def test_template_create(self, dynamic_template_fixture, template_fixture: TemplateDAG):
+    async def test_template_create(
+        self, dynamic_template_fixture, template_fixture: TemplateDAG
+    ):
         process_A_template_dag_builder = MagicMock()
-        process_A_template_dag_builder.set_next_process = MagicMock(return_value=process_A_template_dag_builder)
+        process_A_template_dag_builder.set_next_process = MagicMock(
+            return_value=process_A_template_dag_builder
+        )
         process_A_template_dag = MagicMock()
         process_A_dag_instance = MagicMock()
         process_A_dag_instance.id = "A"
-        process_A_template_dag.create_instance = CoroutineMock(return_value=process_A_dag_instance)
-        process_A_template_dag_builder.build = MagicMock(return_value=process_A_template_dag)
+        process_A_template_dag.create_instance = CoroutineMock(
+            return_value=process_A_dag_instance
+        )
+        process_A_template_dag_builder.build = MagicMock(
+            return_value=process_A_template_dag
+        )
 
         process_B_template_dag_builder = MagicMock()
-        process_B_template_dag_builder.set_next_process = MagicMock(return_value=process_B_template_dag_builder)
+        process_B_template_dag_builder.set_next_process = MagicMock(
+            return_value=process_B_template_dag_builder
+        )
         process_B_template_dag = MagicMock()
         process_B_dag_instance = MagicMock()
         process_B_dag_instance.id = "B"
-        process_B_template_dag.create_instance = CoroutineMock(return_value=process_B_dag_instance)
-        process_B_template_dag_builder.build = MagicMock(return_value=process_B_template_dag)
+        process_B_template_dag.create_instance = CoroutineMock(
+            return_value=process_B_dag_instance
+        )
+        process_B_template_dag_builder.build = MagicMock(
+            return_value=process_B_template_dag
+        )
 
         process_C_template_dag_builder = MagicMock()
-        process_C_template_dag_builder.set_next_process = MagicMock(return_value=process_C_template_dag_builder)
+        process_C_template_dag_builder.set_next_process = MagicMock(
+            return_value=process_C_template_dag_builder
+        )
         process_C_template_dag = MagicMock()
         process_C_dag_instance = MagicMock()
         process_C_dag_instance.id = "C"
-        process_C_template_dag.create_instance = CoroutineMock(return_value=process_C_dag_instance)
-        process_C_template_dag_builder.build = MagicMock(return_value=process_C_template_dag)
+        process_C_template_dag.create_instance = CoroutineMock(
+            return_value=process_C_dag_instance
+        )
+        process_C_template_dag_builder.build = MagicMock(
+            return_value=process_C_template_dag
+        )
         template_fixture.set_dynamic_builders_for_process_template(
             name="dynamic",
             process_template_builders=[
@@ -183,8 +219,12 @@ class TestDynamicProcessTemplateDAG:
         assert instance.id == process_A_dag_instance.id
 
     @pytest.mark.asyncio
-    async def test_template_create_terminal(self, dynamic_template_fixture, template_fixture):
-        template_fixture.set_dynamic_builders_for_process_template(name="dynamic", process_template_builders=[])
+    async def test_template_create_terminal(
+        self, dynamic_template_fixture, template_fixture
+    ):
+        template_fixture.set_dynamic_builders_for_process_template(
+            name="dynamic", process_template_builders=[]
+        )
         instance = await dynamic_template_fixture.create_instance(
             uuid.uuid1(),
             uuid.uuid1(),
@@ -198,14 +238,16 @@ class TestDynamicProcessTemplateDAG:
 
 class TestParallelCompositeProcessTemplateDAG:
     @pytest.fixture()
-    async def dynamic_parallel_composite_fixture(self):
+    def dynamic_parallel_composite_fixture(self):
         app = MagicMock()
         app._store_process_instance = CoroutineMock()
         app.tasks_topic.send = CoroutineMock()
         next_process_template = MagicMock()
         next_template_dag_return_instance = MagicMock()
         next_template_dag_return_instance.id = "np"
-        next_process_template.create_instance = CoroutineMock(return_value=next_template_dag_return_instance)
+        next_process_template.create_instance = CoroutineMock(
+            return_value=next_template_dag_return_instance
+        )
 
         child_1_task = MagicMock()
         child_1_task.id = "c1"
@@ -227,7 +269,9 @@ class TestParallelCompositeProcessTemplateDAG:
         return template
 
     @pytest.mark.asyncio
-    async def test_template_create(self, dynamic_parallel_composite_fixture: ParallelCompositeProcessTemplateDAG):
+    async def test_template_create(
+        self, dynamic_parallel_composite_fixture: ParallelCompositeProcessTemplateDAG
+    ):
 
         instance = await dynamic_parallel_composite_fixture.create_instance(
             uuid.uuid1(),
@@ -286,8 +330,10 @@ class TestParallelCompositeTemplateDagBuilder:
         task_template = MagicMock()
         no_of_parallel_tasks = 2
 
-        builder: ParallelCompositeTaskTemplateBuilder = ParallelCompositeTaskTemplateBuilder(
-            MagicMock(), no_of_parallel_tasks, task_template
+        builder: ParallelCompositeTaskTemplateBuilder = (
+            ParallelCompositeTaskTemplateBuilder(
+                MagicMock(), no_of_parallel_tasks, task_template
+            )
         )
         builder.set_next(next_pd)
         builder.set_name("parallel")
@@ -298,13 +344,17 @@ class TestParallelCompositeTemplateDagBuilder:
         template: ParallelCompositeTaskTemplate = builder.build()
         assert template.next_task_dag == [next_pd]
         assert template.name == "parallel"
-        assert template.child_task_templates == [task_template, task_template, parallel_task_template]
+        assert template.child_task_templates == [
+            task_template,
+            task_template,
+            parallel_task_template,
+        ]
         assert template.parallel_operator_type == TaskOperator.JOIN_ALL
 
 
 class TestTemplateDAG:
     @pytest.fixture()
-    async def template_fixture(self):
+    def template_fixture(self):
         app = MagicMock()
         app._store_process_instance = CoroutineMock()
         process_dag_template = MagicMock()
@@ -313,14 +363,20 @@ class TestTemplateDAG:
         process_dag_template.create_instance = CoroutineMock(return_value=process_dag)
         app.tasks_topic.send = CoroutineMock()
         template = TemplateDAG(
-            dag=process_dag_template, app=app, name="TEST1", template_type=DefaultTemplateDAGInstance
+            dag=process_dag_template,
+            app=app,
+            name="TEST1",
+            template_type=DefaultTemplateDAGInstance,
         )
         return template
 
     @pytest.mark.asyncio
     async def test_template_create(self, template_fixture: TemplateDAG):
         instance = await template_fixture.create_instance(
-            uuid.uuid1(), partition_key_lookup="warehouse_id", warehouse_id="05", container="c1"
+            uuid.uuid1(),
+            partition_key_lookup="warehouse_id",
+            warehouse_id="05",
+            container="c1",
         )
         assert instance.template_name == "TEST1"
         assert instance.task_type == TaskType.ROOT.name

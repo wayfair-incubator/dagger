@@ -1,26 +1,23 @@
 import logging
 import traceback
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import aiohttp
-import ddtrace
-import opentracing
-from aiohttp import TraceRequestStartParams
-from ddtrace.propagation.http import HTTPPropagator
+import opentracing  # type: ignore
 from faust import App, EventT, Sensor, StreamT
 from faust.types import TP, Message, PendingMessage, ProducerT, RecordMetadata
 from faust.types.core import OpenHeadersArg, merge_headers
 from faust.utils.tracing import current_span, set_current_span
-from mode.utils.compat import want_str
-from mode.utils.objects import cached_property
+from mode.utils.compat import want_str  # type: ignore
+from mode.utils.objects import cached_property  # type: ignore
 from opentracing import Format
-from opentracing.ext import tags
+from opentracing.ext import tags  # type: ignore
 
 logger = logging.getLogger(__name__)
 
 
 class TracingSensor(Sensor):
-    aiohttp_sessions: Dict[str, aiohttp.ClientSession] = None
+    aiohttp_sessions: Optional[Dict[str, aiohttp.ClientSession]] = None
 
     @cached_property
     def app_tracer(self) -> opentracing.Tracer:
@@ -41,12 +38,17 @@ class TracingSensor(Sensor):
         carrier_headers = {want_str(k): want_str(v) for k, v in message.headers}  # type: ignore
 
         if carrier_headers:
-            parent_context = self.app_tracer.extract(format=Format.TEXT_MAP, carrier=carrier_headers)
+            parent_context = self.app_tracer.extract(
+                format=Format.TEXT_MAP, carrier=carrier_headers
+            )
             span = self.app_tracer.start_span(
-                operation_name=f"consume-from-{message.topic}", references=opentracing.follows_from(parent_context)
+                operation_name=f"consume-from-{message.topic}",
+                references=opentracing.follows_from(parent_context),
             )
         else:
-            span = self.app_tracer.start_span(operation_name=f"consume-from-{message.topic}")
+            span = self.app_tracer.start_span(
+                operation_name=f"consume-from-{message.topic}"
+            )
         set_current_span(span)
         span.set_tag("kafka-topic", tp.topic)
         span.set_tag("kafka-partition", tp.partition)
@@ -55,13 +57,17 @@ class TracingSensor(Sensor):
         message.span = span  # type: ignore
 
     # Message sent to a stream as an event.
-    def on_stream_event_in(self, tp: TP, offset: int, stream: StreamT, event: EventT) -> None:
+    def on_stream_event_in(
+        self, tp: TP, offset: int, stream: StreamT, event: EventT
+    ) -> None:
         stream_meta = getattr(event.message, "stream_meta", None)
         if stream_meta is None:
             stream_meta = event.message.stream_meta = {}  # type: ignore
         parent_span = event.message.span  # type: ignore
         if parent_span:
-            stream_span = opentracing.start_child_span(parent_span, f"job-{event.message.topic}")
+            stream_span = opentracing.start_child_span(
+                parent_span, f"job-{event.message.topic}"
+            )
             stream_span.set_tag("stream-concurrency-index", stream.concurrency_index)
             stream_span.set_tag("stream-prefix", stream.prefix)
             spans = stream_meta.get("stream_spans")
@@ -71,7 +77,9 @@ class TracingSensor(Sensor):
             stream_span.__enter__()
 
     # Event was acknowledged by stream.
-    def on_stream_event_out(self, tp: TP, offset: int, stream: StreamT, event: EventT, state: Dict = None) -> None:
+    def on_stream_event_out(
+        self, tp: TP, offset: int, stream: StreamT, event: EventT, state: Dict = None
+    ) -> None:
         stream_meta = getattr(event.message, "stream_meta", None)
         if stream_meta is None:
             stream_meta = event.message.stream_meta = {}  # type: ignore
@@ -89,20 +97,27 @@ class TracingSensor(Sensor):
 
     # About to send a message.
     def on_send_initiated(
-        self, producer: ProducerT, topic: str, message: PendingMessage, keysize: int, valsize: int
+        self,
+        producer: ProducerT,
+        topic: str,
+        message: PendingMessage,
+        keysize: int,
+        valsize: int,
     ) -> Any:
         parent_span = current_span()
         if parent_span:
             span = opentracing.start_child_span(parent_span, f"produce-to-{topic}")
             header_map = dict(message.headers) if message.headers else {}
             span.set_tag("kafka-headers", header_map)
-            self.trace_inject_headers(span, message.headers)
+            self.trace_inject_headers(span, message.headers)  # type: ignore
             span.__enter__()
             return {"span": span}
         return {"span": None}
 
     # Message successfully sent.
-    def on_send_completed(self, producer: ProducerT, state: Any, metadata: RecordMetadata) -> None:
+    def on_send_completed(
+        self, producer: ProducerT, state: Any, metadata: RecordMetadata
+    ) -> None:
         span = state.get("span")
         if span is not None:
             span.set_tag("kafka-topic", metadata.topic)
@@ -111,7 +126,9 @@ class TracingSensor(Sensor):
             span.finish()
 
     # Error while sending message.
-    def on_send_error(self, producer: ProducerT, exc: BaseException, state: Any) -> None:
+    def on_send_error(
+        self, producer: ProducerT, exc: BaseException, state: Any
+    ) -> None:
         span = state.get("span")
         if span is not None:
             span.set_tag(tags.ERROR, "true")
@@ -124,13 +141,17 @@ class TracingSensor(Sensor):
             )
             span.finish(exception=exc)
 
-    def trace_inject_headers(self, span: opentracing.Span, headers: OpenHeadersArg) -> Any:
+    def trace_inject_headers(
+        self, span: opentracing.Span, headers: OpenHeadersArg
+    ) -> Any:
         try:
             if self.app_tracer is not None:
                 if span is not None:
                     carrier: Dict = {}
                     self.app_tracer.inject(
-                        span_context=span.context, format=opentracing.Format.TEXT_MAP, carrier=carrier
+                        span_context=span.context,
+                        format=opentracing.Format.TEXT_MAP,
+                        carrier=carrier,
                     )
                     merge_headers(headers, carrier)
             return headers
@@ -140,13 +161,3 @@ class TracingSensor(Sensor):
 
     def on_threaded_producer_buffer_processed(self, app: App, size: int) -> None:  # type: ignore
         pass
-
-
-class AiohttpClientTracer:
-    @staticmethod
-    async def on_request_start(session, trace_config_ctx, params: TraceRequestStartParams):
-        span = ddtrace.tracer.current_span()
-        headers: Dict[Any, Any] = {}
-        propagator = HTTPPropagator()
-        propagator.inject(span.context, headers)
-        params.headers.extend(headers)

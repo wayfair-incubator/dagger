@@ -1,22 +1,16 @@
-# Dagger
-
 [![Release](https://img.shields.io/github/v/release/wayfair-incubator/dagger?display_name=tag)](CHANGELOG.md)
 [![Lint](https://github.com/wayfair-incubator/dagger/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/wayfair-incubator/dagger/actions/workflows/lint.yml)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![Maintainer](https://img.shields.io/badge/Maintainer-Wayfair-7F187F)](https://wayfair.github.io)
 
+# Dagger
 
-## About The Project
-
-**Dagger** is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous and synchronous long-running business logic in a scalable and resilient way.
-
-
-Dagger requires Python 3.7 or later for the new `async/await`_ syntax,
-and variable type annotations.
-
+**Dagger** is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous and
+synchronous long-running business logic in a scalable and resilient way.
+Dagger requires Python 3.7 or later for the new `async/await`_ syntax, and variable type annotations.
 Here's an example of how to use the library to build and run a workflow:
 
-```
+```python
 import logging
 from uuid import uuid1
 from dagger.service.services import Dagger
@@ -59,7 +53,7 @@ def order_template(template_name: str) -> ITemplateDAG:
     payment_process_builder.set_root_task(payment_command_task_template)
     payment_process_builder.set_type(DefaultProcessTemplateDAGInstance)
 
-    # Build more processes like above
+    # Build more processes like above and link them
 
     [...]
 
@@ -75,117 +69,133 @@ def order_template(template_name: str) -> ITemplateDAG:
 # Starts the worker
 workflow_engine.main()
 ```
-       
-    
 
-The ``register_template`` decorator defines a "DAG processor" that essentially
-defines the various processes and child tasks the DAG executes. In the example above the code
-creates a named template ``OrderWorkflow``  and associates a ``PAYMENT`` process with 2 child
-tasks ``PAYMENT_LISTENER`` and ``PAYMENT_COMMAND``. The ``SHIPPING`` process follows with similarly
-named topics and processes and the template defines the root process and links them in a DAG (Directed
+The ``register_template`` decorator defines a "DAG processor" that essentially defines the various processes and child
+tasks the DAG executes. In the example above the code creates a named template ``OrderWorkflow``  and associates
+a ``PAYMENT`` process with 2 child tasks ``PAYMENT_LISTENER`` and ``PAYMENT_COMMAND``. The ``SHIPPING`` process follows
+with similarly named topics and processes and the template defines the root process and links them in a DAG (Directed
 Acyclic Graph) structure
 
 The application can define as many DAG'S it needs to model using the ``register_template``
 decorator. process-engine populates all the DAG templates in the codebase decorated with `register_template`
 
 Here's and example of how to create an instance of a specific DAG:
-    
-        template = workflow_engine.get_template('BulkTemplate')
-        runtime_parameters:Dict[str, str] = dict()
-        runtime_parameters['customer_name']= `EXAMPLE_CUSTOMER`
-        runtime_parameters['order_number'] = 'EXAMPLE_ORDER' 
-        template_instance = await template.create_instance(uuid1(), runtime_parameters)
+
+```python
+template = workflow_engine.get_template('BulkTemplate')
+runtime_parameters:Dict[str, str] = dict()
+runtime_parameters['customer_name']= `EXAMPLE_CUSTOMER`
+runtime_parameters['order_number'] = 'EXAMPLE_ORDER' 
+template_instance = await template.create_instance(uuid1(), runtime_parameters)
+```
 
 To begin execution of the DAG instance created above
-    
-        await workflow_engine.submit(template_instance)
-        
-This begins the actual execution of the tasks created by the template definition and executes them in the sequence as defined
-in the template. The engine currently supports the following types of tasks:
+
+```python
+await workflow_engine.submit(template_instance)
+```
+
+This begins the actual execution of the tasks created by the template definition and executes them in the sequence as
+defined in the template. The engine currently supports the following types of tasks:
 
 ## KafkaCommandTask
 
-This task is used to send a request/message on a Kafka Topic defined using the template builder. This type of task is a child task in the 
-execution graph and can be extended by implementing the method 
+This task is used to send a request/message on a Kafka Topic defined using the template builder. This type of task is a
+child task in the execution graph and can be extended by implementing the method
 
-        @abc.abstractmethod
-        async def execute(self) -> None:
-            ...
-                
+```python
+@abc.abstractmethod
+async def execute(self) -> None:
+    ...
+```
 
- 
 ## KafkaListenerTask
 
-This task waits/halts the execution of the DAG until a message is received on the defined Kafka topic(in the template definition). Each task is created using the
-DAG builder defines a durable key to correlate each received message on the topic against listener tasks. The Engine handles the complexity of invoking the
-appropriate task instance based on the key in the payload.
+This task waits/halts the execution of the DAG until a message is received on the defined Kafka topic(in the template
+definition). Each task is created using the DAG builder defines a durable key to correlate each received message on the
+topic against listener tasks. The Engine handles the complexity of invoking the appropriate task instance based on the
+key in the payload.
 
 A listener task needs to implement the following methods
 
-         @abc.abstractmethod
-         async def on_message(self, *args: Any, **kwargs: Any) -> None :
-            ...
-            
-         @abc.abstractmethod
-         async def get_correlatable_key(self, payload: Any) -> TaskLookupKey: 
-            ...
-            
-The get_correlatable_key method extracts the key by parsing the payload received on the Kafka topic. Using this key the DAGGER looks up the 
-appropriate task from the list of tasks waiting on this event and invokes `on_message` on each one of them. The default implementation of this task
-just sets this task and `COMPLETED`
+```python
+
+ @abc.abstractmethod
+ async def on_message(self, *args: Any, **kwargs: Any) -> None :
+    ...
+    
+ @abc.abstractmethod
+ async def get_correlatable_key(self, payload: Any) -> TaskLookupKey: 
+    ...
+```
+
+The get_correlatable_key method extracts the key by parsing the payload received on the Kafka topic. Using this key the
+DAGGER looks up the appropriate task from the list of tasks waiting on this event and invokes `on_message` on each one
+of them. The default implementation of this task just sets this task and `COMPLETED`
 
 The engine provides the flexibility to implement any other type of listener task by implementing the following interface
-    
-    class SensorTask(ITask[KT, VT]):
+
+```python
+class SensorTask(ITask[KT, VT]):
+```
 
 along with a custom `TaskTemplateBuilder`
 
-    class TaskTemplateBuilder:
-    app: Service
+```python
+class TaskTemplateBuilder:
+app: Service
 
-    def __init__(self, app: Service) -> None :
-        self.app = app
+def __init__(self, app: Service) -> None :
+    self.app = app
 
-    @abc.abstractmethod
-    def set_type(self, task_type:Type[ITask]) -> TaskTemplateBuilder:
-        ...
+@abc.abstractmethod
+def set_type(self, task_type:Type[ITask]) -> TaskTemplateBuilder:
+    ...
 
-    @abc.abstractmethod
-    def build(self) -> TaskTemplate:
-        ...
- 
+@abc.abstractmethod
+def build(self) -> TaskTemplate:
+    ...
+
+```
+
 ## TriggerTask
 
 This task waits/halts the execution of the DAG until current time >= the trigger time on the task
 
 A trigger task needs to implement the following method
 
-        @abc.abstractmethod
-        async def execute(self) -> None:
-            ...
-            
-The engine provides a `TriggerTaskTemplateBuilder` helper to model the task in the DAG. The `set_time_to_execute_lookup_key` on this builder is used
-to define the key to lookup the trigger time provided in the runtime parameters of the task
-            
+```python
+@abc.abstractmethod
+async def execute(self) -> None:
+    ...
+```
+
+The engine provides a `TriggerTaskTemplateBuilder` helper to model the task in the DAG.
+The `set_time_to_execute_lookup_key` on this builder is used to define the key to lookup the trigger time provided in
+the runtime parameters of the task
+
 ## DecisionTask
 
-This type of task is similar to the `case..switch` statement in a programming language. It returns the next task to execute
-based on the execution logic. A decision task needs to implement 
+This type of task is similar to the `case..switch` statement in a programming language. It returns the next task to
+execute based on the execution logic. A decision task needs to implement
 
-    @abc.abstractmethod
-    async def evaluate(self, **kwargs: Any) -> Optional[UUID]:
-        ...
-     
+```python
+@abc.abstractmethod
+async def evaluate(self, **kwargs: Any) -> Optional[UUID]:
+    ...
+```
+
 This method returns the UUID of the next task to execute in the execution path
 
 The Engine provides a `DecisionTaskTemplateBuilder` to model a decision task in the DAG
 
 ## RESTful API
-                    
 
-The framework provides a RESTFul API to retrieve the status of root task instances. Root task is the instance created using the `TaskTemplate`
+The framework provides a RESTFul API to retrieve the status of root task instances. Root task is the instance created
+using the `TaskTemplate`
 which then has multiple, chained ProcessTasks and child tasks(KafkaCommand and KafkaListener tasks)
 
+```json
     http://<hostname>:6066/tasks/instances
 
     [
@@ -256,118 +266,75 @@ which then has multiple, chained ProcessTasks and child tasks(KafkaCommand and K
             "time_created": 1573767624,
             "time_submitted": 1573767698
         }]
-        
-     
 
-Dagger supports any type of stream data: bytes, Unicode and serialized
-structures, but also comes with "Models" that use modern Python
-syntax to describe how keys and values in streams are serialized. For more details on supported models refer to
-https://faust.readthedocs.io/en/latest/userguide/models.html
+```
+
+Dagger supports any type of stream data: bytes, Unicode and serialized structures, but also comes with "Models" that use
+modern Python syntax to describe how keys and values in streams are serialized. For more details on supported models
+refer to
+<https://faust.readthedocs.io/en/latest/userguide/models.html>
 
 ## OpenTelemetry
 
-Dagger has support for open telemetry. To enable open telemetry the client application has to initialise the tracer 
+Dagger has support for open telemetry. To enable open telemetry the client application has to initialise the tracer
 implementation and set the flag enable_telemetry while initializing dagger
 
-Dagger is...
-===========
+## Dagger is
 
-**Simple**
-============
+### Simple
 
+Dagger is extremely easy to use. To get started applications need to install this library, define a DAG using the
+default templates or extending them based on the use case, creating instances of these DAG's and scheduling them for
+execution. The library hides all the complexity of producing and consuming from Kafka, maintaining Kafka Streams
+topology processing and also persistence and recovery of created tasks
 
-Dagger is extremely easy to use. To get started applications need to install this library, define a DAG using
-the default templates or extending them based on the use case, creating instances of these DAG's and scheduling them for 
-execution. The library hides all the complexity of producing and consuming from Kafka, maintaining Kafka Streams topology processing and also persistence
-and recovery of created tasks
+### Highly Available
 
-
-**Highly Available**
-============
-
-
-Dagger is highly available and can survive network problems and server
-crashes.  In the case of node failure, it can automatically recover the state store(representing task data)
+Dagger is highly available and can survive network problems and server crashes. In the case of node failure, it can
+automatically recover the state store(representing task data)
 or failover to a standby node
 
-**Distributed**
-============
+### Distributed
 
- Start more instances of your application as needed to distribute the load on the system
+Start more instances of your application as needed to distribute the load on the system
 
-**Fast**
-============
+### Fast
 
-A single-core  worker instance can already process tens of thousands
-of tasks every second. Dagger uses a fast key-value lookup store based on
-rocksDB replicated to kafka topics for fault tolerance
+A single-core worker instance can already process tens of thousands of tasks every second. Dagger uses a fast key-value
+lookup store based on rocksDB replicated to kafka topics for fault tolerance
 
+## Installation
 
-
-Installation
-============
-
-You can install dagger  via the Wayfair artifactory
-or from source.
+You can install dagger via the Wayfair artifactory or from source.
 
 To install using `pip`:
 
+```shell
+pip install py-dagger
+```
 
-    $ pip install py-dagger
-    
-processingengine has a dependency on `faust` for kafka stream processing
+dagger has a dependency on `faust` for kafka stream processing
 
-Development Setup
-============
+## FAQ
 
-Clone the git repo to your machine.
+### Which version of python is supported?
 
-    $ git clone git@github.csnzoo.com:shared/dagger.git
-
-Create a virtual environment for the process engine project 
-
-    $ cd ./dagger
-    $ python3 -m venv env
-    
-Install the project requirements in your newly created virtual environment.
-    
-    $ source env/bin/activate
-    (env)$ pip install -r requirements.txt
-    (env)$ pip install -r requirements-test.txt
-
-Run docker-compose to see if your installation is in a good state
-
-    $ docker-compose up
-
-Don't forget to set your IDE's interpreter to use the Python instance in the virtual environment you just setup.
-
-PyCharm: Prefences->Project->Project Interpreter
-
-FAQ
-===
-
-
-Which version of python is supported?
----------------------------------------
 dagger supports python version >= 3.7
 
-
-
-What kafka versions are supported?
----------------------------------------
+### What kafka versions are supported?
 
 dagger supports kafka with version >= 0.10.
 
-
-
-
 ## Roadmap
 
-See the [open issues](https://github.com/wayfair-incubator/dagger/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/wayfair-incubator/dagger/issues) for a list of proposed features (and known
+issues).
 
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**. For detailed contributing guidelines, please see [CONTRIBUTING.md](CONTRIBUTING.md)
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any
+contributions you make are **greatly appreciated**. For detailed contributing guidelines, please
+see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## License
 

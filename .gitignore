@@ -1,0 +1,42 @@
+test.txt
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# pyenv
+.python-version
+
+# Environments
+.coverage
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# flake8
+.flake8
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# docs
+docs/build/
+docs/_build/
+docs/Makefile
+docs/*.rst
+
+# vscode
+.vscode
+
+# Other
+dagger-data
+
+# JetBrains
+.idea/

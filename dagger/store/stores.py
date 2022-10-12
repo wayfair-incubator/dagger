@@ -1,35 +1,30 @@
 from __future__ import annotations
 
 import abc
-import json
-
-import jsonpickle
 import asyncio
+import json
 import logging
 import time
-from typing import Any, AsyncGenerator, Dict, List, Mapping, Optional, Set, TypeVar, Union
+from typing import Any, AsyncGenerator, Mapping, Set
 
-
-import aerospike
-from aerospike_helpers import expressions as exp
-
+import aerospike  # type: ignore
+import faust.serializers.schemas  # type: ignore
+import jsonpickle  # type: ignore
+from aerospike_helpers import expressions as exp  # type: ignore
 from faust import Record, Table
 from faust.types import TP
-import faust.serializers.schemas
 from mode import Service
 
 from dagger.service.engineconfig import ROCKS_DB_OPTIONS
 from dagger.tasks.task import (
-    ITemplateDAGInstance,
+    TERMINAL_STATUSES,
     IntervalTask,
     ITask,
+    ITemplateDAGInstance,
     SystemTimerTask,
     TaskStatusEnum,
-    TaskType,
     Trigger,
     TriggerTask,
-    CorreletableKeyTasks,
-    TERMINAL_STATUSES,
 )
 
 logger = logging.getLogger(__name__)
@@ -59,7 +54,11 @@ class IStore:
 
         if self.app.task_update_topic:  # type: ignore
             update_key_lookup = value.partition_key_lookup
-            update_key = value.runtime_parameters.get(update_key_lookup, None)
+            update_key = (
+                value.runtime_parameters.get(update_key_lookup, None)
+                if update_key_lookup
+                else None
+            )
             payload = jsonpickle.encode(value.asdict())
             future = await self.app.task_update_topic.send(key=update_key, value=payload)  # type: ignore
             await future
@@ -67,7 +66,6 @@ class IStore:
             await fn_callback(value)
 
         await self.set_table_value(self.kv_table, key, value)
-
 
     async def remove_key_value(self, key: str) -> None:  # pragma: no cover
         await self.del_table_value(self.kv_table, key)
@@ -89,7 +87,9 @@ class IStore:
         ...
 
     @abc.abstractmethod
-    async def get_trigger(self, key, use_partition: bool = False) -> Trigger:  # pragma: no cover
+    async def get_trigger(
+        self, key, use_partition: bool = False
+    ) -> Trigger:  # pragma: no cover
         ...
 
     def set_value(self, table, key, value):
@@ -110,7 +110,6 @@ class IStore:
     async def del_table_value(self, table, key):
         return table.pop(key, None)
 
-
     @abc.abstractmethod
     def initialize(self, *args) -> None:  # pragma: no cover
         ...
@@ -121,9 +120,12 @@ class IStore:
         except Exception as ex:
             logger.warning(f"Exception executing timer task {ex}")
 
-    async def store_trigger_instance(self, task_instance: TriggerTask, wokflow_instance: ITemplateDAGInstance) -> None:
-        trigger_instance = await self._create_trigger_instance_from_trigger_task(task_instance=task_instance,
-                                                                                 wokflow_instance=wokflow_instance)
+    async def store_trigger_instance(
+        self, task_instance: TriggerTask, wokflow_instance: ITemplateDAGInstance
+    ) -> None:
+        trigger_instance = await self._create_trigger_instance_from_trigger_task(
+            task_instance=task_instance, wokflow_instance=wokflow_instance
+        )
         await self.insert_trigger(trigger_instance)
         logger.debug(
             f"Stored trigger task with id: {str(task_instance.get_id())} and time to execute: {str(task_instance.time_to_execute)} in the datastore."
@@ -133,37 +135,42 @@ class IStore:
     def get_db_options(self) -> Mapping[str, Any]:  # pragma: no cover
         ...
 
-    async def _create_trigger_instance_from_trigger_task(self, task_instance: TriggerTask, wokflow_instance: ITemplateDAGInstance) -> Trigger:
+    async def _create_trigger_instance_from_trigger_task(
+        self, task_instance: TriggerTask, wokflow_instance: ITemplateDAGInstance
+    ) -> Trigger:
         trigger_instance = Trigger()
         trigger_instance.id = task_instance.id
         trigger_instance.trigger_time = task_instance.time_to_execute
         trigger_instance.workflow_id = wokflow_instance.id
         return trigger_instance
 
-    async def process_trigger_task_complete(self, task: TriggerTask, wokflow_instance: ITemplateDAGInstance) -> None:
+    async def process_trigger_task_complete(
+        self, task: TriggerTask, wokflow_instance: ITemplateDAGInstance
+    ) -> None:
         if task and wokflow_instance:
-            trigger: Trigger = await self._create_trigger_instance_from_trigger_task(task_instance=task,
-                                                                                  wokflow_instance=wokflow_instance)
-            if trigger :
+            trigger: Trigger = await self._create_trigger_instance_from_trigger_task(
+                task_instance=task, wokflow_instance=wokflow_instance
+            )
+            if trigger:
                 await self.remove_trigger(trigger)
 
     async def execute_system_timer_task(self) -> None:  # pragma: no cover
-        async for trigger in self.get_valid_triggers() :
+        async for trigger in self.get_valid_triggers():
             # get all tasks with this trigger
             logger.info(f"Found valid trigger {trigger.id}")
             workflow_instance = await self.app.get_instance(trigger.workflow_id)  # type: ignore
             task = None
-            if workflow_instance :
+            if workflow_instance:
                 task = workflow_instance.get_task(id=trigger.id)  # type: ignore
                 finished = True
-            if task and task.status.code == TaskStatusEnum.EXECUTING.name :
-                if issubclass(task.__class__, IntervalTask) :
+            if task and task.status.code == TaskStatusEnum.EXECUTING.name:
+                if issubclass(task.__class__, IntervalTask):
                     finished = await task.start(workflow_instance)
-                else :
+                else:
                     await task.start(workflow_instance)
-                if finished :
+                if finished:
                     await self.remove_trigger(trigger)
-            if not task or task.status.code in TERMINAL_STATUSES :
+            if not task or task.status.code in TERMINAL_STATUSES:
                 await self.remove_trigger(trigger)
 
 
@@ -216,20 +223,29 @@ class AerospikeStore(IStore):
                 self.triggers_table.data._encode_key(value.get_trigger_key()),
             )
             vt = {
-                self.triggers_table.data.BIN_KEY: self.triggers_table.data._encode_value(value),
+                self.triggers_table.data.BIN_KEY: self.triggers_table.data._encode_value(
+                    value
+                ),
                 self.TRIGGER_TIMESTAMP: value.trigger_time,
             }
             self.triggers_table.data.client.put(
                 key=key,
                 bins=vt,
                 meta={"ttl": self.app.aerospike_config.TTL},  # type: ignore
-                policy={"exists": aerospike.POLICY_EXISTS_IGNORE, "key": aerospike.POLICY_KEY_SEND},
+                policy={
+                    "exists": aerospike.POLICY_EXISTS_IGNORE,
+                    "key": aerospike.POLICY_KEY_SEND,
+                },
             )
         except Exception as ex:
-            logger.error(f"Error in set for table {self.triggers_table.name} exception {ex}")
+            logger.error(
+                f"Error in set for table {self.triggers_table.name} exception {ex}"
+            )
             raise ex
 
-    async def get_trigger(self, key, use_partition: bool = False) -> Trigger:  # pragma: no cover
+    async def get_trigger(
+        self, key, use_partition: bool = False
+    ) -> Trigger:  # pragma: no cover
         return await self.get_table_value(self.triggers_table, key)
 
     async def get_valid_triggers(self) -> AsyncGenerator[Trigger, None]:
@@ -253,11 +269,15 @@ class AerospikeStore(IStore):
                     (key, meta, bins) = result
                     await asyncio.sleep(0)
                     if bins:
-                        trigger = self.triggers_table.data._decode_value((bins[self.triggers_table.data.BIN_KEY]))
+                        trigger = self.triggers_table.data._decode_value(
+                            (bins[self.triggers_table.data.BIN_KEY])
+                        )
                         yield trigger
 
         except Exception as ex:
-            logger.error(f"Error in _itervalues for table {self.triggers_table.name} exception {ex}")
+            logger.error(
+                f"Error in _itervalues for table {self.triggers_table.name} exception {ex}"
+            )
             raise ex
 
         end_time = int(time.time())
@@ -290,6 +310,7 @@ class AerospikeStore(IStore):
             table.on_key_del(key)
         return return_value
 
+
 class RocksDBStore(IStore):
 
     DELIM_VAUE = "|"
@@ -321,7 +342,6 @@ class RocksDBStore(IStore):
         )
         self.correletable_keys_table.value_serializer = "raw"
 
-
     def get_db_options(self) -> Mapping[str, Any]:
         return ROCKS_DB_OPTIONS
 
@@ -332,16 +352,17 @@ class RocksDBStore(IStore):
     async def get_value_for_key(self, key: str) -> Record:
         return self.kv_table.get(key, None)
 
-
     async def insert_trigger(self, value: Trigger) -> None:
         self.triggers_table[value.get_trigger_key()] = value
 
-    async def get_trigger(self, key, use_partition: bool = False) -> Trigger:  # pragma: no cover
+    async def get_trigger(
+        self, key, use_partition: bool = False
+    ) -> Trigger:  # pragma: no cover
         if not use_partition:
             return self.triggers_table.get(key, None)
         else:
             event = faust.current_event()
-            partition = event.message.partition
+            partition = event.message.partition  # type: ignore
             db = self.triggers_table.data._db_for_partition(partition)
             value = db.get(str(key).encode())
             if value:
@@ -349,10 +370,10 @@ class RocksDBStore(IStore):
             return value
 
     async def get_valid_triggers(self) -> AsyncGenerator[Trigger, None]:
-        logger.debug(f"get_valid_triggers start")
+        logger.debug("get_valid_triggers start")
         current_time = int(time.time())
         event = faust.current_event()
-        partition = event.message.partition
+        partition = event.message.partition  # type: ignore
         topic = self.triggers_table._changelog_topic_name()
         tp = TP(topic=topic, partition=partition)
         logger.debug(f"get_valid_triggers function. partition: {str(partition)}.")
@@ -364,10 +385,12 @@ class RocksDBStore(IStore):
             try:
                 await asyncio.sleep(0)
                 if tp not in self.app.faust_app.assignor.assigned_actives():  # type: ignore
-                    logger.info(f"Partition assignment changed when executing Trigger tasks {tp}")
+                    logger.info(
+                        f"Partition assignment changed when executing Trigger tasks {tp}"
+                    )
                     break
                 trigger: Trigger = Trigger.loads(json.loads(item[1]))
-                if trigger.trigger_time <= int(current_time):
+                if trigger.trigger_time and trigger.trigger_time <= int(current_time):
                     yield trigger
                 else:
                     break
@@ -375,7 +398,6 @@ class RocksDBStore(IStore):
                 logger.warning(f"Error iterating {ex}")
         end_time = int(time.time())
         logger.info(f"get_valid_triggers took {(end_time-current_time)}")
-
 
     def initialize(self, *args) -> None:
         self.app.faust_app.agent(  # type: ignore
