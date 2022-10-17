@@ -1,4 +1,10 @@
 version: '3.5'
+
+x-mount-app-and-user-git-config: &mount-app-and-user-git-config
+  volumes:
+    - ./:/app
+    - ~/.gitconfig:/home/dagger/.gitconfig # allow script to commit as user
+
 services:
   dagger_test_app:
     tty: true
@@ -67,5 +73,51 @@ services:
       - $PWD:/opt/aerospike/etc
     networks:
       - dagger_py
+
+  # a fully loaded development environment to test new code
+  devbox: &devbox
+    build:
+      dockerfile: ./docker/devbox.dockerfile
+      context: .
+    image: "wayfair/dagger-devbox"
+    volumes:
+      - ./:/app
+
+  # run all the tests and linting locally
+  # - black & isort will format code to address issues
+  test:
+    <<: *devbox
+    command: docker/run_tests.sh --format-code
+
+  integration_test:
+    <<: *devbox
+    command: ["./wait-for-it.sh", "kafka:29092", "--", "sh", "docker/run_integration_tests.sh"]
+    depends_on:
+      - dagger_test_app
+    networks:
+      - dagger_py
+
+  # test the documentation examples to make sure they can be run with Python
+  validateDocExamples:
+    <<: *devbox
+    command: docker/validate_docs.sh
+
+  bump:
+    <<: *devbox
+    <<: *mount-app-and-user-git-config
+    entrypoint: docker/bump_version.sh
+
+  # generate and serve the project documentation locally
+  mkdocs: &mkdocs
+    <<: *devbox
+    entrypoint: "mkdocs"
+    ports:
+      - "8000:8000"
+    command: [ "serve", "--dev-addr=0.0.0.0:8000" ]
+
+  mike:
+    <<: *mkdocs
+    <<: *mount-app-and-user-git-config
+    entrypoint: "mike"
 networks:
   dagger_py:

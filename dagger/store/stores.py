@@ -62,7 +62,7 @@ class IStore:
             payload = jsonpickle.encode(value.asdict())
             future = await self.app.task_update_topic.send(key=update_key, value=payload)  # type: ignore
             await future
-        for fn_callback in self.app.task_update_callbacks:
+        for fn_callback in self.app.task_update_callbacks:  # type: ignore
             await fn_callback(value)
 
         await self.set_table_value(self.kv_table, key, value)
@@ -350,7 +350,7 @@ class RocksDBStore(IStore):
         logger.debug(f"Removed trigger {key.get_trigger_key()}")
 
     async def get_value_for_key(self, key: str) -> Record:
-        return self.kv_table.get(key, None)
+        return self.kv_table.get(key, None)  # type: ignore
 
     async def insert_trigger(self, value: Trigger) -> None:
         self.triggers_table[value.get_trigger_key()] = value

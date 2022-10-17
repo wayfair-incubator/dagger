@@ -73,7 +73,7 @@ class TracingSensor(Sensor):
             spans = stream_meta.get("stream_spans")
             if spans is None:
                 spans = stream_meta["stream_spans"] = {}
-            spans[stream] = stream_span
+            spans[stream] = stream_span  # type: ignore
             stream_span.__enter__()
 
     # Event was acknowledged by stream.

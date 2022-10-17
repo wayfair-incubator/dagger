@@ -46,6 +46,13 @@ class ITemplateDAG:
         app: Service,
         template_type: Type[ITemplateDAGInstance],
     ) -> None:
+        """
+        ITemplateDAG Constructor
+        :param dag: The definition of the first process to execute
+        :param name: the name of the Workflow
+        :param app: the Dagger instance
+        :param template_type: the type of the Workflow to instantiate
+        """
         self.app = app
         self.root_process_dag = dag
         self.name = name
@@ -61,13 +68,30 @@ class ITemplateDAG:
         seed: random.Random = None,
         **kwargs,
     ) -> ITemplateDAGInstance:  # pragma: no cover
-        """Method for creating an instance of a template"""
+        """Method for creating an instance of a workflow definition
+        :param id: The id of the workflow
+        :param partition_key_lookup: Kafka topic partition key associated with the instance of the workflow. The key
+        needs to be defined within the runtime parameters
+        :param repartition: Flag indicating if the creation of this instance needs to be stored on the current node or
+        by the owner of the partition defined by the partition_key_lookup
+        :param seed: the seed to use to create all internal instances of the workflow
+        :param **kwargs: Other keyword arguments
+        :return: An instance of the workflow
+        """
         ...
 
     @abc.abstractmethod
     def set_dynamic_builders_for_process_template(
         self, name: str, process_template_builders
     ):
+        """
+        Use these builders only when the processes of the workflow definition need to be determined at runtime.
+        Using these the processes in the workflow definition can be defined at runtime based on the runtime parameters
+        of the workflow
+
+        :param name: Then name of the dynamic process builder
+        :param process_template_builders: the ProcessTemplateDagBuilder dynamic process builders
+        """
         ...
 
 
@@ -89,6 +113,15 @@ class IProcessTemplateDAG:
         root_task_dag: Optional[TaskTemplate],
         max_run_duration: int,
     ) -> None:
+        """
+        Constructor
+        :param next_process_dag: The list of next processes to execute in this workflow
+        :param app: The Dagger instance
+        :param name: the name of the process
+        :param process_type: the type of the process to instantiate
+        :param root_task_dag: The workflow type instance(definition)
+        :param max_run_duration: The maximum time this process can execute until its marked as failure(timeout)
+        """
         self.next_process_dag = next_process_dag
         self.app = app
         self.name = name
@@ -109,23 +142,38 @@ class IProcessTemplateDAG:
         workflow_instance: ITemplateDAGInstance = None,
         **kwargs,
     ) -> IProcessTemplateDAGInstance:  # pragma: no cover
-        """Method for creating an instance of a template"""
+        """Method for creating an instance of a process instance
+        :param id: The id of the instance
+        :param parent_id: the id of the parent of this process(The workflow instance)
+        :param parent_name: the name of the workflow
+        :param partition_key_lookup: The kafka partitioning key to look up
+        :param repartition: If true the instance is serialized and stored in the owner of the parition owned by the
+        partioning key
+        :param seed: The seed to use to create any child instances
+        :param workflow_instance: the instance of the workflow
+        :param **kwargs: Other keyword arguments
+        :return: the instance of the Process
+        """
         ...
 
     @abc.abstractmethod
     def set_dynamic_process_builders(
         self, process_template_builders
     ) -> None:  # pragma: no cover
+        """
+        Sets the dynamic process builders on the process instance determined at runtime. Only used when the processes
+        of the workflow cannot be determined statically and needs to be defined at runtime
+        :param process_template_builders: the list of ProcessTemplateDagBuilder
+        """
         ...
 
     @abc.abstractmethod
     def set_parallel_process_template_dags(
         self, parallel_process_templates
     ) -> None:  # pragma: no cover
-        """Method to set child_process_task_templates
+        """Method to set child_process_task_templates for parallel execution
 
-        Args:
-            parallel_process_templates (List[IProcessTemplateDAG]): List of parallel process templates
+        :param parallel_process_templates: List of parallel process templates
         """
         ...
 
@@ -144,6 +192,13 @@ class IDynamicProcessTemplateDAG(IProcessTemplateDAG):
         name: str,
         max_run_duration: int,
     ) -> None:
+        """
+        Init method
+        :param next_process_dags: The next Process to execute after the current process is complete
+        :param app: The Dagger instance
+        :param name: The name of the process
+        :param max_run_duration: the timeout on the process
+        """
         self.next_process_dag = next_process_dags
         self.app = app
         self.max_run_duration = max_run_duration
@@ -161,7 +216,17 @@ class IDynamicProcessTemplateDAG(IProcessTemplateDAG):
         workflow_instance: ITemplateDAGInstance = None,
         **kwargs,
     ) -> IProcessTemplateDAGInstance:  # pragma: no cover
-        """Method for creating an dynamic instance(s) of a template and return the head of the list"""
+        """Method for creating an dynamic instance(s) of a template and return the head of the list
+        :param id: The id of the instance to create
+        :param parent_id: the id of the parent instance
+        :param parent_name: the name of the parent workflow
+        :param partition_key_lookup: The kafka partitioning key to use serialize the storage of this instance
+        :param repartition: If true, the instance is stored on the node owning the parition defined by the partioning
+        key
+        :param seed: the seed to use any create any child instances
+        :param workflow_instance: the instance of the workflow
+        :param **kwargs: Other keyword arguments
+        """
         ...
 
     def set_dynamic_process_builders(self, process_template_builders) -> None:
@@ -194,7 +259,17 @@ class TaskTemplate:
         workflow_instance: ITemplateDAGInstance = None,
         **kwargs,
     ) -> ITask:  # pragma: no cover
-        """Method for creating an instance of a template"""
+        """Method for creating an instance of a template definition
+        :param id: the ID of the instance
+        :param parent_id: the ID of the parent instance if any
+        :param parent_name: the name of the parent instance
+        :param partition_key_lookup: The kafka paritioning key
+        :param repartition: If true the instance is serialized and stored by the node owning the parition defined by
+        the partitioning key
+        :param seed: the seed to use to create any child instanes
+        :param workflow_instance: the workflow object
+        :param **kwargs: Other keyword arguments
+        """
         ...
 
 
@@ -212,6 +287,15 @@ class DefaultTaskTemplate(TaskTemplate):
         allow_skip_to: bool,
         reprocess_on_message: bool = False,
     ) -> None:
+        """
+        Init method
+        :param app: The Dagger Instance
+        :param type: The type of the task defined within the workflow
+        :param name: the name of the task
+        :param task_dag_template: The next task to execute after this task
+        :param allow_skip_to: Set to true if processing of the worklow can skip to this task
+        :param reprocess_on_message: the task is executed when invoked irresepective of the state of the task
+        """
         self.app = app
         self._type = type
         self.next_task_dag = task_dag_template
@@ -231,6 +315,18 @@ class DefaultTaskTemplate(TaskTemplate):
         workflow_instance: ITemplateDAGInstance = None,
         **kwargs: Any,
     ) -> ITask:
+        """
+        Creates an instance of the task defined by this template
+        :param id: the id of the instance to create
+        :param parent_id: the id of the parent of this task to be created
+        :param parent_name: the name of the task of the parent of the task to be created
+        :param partition_key_lookup: the kafka partioning key if this instance needs to be repartitioned
+        :param repartition: If true, the instance is stored in the node owning the partition defined by the paritioning
+        key
+        :param seed: the seed to use to create any child instances
+        :param workflow_instance: the workflow object
+        :param **kwargs: other keywork arguments
+        """
         task_instance = self._type(id=id, parent_id=parent_id)
         return await self._setup_instance(
             task_instance,
@@ -257,13 +353,17 @@ class DefaultTaskTemplate(TaskTemplate):
     ) -> ITask:
         """Follows from create instance. Sets up next tasks and sends to tasks topic.
 
-        Args:
-            task_instance (ITask): Instance of ITask.
-            parent_id (UUID): Id of parent ITask.
-            partition_key_lookup (str): Kafka topic partition key associated with the ITask.
-
-        Returns:
-            ITask: Instance of ITask.
+        :param task_instance: Instance of ITask.
+        :param parent_id: Id of parent ITask.
+        :param parent_name: the name of the parent task
+        :param partition_key_lookup: Kafka topic partition key associated with the ITask.
+         :param partition_key_lookup: the kafka partioning key if this instance needs to be repartitioned
+        :param repartition: If true, the instance is stored in the node owning the partition defined by the paritioning
+        key
+        :param seed: the seed to use to create any child instances
+        :param workflow_instance: the workflow object
+        :param **kwargs: other keywork arguments
+        :return: Instance of ITask.
         """
         task_instance.time_created = int(time.time())
         task_instance.status = TaskStatus(
@@ -314,6 +414,16 @@ class DefaultKafkaTaskTemplate(DefaultTaskTemplate):
         allow_skip_to: bool,
         reprocess_on_message: bool = False,
     ) -> None:
+        """
+        Init method
+        :param app: Dagger instance
+        :param type: The type of KafkaCommandTask
+        :param name: the name of the task
+        :param topic: The topic to send the command on
+        :param task_dag_templates: the next task to execute after this task
+        :param allow_skip_to: If true the execution of the workflow can jump to this task
+        :param reprocess_on_message: if true, the task is executed irrespective of the state of this task
+        """
         super().__init__(
             app=app,
             type=type,
@@ -336,6 +446,18 @@ class DefaultKafkaTaskTemplate(DefaultTaskTemplate):
         workflow_instance: ITemplateDAGInstance = None,
         **kwargs: Any,
     ) -> ITask:
+        """Method for creating an instance of a kafkaTask
+        :param id: The id of the instance
+        :param parent_id: the id of the parent of this process(The workflow instance)
+        :param parent_name: the name of the workflow
+        :param partition_key_lookup: The kafka partitioning key to look up
+        :param repartition: If true the instance is serialized and stored in the owner of the parition owned by the
+        partioning key
+        :param seed: The seed to use to create any child instances
+        :param workflow_instance: the instance of the workflow
+        :param **kwargs: Other keyword arguments
+        :return: the instance of the Process
+        """
         self.app.add_topic(self.topic.get_topic_name(), self.topic)  # type: ignore
         task_instance = self._type(
             id=id, topic=self.topic.get_topic_name(), parent_id=parent_id
@@ -366,6 +488,14 @@ class DefaultTriggerTaskTemplate(DefaultTaskTemplate):
         task_dag_templates: List[TaskTemplate],
         allow_skip_to: bool,
     ) -> None:
+        """
+        Init method
+        :param app: The dagger instance
+        :param type: The type of TriggerTask
+        :param name: the name of the task
+        :param time_to_execute_key: the key lookup in runtime paramters to execute the trigger
+        :param allow_skip_to: Flag For skipping serial execution
+        """
         super().__init__(
             app=app,
             type=type,
@@ -387,6 +517,18 @@ class DefaultTriggerTaskTemplate(DefaultTaskTemplate):
         workflow_instance: ITemplateDAGInstance = None,
         **kwargs: Any,
     ) -> ITask:
+        """Method for creating an instance of a TriggerTask
+        :param id: The id of the instance
+        :param parent_id: the id of the parent of this process(The workflow instance)
+        :param parent_name: the name of the workflow
+        :param partition_key_lookup: The kafka partitioning key to look up
+        :param repartition: If true the instance is serialized and stored in the owner of the parition owned by the
+        partioning key
+        :param seed: The seed to use to create any child instances
+        :param workflow_instance: the instance of the workflow
+        :param **kwargs: Other keyword arguments
+        :return: the instance of the Process
+        """
         time_to_execute = (
             workflow_instance.runtime_parameters.get(
                 self.time_to_execute_lookup_key, None
@@ -431,6 +573,18 @@ class DefaultIntervalTaskTemplate(DefaultTaskTemplate):
         task_dag_templates: List[TaskTemplate],
         allow_skip_to: bool,
     ) -> None:
+        """
+        Init method
+        :param app: Dagger instance
+        :param type: The type of IntervalTask
+        :param name: the name of the task
+        :param time_to_execute_key: the key to lookup in the runtime paramters to trigger the task
+        :param time_to_force_complete_key: the key to lookup to timeout the task
+        :param interval_execute_period_key: the frequency of execution from trigger time to timeout until the task
+        succeeds
+        :param task_dag_templates: the next task to execute
+        :param allow_skip_to: Flag to skip serial execution
+        """
         super().__init__(
             app=app,
             type=type,
@@ -454,6 +608,18 @@ class DefaultIntervalTaskTemplate(DefaultTaskTemplate):
         workflow_instance: ITemplateDAGInstance = None,
         **kwargs,
     ) -> ITask:
+        """Method for creating an instance of IntervalTask
+        :param id: The id of the instance
+        :param parent_id: the id of the parent of this process(The workflow instance)
+        :param parent_name: the name of the workflow
+        :param partition_key_lookup: The kafka partitioning key to look up
+        :param repartition: If true the instance is serialized and stored in the owner of the parition owned by the
+        partioning key
+        :param seed: The seed to use to create any child instances
+        :param workflow_instance: the instance of the workflow
+        :param **kwargs: Other keyword arguments
+        :return: the instance of the Process
+        """
         time_to_execute_lookup_key_runtime = (
             workflow_instance.runtime_parameters.get(
                 self.time_to_execute_lookup_key, None
@@ -514,6 +680,10 @@ class DefaultIntervalTaskTemplate(DefaultTaskTemplate):
 
 
 class ParallelCompositeTaskTemplate(DefaultTaskTemplate):
+    """
+    Template to define the structure of parallel tasks to execute within a workflow
+    """
+
     child_task_templates: List[TaskTemplate]
     parallel_operator_type: TaskOperator
 
@@ -528,6 +698,18 @@ class ParallelCompositeTaskTemplate(DefaultTaskTemplate):
         reprocess_on_message: bool = False,
         parallel_operator_type: TaskOperator = TaskOperator.JOIN_ALL,
     ) -> None:
+        """
+        Init method
+        :param app: The dagger instance
+        :param type: The type of ParallelCompositeTask
+        :param name: The name of the ParallelCompositeTask
+        :param task_dag_templates: the next task to execute after the parallel task completes
+        :param child_task_templates: the set of parallel tasks to execute
+        :param allow_skip_to: Skip serial execution of the workflow if this is set
+        :param reprocess_on_message: Re-execute the task irrespective of the state of the task
+        :param parallel_operator_type: Wait for all parallel tasks to complete or just one before transitioning to the
+        next task in the workflow
+        """
         super().__init__(
             app=app,
             type=type,
@@ -553,13 +735,17 @@ class ParallelCompositeTaskTemplate(DefaultTaskTemplate):
     ) -> ITask:
         """Follows from create instance. Sets up next tasks and sends to tasks topic.
 
-        Args:
-            task_instance (ITask): Instance of ITask.
-            parent_id (UUID): Id of parent ITask.
-            partition_key_lookup (str): Kafka topic partition key associated with the ITask.
-
-        Returns:
-            ITask: Instance of ITask.
+        :param task_instance: Instance of ITask.
+        :param parent_id: Id of parent ITask.
+        :param parent_name: the name of the parent task
+        :param partition_key_lookup: Kafka topic partition key associated with the ITask.
+         :param partition_key_lookup: the kafka partioning key if this instance needs to be repartitioned
+        :param repartition: If true, the instance is stored in the node owning the partition defined by the paritioning
+        key
+        :param seed: the seed to use to create any child instances
+        :param workflow_instance: the workflow object
+        :param **kwargs: other keywork arguments
+        :return: Instance of ITask.
         """
         task_instance.time_created = int(time.time())
         task_instance.status = TaskStatus(
@@ -608,7 +794,9 @@ class ParallelCompositeTaskTemplate(DefaultTaskTemplate):
 
 
 class TaskTemplateBuilder:
-    """Skeleton builder class used to build a task object."""
+    """Skeleton builder class used to build the definition of a task object
+    within a workflow
+    """
 
     app: Service
     task_dags: List[TaskTemplate]
@@ -616,6 +804,9 @@ class TaskTemplateBuilder:
     reprocess_on_message: bool
 
     def __init__(self, app: Service) -> None:
+        """
+        :param app: The Dagger object
+        """
         self.app = app
         self.task_dags = list()
         self.name = "task"
@@ -626,35 +817,51 @@ class TaskTemplateBuilder:
     def set_type(
         self, task_type: Type[ITask]
     ) -> TaskTemplateBuilder:  # pragma: no cover
-        """Set the type of task."""
+        """Sets the type of task
+        :param task_type: the type of the task to instantiate from the builder
+        :return: An instance of the updated template builder.
+        """
         ...
 
     @abc.abstractmethod
     def set_name(self, name: str) -> TaskTemplateBuilder:  # pragma: no cover
-        """Set the type of task."""
+        """Set the name of task
+        :param name: the name of the Task
+        :return: An instance of the updated template builder.
+        """
         ...
 
     def set_next(
         self, task_template: TaskTemplate
     ) -> TaskTemplateBuilder:  # pragma: no cover
-        """Set the next task."""
+        """Set the next task in the process definition within the workflow
+        :param task_template: the next task template definition
+        :return: An instance of the updated template builder.
+        """
         self.task_dags.append(task_template)
         return self
 
     def set_allow_skip_to(
         self, allow_skip_to: bool
     ) -> TaskTemplateBuilder:  # pragma: no cover
-        """Set whether or not this task is allowed to be executed out of order (skipped to)"""
+        """Set whether or not this task is allowed to be executed out of order (skipped to)
+        :param allow_skip_to: If set to true a Sensor task can be executed if an event is received out of order
+        :return: An instance of the updated template builder.
+        """
         self.allow_skip_to = allow_skip_to
         return self
 
     @abc.abstractmethod
     def build(self) -> TaskTemplate:  # pragma: no cover
-        """Builds the TaskTemplate object."""
+        """Builds the TaskTemplate object
+        :return: The TaskTemplate instance to add to the ProcessBuilder definition
+        """
         ...
 
 
 class DefaultTaskTemplateBuilder(TaskTemplateBuilder):
+    """Default Implementation of TaskTemplateBuilder"""
+
     _type: Type[ITask]
     name: str
 
@@ -685,6 +892,10 @@ class DefaultTaskTemplateBuilder(TaskTemplateBuilder):
 
 
 class ParallelCompositeTaskTemplateBuilder(DefaultTaskTemplateBuilder):
+    """
+    A type of DefaultTaskTemplateBuilder to create ParallelTasks
+    """
+
     parallel_tasks_templates: List[TaskTemplate]
     operator: TaskOperator
 
@@ -729,6 +940,10 @@ class ParallelCompositeTaskTemplateBuilder(DefaultTaskTemplateBuilder):
 
 
 class KafkaCommandTaskTemplateBuilder(DefaultTaskTemplateBuilder):
+    """
+    A type of DefaultTaskTemplateBuilder to define KafkaCommandTasks
+    """
+
     _type: Type[KafkaCommandTask]
     _topic: Topic
     name: str
@@ -758,6 +973,10 @@ class KafkaCommandTaskTemplateBuilder(DefaultTaskTemplateBuilder):
 
 
 class DecisionTaskTemplateBuilder(DefaultTaskTemplateBuilder):
+    """
+    A type of DefaultTaskTemplateBuilder to define DecisionTasks
+    """
+
     def __init__(self, app: Service) -> None:
         super().__init__(app)
 
@@ -769,6 +988,10 @@ class DecisionTaskTemplateBuilder(DefaultTaskTemplateBuilder):
 
 
 class TriggerTaskTemplateBuilder(DefaultTaskTemplateBuilder):
+    """
+    A type of DefaultTaskTemplateBuilder to define TriggerTasks
+    """
+
     _time_to_execute_key: str
 
     def set_time_to_execute_lookup_key(self, key: str) -> TriggerTaskTemplateBuilder:
@@ -796,6 +1019,10 @@ class TriggerTaskTemplateBuilder(DefaultTaskTemplateBuilder):
 
 
 class IntervalTaskTemplateBuilder(TriggerTaskTemplateBuilder):
+    """
+    A type of DefaultTaskTemplateBuilder to define IntervalTasks
+    """
+
     _time_to_execute_key: Optional[str] = None  # type: ignore
     _time_to_force_complete_key: str
     _interval_execute_period_key: str
@@ -826,6 +1053,10 @@ class IntervalTaskTemplateBuilder(TriggerTaskTemplateBuilder):
 
 
 class KafkaListenerTaskTemplateBuilder(DefaultTaskTemplateBuilder):
+    """
+    A type of DefaultTaskTemplateBuilder to define KafkaListenerTasks
+    """
+
     _topic: Topic
     _concurrency: int = 1
 
@@ -871,13 +1102,16 @@ class KafkaListenerTaskTemplateBuilder(DefaultTaskTemplateBuilder):
 
 
 class IProcessTemplateDAGBuilder:
-    """Skeleton builder class used to build a process object."""
+    """Skeleton builder class used to build a process definition within a workfow."""
 
     app: Service
     root_task_dag: TaskTemplate
     next_process_dag: List[IProcessTemplateDAG]
 
     def __init__(self, app: Service) -> None:
+        """
+        :param app: The Dagger instance
+        """
         self.app = app
         self.next_process_dag = list()
 
@@ -885,13 +1119,10 @@ class IProcessTemplateDAGBuilder:
     def set_root_task(
         self, task: TaskTemplate
     ) -> IProcessTemplateDAGBuilder:  # pragma: no cover
-        """Set the first task in the process.
+        """Set the first task in the process definition of the workflow.
 
-        Args:
-            task (TaskTemplate): TaskTemplate to be set as the first task.
-
-        Returns:
-            IProcessTemplateDAGBuilder: An instance of the updated process template builder.
+        :param task: TaskTemplate to be set as the first task of the process execution.
+        :return: An instance of the updated process template builder.
         """
         ...
 
@@ -899,13 +1130,10 @@ class IProcessTemplateDAGBuilder:
     def set_next_process(
         self, task: IProcessTemplateDAG
     ) -> IProcessTemplateDAGBuilder:  # pragma: no cover
-        """Set the next process.
+        """Set the next process in the execution of the workflow defintion.
 
-        Args:
-            task (TaskTemplate): TaskTemplate to be set as the next process.
-
-        Returns:
-            IProcessTemplateDAGBuilder: An instance of the updated process template builder.
+        :param task: TaskTemplate to be set as the next process.
+        :return: An instance of the updated process template builder.
         """
         ...
 
@@ -915,11 +1143,8 @@ class IProcessTemplateDAGBuilder:
     ) -> IProcessTemplateDAGBuilder:  # pragma: no cover
         """Sets the name of the process.
 
-        Args:
-            process_name (str): Name of the process.
-
-        Returns:
-            IProcessTemplateDAGBuilder: An instance of the updated process template builder.
+        :param process_name: Name of the process.
+        :return: An instance of the updated process template builder.
         """
         ...
 
@@ -929,54 +1154,57 @@ class IProcessTemplateDAGBuilder:
     ) -> IProcessTemplateDAGBuilder:  # pragma: no cover
         """Sets the type of the process.
 
-        Args:
-            process_type (Type[IProcessTemplateDAGInstance]): The type of the process.
-
-        Returns:
-            IProcessTemplateDAGBuilder: An instance of the updated process template builder.
+        :param process_type: The type of the process.
+        :return: An instance of the updated process template builder.
         """
         ...
 
     @abc.abstractmethod
     def build(self) -> IProcessTemplateDAG:  # pragma: no cover
-        """Builds the IProcessTemplateDAG object."""
+        """Builds the IProcessTemplateDAG object
+        :return: the instance of IProcessTemplateDAG to create the workflow definition
+        """
         ...
 
 
 class ITemplateDAGBuilder:
+
+    """
+    Base class to define the structure of workflow definition
+    """
+
     app: Service
 
     def __init__(self, app: Service) -> None:
+        """
+        :param app: The Dagger app instance
+        """
         self.app = app
 
     @abc.abstractmethod
     def set_root(
         self, template: IProcessTemplateDAG
     ) -> ITemplateDAGBuilder:  # pragma: no cover
-        """Sets the first process in the template.
+        """Sets the first process to execute in the template.
 
-        Args:
-            template (IProcessTemplateDAG): Instance of a process template.
-
-        Returns:
-            ITemplateDAGBuilder: An instance of the updated template builder.
+        :param template: Instance of a process template containing the defintion of the process.
+        :return: An instance of the updated template builder.
         """
         ...
 
     @abc.abstractmethod
     def build(self) -> ITemplateDAG:  # pragma: no cover
-        """Builds the template object."""
+        """Builds the ITemplateDAGBuilder object.
+        :return: The instance of ITemplateDAG
+        """
         ...
 
     @abc.abstractmethod
     def set_name(self, name: str) -> ITemplateDAGBuilder:  # pragma: no cover
         """Sets the name of the template.
 
-        Args:
-            name (str): Name of the template.
-
-        Returns:
-            ITemplateDAGBuilder: An instance of the updated template builder.
+        :param name: Name of the template.
+        :return: An instance of the updated template builder.
         """
         ...
 
@@ -986,10 +1214,7 @@ class ITemplateDAGBuilder:
     ) -> ITemplateDAGBuilder:  # pragma: no cover
         """Sets the type of the process.
 
-        Args:
-            template_type (Type[ITemplateDAGInstance]): The type of the process.
-
-        Returns:
-            ITemplateDAGBuilder: An instance of the updated template builder.
+        :param template_type: The type of the process.
+        :return: An instance of the updated template builder.
         """
         ...

@@ -1,0 +1,45 @@
+site_name: Dagger Documentation
+site_url: https://wayfair-incubator.github.io/dagger/
+repo_url: https://github.com/wayfair-incubator/dagger/
+repo_name: wayfair-incubator/dagger
+edit_uri: edit/main/docs/
+docs_dir: docs
+nav:
+  - Overview: index.md
+  - Getting Started: getting-started.md
+  - Usage Guide:
+    - Fundamentals: usage-guide/fundamentals.md
+  - Why dagger?: why-dagger.md
+  - API Documentation: api.md
+  - Development Guide: development-guide.md
+theme: material
+markdown_extensions:
+  - markdown_include.include:
+      base_path: docs
+  - admonition
+  - codehilite
+  - footnotes
+  - pymdownx.highlight
+  - pymdownx.keys
+  - pymdownx.superfences
+plugins:
+  - search
+  - redirects:
+      redirect_maps:
+        usage-guide.md: usage-guide/fundamentals.md
+  - mkdocstrings:
+      handlers:
+        python:
+          selection:
+            docstring_style: "sphinx"
+          rendering:
+            heading_level: 3
+            show_root_heading: True
+            show_source: False
+            show_root_full_path: False
+
+extra:
+  version:
+    provider: mike
+extra_css:
+  - css/mkdocstrings.css

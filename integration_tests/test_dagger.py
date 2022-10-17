@@ -13,8 +13,8 @@ from kafka import KafkaConsumer, KafkaProducer
 
 from dagger.tasks.task import ITask, ITemplateDAGInstance, TaskStatusEnum
 
-KAFKA_ADMIN_CLIENT_URL = "localhost:9092"
-PROCESSENGINE_URL = "http://localhost:6066"
+KAFKA_ADMIN_CLIENT_URL = "kafka:29092"
+DAGGER_URL = "http://dagger_test_app:6066"
 logger = logging.getLogger(__name__)
 
 TOTAL_ORDERS = 4
@@ -71,7 +71,7 @@ def test_clean_consumer(workflow_consumer):
 
 @retry(AssertionError, tries=30, delay=1)
 def test_dagger_initialized():
-    response = requests.get(PROCESSENGINE_URL + "/service/ready")
+    response = requests.get(DAGGER_URL + "/service/ready")
     engine_response = json.loads(response.content)["is_ready"]
     assert engine_response is True
 
@@ -88,7 +88,7 @@ def test_dagger_start():
 
 @retry(AssertionError, tries=30, delay=1)
 def test_instances_created():
-    response = requests.get(PROCESSENGINE_URL + "/tasks/instances")
+    response = requests.get(DAGGER_URL + "/tasks/instances")
     assert response.status_code == requests.codes.ok
     engine_response = json.loads(response.content)
     assert len(engine_response) > 0
@@ -98,7 +98,7 @@ def test_instances_created():
 
 @retry(AssertionError, tries=30, delay=1)
 def test_instances_executing():
-    response = requests.get(PROCESSENGINE_URL + "/tasks/instances")
+    response = requests.get(DAGGER_URL + "/tasks/instances")
     assert response.status_code == requests.codes.ok
     engine_response = json.loads(response.content)
     assert len(engine_response) > 0
@@ -121,7 +121,7 @@ def test_dagger_update_listeners():
 @retry(AssertionError, tries=30, delay=1)
 def test_interval_tasks():
 
-    response = requests.get(PROCESSENGINE_URL + "/tasks/instances")
+    response = requests.get(DAGGER_URL + "/tasks/instances")
     assert response.status_code == requests.codes.ok
     engine_response = json.loads(response.content)
     for instance in engine_response:
@@ -145,7 +145,7 @@ def test_send_fulfillment_ack():
 
 @retry(AssertionError, tries=30, delay=1)
 def test_fulfillment_executing():
-    response = requests.get(PROCESSENGINE_URL + "/tasks/instances")
+    response = requests.get(DAGGER_URL + "/tasks/instances")
     assert response.status_code == requests.codes.ok
     engine_response = json.loads(response.content)
     for instance in engine_response:
@@ -154,7 +154,7 @@ def test_fulfillment_executing():
 
 @retry(AssertionError, tries=30, delay=1)
 def test_parallel_instances_executing():
-    response = requests.get(PROCESSENGINE_URL + "/tasks/instances")
+    response = requests.get(DAGGER_URL + "/tasks/instances")
     assert response.status_code == requests.codes.ok
     engine_response = json.loads(response.content)
     assert len(engine_response) > 0
@@ -178,7 +178,7 @@ def test_send_parallel_process_ack():
 @retry(AssertionError, tries=30, delay=1)
 def test_all_completed():
 
-    response = requests.get(PROCESSENGINE_URL + "/tasks/instances")
+    response = requests.get(DAGGER_URL + "/tasks/instances")
     assert response.status_code == requests.codes.ok
     engine_response = json.loads(response.content)
     assert len(engine_response) > 0
@@ -199,7 +199,7 @@ def test_dagger_one_to_many_create():
 
 @retry(AssertionError, tries=30, delay=1)
 def test_on_the_fly_workflow_instances_created():
-    response = requests.get(PROCESSENGINE_URL + "/tasks/instances")
+    response = requests.get(DAGGER_URL + "/tasks/instances")
     assert response.status_code == requests.codes.ok
     engine_response = json.loads(response.content)
     executing_counter = 0
@@ -221,7 +221,7 @@ def test_on_the_fly_workflow_listeners():
 @retry(AssertionError, tries=30, delay=1)
 def test_all_simple_completed():
 
-    response = requests.get(PROCESSENGINE_URL + "/tasks/instances")
+    response = requests.get(DAGGER_URL + "/tasks/instances")
     assert response.status_code == requests.codes.ok
     engine_response = json.loads(response.content)
     assert len(engine_response) > 0
