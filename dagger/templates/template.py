@@ -82,7 +82,7 @@ class ITemplateDAG:
 
     @abc.abstractmethod
     def set_dynamic_builders_for_process_template(
-        self, name: str, process_template_builders: List[IProcessTemplateDAGBuilder]
+        self, name: str, process_template_builders
     ):
         """
         Use these builders only when the processes of the workflow definition need to be determined at runtime.
@@ -90,7 +90,7 @@ class ITemplateDAG:
         of the workflow
 
         :param name: Then name of the dynamic process builder
-        :param process_template_builders: the dynamic process builders
+        :param process_template_builders: the ProcessTemplateDagBuilder dynamic process builders
         """
         ...
 
@@ -158,7 +158,7 @@ class IProcessTemplateDAG:
 
     @abc.abstractmethod
     def set_dynamic_process_builders(
-        self, process_template_builders: List[IProcessTemplateDAGBuilder]
+        self, process_template_builders
     ) -> None:  # pragma: no cover
         """
         Sets the dynamic process builders on the process instance determined at runtime. Only used when the processes
@@ -683,6 +683,7 @@ class ParallelCompositeTaskTemplate(DefaultTaskTemplate):
     """
     Template to define the structure of parallel tasks to execute within a workflow
     """
+
     child_task_templates: List[TaskTemplate]
     parallel_operator_type: TaskOperator
 
@@ -860,6 +861,7 @@ class TaskTemplateBuilder:
 
 class DefaultTaskTemplateBuilder(TaskTemplateBuilder):
     """Default Implementation of TaskTemplateBuilder"""
+
     _type: Type[ITask]
     name: str
 
@@ -893,6 +895,7 @@ class ParallelCompositeTaskTemplateBuilder(DefaultTaskTemplateBuilder):
     """
     A type of DefaultTaskTemplateBuilder to create ParallelTasks
     """
+
     parallel_tasks_templates: List[TaskTemplate]
     operator: TaskOperator
 
@@ -940,6 +943,7 @@ class KafkaCommandTaskTemplateBuilder(DefaultTaskTemplateBuilder):
     """
     A type of DefaultTaskTemplateBuilder to define KafkaCommandTasks
     """
+
     _type: Type[KafkaCommandTask]
     _topic: Topic
     name: str
@@ -972,6 +976,7 @@ class DecisionTaskTemplateBuilder(DefaultTaskTemplateBuilder):
     """
     A type of DefaultTaskTemplateBuilder to define DecisionTasks
     """
+
     def __init__(self, app: Service) -> None:
         super().__init__(app)
 
@@ -986,6 +991,7 @@ class TriggerTaskTemplateBuilder(DefaultTaskTemplateBuilder):
     """
     A type of DefaultTaskTemplateBuilder to define TriggerTasks
     """
+
     _time_to_execute_key: str
 
     def set_time_to_execute_lookup_key(self, key: str) -> TriggerTaskTemplateBuilder:
@@ -1016,6 +1022,7 @@ class IntervalTaskTemplateBuilder(TriggerTaskTemplateBuilder):
     """
     A type of DefaultTaskTemplateBuilder to define IntervalTasks
     """
+
     _time_to_execute_key: Optional[str] = None  # type: ignore
     _time_to_force_complete_key: str
     _interval_execute_period_key: str
@@ -1049,6 +1056,7 @@ class KafkaListenerTaskTemplateBuilder(DefaultTaskTemplateBuilder):
     """
     A type of DefaultTaskTemplateBuilder to define KafkaListenerTasks
     """
+
     _topic: Topic
     _concurrency: int = 1
 
@@ -1164,6 +1172,7 @@ class ITemplateDAGBuilder:
     """
     Base class to define the structure of workflow definition
     """
+
     app: Service
 
     def __init__(self, app: Service) -> None:

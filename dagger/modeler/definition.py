@@ -140,7 +140,7 @@ class ProcessTemplateDAG(IProcessTemplateDAG):
         return process_instance
 
     def set_dynamic_process_builders(
-        self, process_template_builders: List[ProcessTemplateDagBuilder]
+        self, process_template_builders: List[IProcessTemplateDAGBuilder]
     ) -> None:  # pragma: no cover
         raise NotImplementedError("ProcessTemplateDAG does not implement this method")
 
