@@ -40,8 +40,8 @@ async def get_correlatable_key_from_payload(
 ) -> TaskLookupKey:
 ```
 
-The `get_correlatable_key_from_payload` method extracts the key value by parsing the payload received on the Kafka topic. Using this key 
-`dagger` looks up the appropriate task from the list of tasks waiting on this event and invokes `on_message` on each one
+The `get_correlatable_key_from_payload` method extracts the key value by parsing the payload received on the Kafka topic.
+Using this key `dagger` looks up the appropriate task from the list of tasks waiting on this event and invokes `on_message` on each one
 of them. The default implementation of this task just sets this task to `COMPLETED`
 
 `dagger` provides the flexibility to implement any other type of listener task by implementing the following interface
@@ -87,7 +87,6 @@ This method returns the UUID of the next task to execute in the execution path
 
 The Engine provides a `DecisionTaskTemplateBuilder` to model a decision task in the DAG
 
-
 ### MonitoredTask
 
 dagger provides the `IMonitoredTask` interface which can be implemented on any task to provide a way to monitor that task.
@@ -98,7 +97,6 @@ Dagger comes built in with `MonitoredProcessTemplateDAGInstance`
 
 SUB-DAG Task to execute parallel tasks and wait until all of them are in a terminal state before progressing to the next task
 This task can be embedded as a child of the root node or a process node
-
 
 ### RESTful API
 

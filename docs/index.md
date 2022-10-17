@@ -72,7 +72,7 @@ The ``register_template`` decorator defines a "DAG processor" that essentially d
 tasks the DAG executes. In the example above the code creates a named template ``OrderWorkflow``  and associates
 a ``PAYMENT`` process with 2 child tasks ``PAYMENT_LISTENER`` using ``PaymentKafkaListenerTask`` and ``PAYMENT_COMMAND``
 using the ``PaymentKafkaCommandTask`` definition. The ``SHIPPING`` process follows
-after the ``PAYMENT`` process with similarly named topics and processes and the template defines the root process and 
+after the ``PAYMENT`` process with similarly named topics and processes and the template defines the root process and
 links them in a DAG (Directed Acyclic Graph) structure
 
 The application can define as many DAG'S it needs to model using the ``register_template``
@@ -103,7 +103,6 @@ Check out the [project documentation][dagger-docs].
 
 For an overview on how repository structure and how to work with the code base, read the
 [Development Guide][development-docs].
-
 
 [dagger-docs]: https://wayfair-incubator.github.io/dagger/latest/
 [development-docs]: https://wayfair-incubator.github.io/dagger/latest/development-guide/

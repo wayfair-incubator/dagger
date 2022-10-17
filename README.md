@@ -73,9 +73,9 @@ workflow_engine.main()
 The ``register_template`` decorator defines a "DAG processor" that essentially defines the various processes and child
 tasks the DAG executes. In the example above the code creates a named template ``OrderWorkflow``  and associates
 a ``PAYMENT`` process with 2 child tasks ``PAYMENT_LISTENER`` using ``PaymentKafkaListenerTask`` and ``PAYMENT_COMMAND``
-using the ``PaymentKafkaCommandTask`` definition. The ``SHIPPING`` process follows
-after the ``PAYMENT`` process with similarly named topics and processes and the template defines the root process and 
-links them in a DAG (Directed Acyclic Graph) structure
+using the ``PaymentKafkaCommandTask`` definition. The ``SHIPPING`` process follows after the ``PAYMENT`` process with
+similarly named topics and processes and the template defines the root process and links them in a
+DAG (Directed Acyclic Graph) structure
 
 The application can define as many DAG'S it needs to model using the ``register_template``
 decorator. dagger populates all the DAG templates in the codebase decorated with `register_template`
@@ -97,7 +97,7 @@ await workflow_engine.submit(workflow_instance)
 ```
 
 This begins the actual execution of the tasks created by the template definition and executes them in the sequence as
-defined in the template. 
+defined in the template.
 Dagger supports any type of stream data: bytes, Unicode and serialized structures, but also comes with "Models" that use
 modern Python syntax to describe how keys and values in streams are serialized. For more details on supported models
 refer to

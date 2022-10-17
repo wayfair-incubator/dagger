@@ -163,25 +163,25 @@ jobs:
         with:
           name: docs-site
           path: site/
-#
-#  update-dev-docs:
-#    runs-on: ubuntu-latest
-#    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-#    steps:
-#      - name: Check out code
-#        uses: actions/checkout@v3
-#
-#      - uses: actions/setup-python@v4.2.0
-#        with:
-#          python-version: ${{ env.PYTHON_VERSION }}
-#
-#      - name: Install dependencies
-#        uses: ./.github/actions/install-dependencies
-#        with:
-#          requirements: "true"
-#          docs-requirements: "true"
-#
-#      - name: Push documentation changes
-#        uses: ./.github/actions/publish-docs-with-mike
-#        with:
-#          version_name: dev
+
+  update-dev-docs:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4.2.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+        with:
+          requirements: "true"
+          docs-requirements: "true"
+
+      - name: Push documentation changes
+        uses: ./.github/actions/publish-docs-with-mike
+        with:
+          version_name: dev

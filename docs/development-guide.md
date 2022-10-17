@@ -20,7 +20,6 @@ Once that is configured, the integration test suite can be run locally:
 docker-compose run --rm integation_test 
 ```
 
-
 ## Testing
 
 You'll be unable to merge code unless the linting and tests pass. You can run these in your container via:
@@ -45,8 +44,8 @@ To customize / override a specific testing stage, please read the documentation 
 2. [MyPy][mypy-docs]
 3. [Black][black-docs]
 4. [Isort][isort-docs]
-4. [Flake8][flake8-docs]
-5. [Bandit][bandit-docs]
+5. [Flake8][flake8-docs]
+6. [Bandit][bandit-docs]
 
 ## Building the Library
 
@@ -67,7 +66,6 @@ Once the package is ready to be released, there are a few things that need to be
 1. Start with a local clone of the repo on the default branch with a clean working tree.
 2. Run the version bump script with the appropriate part name (`major`, `minor`, or `patch`).
     Example: `docker-compose run --rm bump minor`
-    
     This wil create a new branch, updates all affected files with the new version, and commit the changes to the branch.
 
 3. Push the new branch to create a new pull request.
@@ -80,14 +78,14 @@ release will trigger a GitHub Action that will to build a wheel & a source distr
 
 !!! warning
     The action that uploads the files to PyPI will not run until a repository maintainer acknowledges that the job is
-    ready to run. This is to keep the PyPI publishing token secure. Otherwise, any job would have access to the token. 
+    ready to run. This is to keep the PyPI publishing token secure. Otherwise, any job would have access to the token.
 
 In addition to uploading the files to PyPI, the documentation website will be updated to include the new version. If the
 new version is a full release, it will be made the new `latest` version.
 
 ## Continuous Integration Pipeline
 
-The Continuous Integration (CI) Pipeline runs to confirm that the repository is in a good state. It will run when 
+The Continuous Integration (CI) Pipeline runs to confirm that the repository is in a good state. It will run when
 someone creates a pull request or when they push new commits to the branch for an existing pull request. The pipeline
 runs multiple different jobs that helps verify the state of the code.
 
@@ -123,21 +121,16 @@ The remaining jobs are all related to documentation.
     publishes the current state of the documentation to as the `dev` version. This will allow users to view the state of
     the documentation as it has changed since a maintainer published the `latest` version.
 
-
 [usage-guide]: usage-guide/fundamentals.md
 [code of conduct]: https://github.com/wayfair-incubator/dagger/blob/main/CODE_OF_CONDUCT.md
 [contributing]: https://github.com/wayfair-incubator/dagger/blob/main/CONTRIBUTING.md
 [install-docker]: https://docs.docker.com/install/
-[pdbpp-home]: https://github.com/pdbpp/pdbpp
-[pdb-docs]: https://docs.python.org/3/library/pdb.html
-[pdbpp-docs]: https://github.com/pdbpp/pdbpp#usage
 [pytest-docs]: https://docs.pytest.org/en/latest/
 [mypy-docs]: https://mypy.readthedocs.io/en/stable/
 [black-docs]: https://black.readthedocs.io/en/stable/
 [isort-docs]: https://pycqa.github.io/isort/
 [flake8-docs]: http://flake8.pycqa.org/en/stable/
 [bandit-docs]: https://bandit.readthedocs.io/en/stable/
-[sem-ver]: https://semver.org/
 [pep-517]: https://www.python.org/dev/peps/pep-0517
 [build]: https://pypa-build.readthedocs.io/
 [pypi]: https://pypi.org/project/py-dagger/

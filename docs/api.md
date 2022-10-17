@@ -1,7 +1,7 @@
 
 # API Documentation
 
-::: dagger.service.services.Dagger 
+::: dagger.service.services.Dagger
 ::: dagger.templates.template.ITemplateDAGBuilder
 ::: dagger.templates.template.IProcessTemplateDAGBuilder
 ::: dagger.templates.template.TaskTemplateBuilder
