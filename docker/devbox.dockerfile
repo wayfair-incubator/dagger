@@ -1,10 +1,30 @@
-ARG BASE_OS=${BASE_OS:-"BASE_OS NOT SET"}
-ARG DOCKER_PYTHON_VERSION=${DOCKER_PYTHON_VERSION:-"DOCKER_PYTHON_VERSION NOT SET"}
-ARG PYTHON_VERSION=${PYTHON_VERSION:-"PYTHON_VERSION NOT SET"}
-ARG DEVBOX_RELEASE_DATE=${DEVBOX_RELEASE_DATE:-"SERVICE_RELEASE_DATE NOT SET"}
+FROM python:3.10-buster
 
-FROM wayfair/python/${BASE_OS}-${DOCKER_PYTHON_VERSION}-devbox:${PYTHON_VERSION}-${DEVBOX_RELEASE_DATE}
+ARG _USER="dagger"
+ARG _UID="1001"
+ARG _GID="100"
+ARG _SHELL="/bin/bash"
 
-USER root
 
-RUN yum -y install  snappy lz4
+RUN useradd -m -s "${_SHELL}" -N -u "${_UID}" "${_USER}"
+
+ENV USER ${_USER}
+ENV UID ${_UID}
+ENV GID ${_GID}
+ENV HOME /home/${_USER}
+ENV PATH "${HOME}/.local/bin/:${PATH}"
+ENV PIP_NO_CACHE_DIR "true"
+
+
+RUN mkdir /app && chown ${UID}:${GID} /app
+
+USER ${_USER}
+
+COPY --chown=${UID}:${GID} ./requirements*.txt /app/
+WORKDIR /app
+
+RUN pip install -r requirements.txt -r requirements-test.txt -r requirements-docs.txt
+
+CMD bash
+
+EXPOSE 6066

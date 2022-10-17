@@ -97,85 +97,15 @@ await workflow_engine.submit(workflow_instance)
 ```
 
 This begins the actual execution of the tasks created by the template definition and executes them in the sequence as
-defined in the template. 
-Dagger supports any type of stream data: bytes, Unicode and serialized structures, but also comes with "Models" that use
-modern Python syntax to describe how keys and values in streams are serialized. For more details on supported models
-refer to
-<https://faust-streaming.github.io/faust/userguide/models.html>
+defined in the template.
 
-## OpenTelemetry
+## Documentation
 
-Dagger has support for open telemetry. To enable open telemetry the client application has to initialise the tracer
-implementation and set the flag enable_telemetry while initializing dagger
+Check out the [project documentation][dagger-docs].
 
-## Dagger is
+For an overview on how repository structure and how to work with the code base, read the
+[Development Guide][development-docs].
 
-### Simple
 
-Dagger is extremely easy to use. To get started applications need to install this library, define a DAG using the
-default templates or extending them based on the use case, creating instances of these DAG's and scheduling them for
-execution. The library hides all the complexity of producing and consuming from Kafka, maintaining Kafka Streams
-topology processing and also persistence and recovery of created tasks
-
-### Highly Available
-
-Dagger is highly available and can survive network problems and server crashes. In the case of node failure, it can
-automatically recover the state store(representing task data)
-or failover to a standby node
-
-### Distributed
-
-Start more instances of your application as needed to distribute the load on the system
-
-### Fast
-
-A single-core worker instance can already process tens of thousands of tasks every second. Dagger uses a fast key-value
-lookup store based on rocksDB replicated to kafka topics for fault tolerance
-
-## Installation
-
-You can install dagger via the Wayfair artifactory or from source.
-
-To install using `pip`:
-
-```shell
-pip install py-dagger
-```
-
-dagger has a dependency on `faust-streaming` for kafka stream processing
-
-## FAQ
-
-### Which version of python is supported?
-
-dagger supports python version >= 3.7
-
-### What kafka versions are supported?
-
-dagger supports kafka with version >= 0.10.
-
-## Roadmap
-
-See the [open issues](https://github.com/wayfair-incubator/dagger/issues) for a list of proposed features (and known
-issues).
-
-## Contributing
-
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any
-contributions you make are **greatly appreciated**. For detailed contributing guidelines, please
-see [CONTRIBUTING.md](CONTRIBUTING.md)
-
-## License
-
-Distributed under the `MIT LICENSE` License. See `LICENSE` for more information.
-
-## Contact
-
-Vikram Patki - vpatki@wayfair.com
-
-Project Link: [https://github.com/wayfair-incubator/dagger](https://github.com/wayfair-incubator/dagger)
-
-## Acknowledgements
-
-This template was adapted from
-[https://github.com/othneildrew/Best-README-Template](https://github.com/othneildrew/Best-README-Template).
+[dagger-docs]: https://wayfair-incubator.github.io/dagger/latest/
+[development-docs]: https://wayfair-incubator.github.io/dagger/latest/development-guide/

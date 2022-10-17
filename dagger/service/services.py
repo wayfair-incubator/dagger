@@ -60,6 +60,10 @@ RESTART_WAIT_TIME = 1800
 
 
 class Dagger(Service):
+    """
+    The Dagger class to create the workflow engine.
+    """
+
     faust_app: App
     app: Dagger
     schema_registry_client: SchemaRegistryClient
@@ -121,30 +125,29 @@ class Dagger(Service):
         ] = [],
         **kwargs: Any,
     ) -> None:
-        """Initialize an instance of Dagger
+        """Initialize an instance of Dagger.
 
-        Args:
-            broker (str, optional): Kafka broker address i.e. kafka://0.0.0.0:9092. Defaults to None.
-            datadir (str, optional): Directory where db data will reside. Defaults to None.
-            store (str, optional): DB to use. Defaults to "rocksdb://".
-            application_name (str, optional): Name of application. Defaults to "dagger".
-            package_name (str, optional): Name of package. Defaults to "dagger".
-            kafka_partitions (int, optional): Number of Kafka partitions. Defaults to 1.
-            task_update_topic (str, optional): Name of topic where tasks that have updated in status will be sent. Defaults to "task_update_topic".
-            tasks_topic (str, optional): Name of topic where new tasks will be sent for execution. Defaults to "dagger_task_topic".
-            bootstrap_topic (str, optional): Name of topic where tasks after restart will be sent for execution. Defaults to "dagger_task_topic".
-            beacon (NodeT, optional): Beacon used to track services in a dependency graph. Defaults to None.
-            loop (asyncio.AbstractEventLoop, optional): Asyncio event loop to attach to. Defaults to None.
-            tracing_sensor: Tracing Sensor to use for OpenTelemetry. The global tracer has to be initialized in the client. Defaults to None
-            datadog_sensor: datadog statsD sensor
-            aerospike_config: Config for Aerospike if enabled
-            enable_changelog: Flag to enable/disable events on the table changelog topic
-            max_correletable_keys_in_values: maximum number of ids in the value part to chunk
-            schema_registry_url: the schema registry URK
-            message_serializer: the message serializer instance using the schema registry
-            delete_workflow_on_complete: deletes the workflow instance when complete
-            task_update_callbacks: callbacks when a workflow instance is updated
-            kwargs (Any): Other Faust keyword arguments.
+        :param broker: Kafka broker address i.e. kafka://0.0.0.0:9092. Defaults to None.
+        :param datadir: Directory where db data will reside. Defaults to None.
+        :param store: DB to use. Defaults to "rocksdb://".
+        :param application_name: Name of application. Defaults to "dagger".
+        :param package_name: Name of package. Defaults to "dagger".
+        :param kafka_partitions: Number of Kafka partitions. Defaults to 1.
+        :param task_update_topic: Name of topic where tasks that have updated in status will be sent. Defaults to "task_update_topic".
+        :param tasks_topic: Name of topic where new tasks will be sent for execution. Defaults to "dagger_task_topic".
+        :param bootstrap_topic: Name of topic where tasks after restart will be sent for execution. Defaults to "dagger_task_topic".
+        :param beacon: Beacon used to track services in a dependency graph. Defaults to None.
+        :param loop: Asyncio event loop to attach to. Defaults to None.
+        :param tracing_sensor: Tracing Sensor to use for OpenTelemetry. The global tracer has to be initialized in the client. Defaults to None
+        :param datadog_sensor: datadog statsD sensor
+        :param aerospike_config: Config for Aerospike if enabled
+        :param enable_changelog: Flag to enable/disable events on the table changelog topic
+        :param max_correletable_keys_in_values: maximum number of ids in the value part to chunk
+        :param schema_registry_url: the schema registry URK
+        :param message_serializer: the message serializer instance using the schema registry
+        :param delete_workflow_on_complete: deletes the workflow instance when complete
+        :param task_update_callbacks: callbacks when a workflow instance is updated
+        :param **kwargs: Other Faust keyword arguments.
         """
         self.started_flag = False
         self.restart_tasks_on_boot = restart_tasks_on_boot
@@ -204,16 +207,13 @@ class Dagger(Service):
             self.asyncio_locks[i] = asyncio.Lock()
 
     def get_template(self, template_name: str) -> ITemplateDAG:
-        """Get the instance of a template given it's name.
+        """Get the instance of a template that contains the workflow definition given it's name.
 
-        Args:
-            template_name (str): Name of template
+        :param template_name: Name of template
 
-        Raises:
-            TemplateDoesNotExist: Template does not exist
+        :raises TemplateDoesNotExist: Template does not exist
 
-        Returns:
-            ITemplateDAG: Instance of Template
+        :return: Instance of Template that contains the workflow definition
         """
         if template_name not in self.template_dags:
             raise TemplateDoesNotExist()
@@ -222,8 +222,7 @@ class Dagger(Service):
     def __create_app(self) -> faust.App:
         """Initializes instance of Faust
 
-        Returns:
-            faust.App: Instance of Faust
+        :return: Instance of Faust
         """
         return App(
             self.config.APPLICATION_NAME,
@@ -247,6 +246,9 @@ class Dagger(Service):
         )  # mark application as ready for kubernetes
 
     def __post_init__(self) -> None:
+        """
+        This method is called after initialization of dagger
+        """
         self.faust_app = self.__create_app()
         logger.info("Faust app initialized.")
         Dagger.app = self
@@ -291,15 +293,13 @@ class Dagger(Service):
     def create_topic(
         cls, topic_name: str, key_type: type = str, value_type: type = str
     ) -> TopicT:
-        """Create a Kafka topic using Faust (which will also create a rocksdb table)
+        """Create a Kafka topic using Faust
 
-        Args:
-            topic_name (str): Name of topic
-            key_type (type, optional):  Key type for the topic. Defaults to str.
-            value_type (type, optional): Value type for the topic. Defaults to str.
+        :param topic_name: Name of topic
+        :param key_type:  Key type for the topic. Defaults to str.
+        :param value_type: Value type for the topic. Defaults to str.
+        :return: Instance of Faust Topic
 
-        Returns:
-            TopicT: Instance of Faust Topic
         """
         logger.info(f"Creating topic {topic_name}")
         topic_instance: Optional[TopicT] = None
@@ -329,10 +329,11 @@ class Dagger(Service):
 
     @classmethod
     def register_template(cls, template_name: str):
-        """Registers a template as a path in Dagger.
+        """
+        this method is used to register a workflow definition with Dagger. Refer to the examples
+        in the documentation
 
-        Args:
-            template_name (str): Name of function that returns a built template.
+        :param template_name: Name of workflow to register
         """
 
         def wrapped(wrapped_fun: RegisterFun):
@@ -345,8 +346,7 @@ class Dagger(Service):
     def register_process_template(cls, process_template_name: str):
         """Registers a process template in Dagger.
 
-        Args:
-            template_name (str): Name of function that returns a built template.
+        :param process_template_name (str): Name of process to register in dagger.
         """
 
         def wrapped(wrapped_fun: RegisterFun):
@@ -362,11 +362,10 @@ class Dagger(Service):
     ) -> AsyncGenerator[Optional[ITask, ITask], None]:  # type: ignore
         """Get a task based on the lookup key associated with the task
 
-        Args:
-            lookup_key (TaskLookupKey): Key, value associated with a task
-
-        Returns:
-            Optional[ITask, ITask]: Instance of workflow task  and the SensorTask
+        :param lookup_key: Key, value associated with a task
+        :param get_completed: If false it looks up only SensorTasks which are not in terminal state. If true ir returns
+        tasks which are in terminal state(COMPLETED,STOPPED, FAILED, SKIPPED)
+        :return: Instance of workflow task  and the SensorTask
         """
         cor_instance: Optional[
             CorreletableKeyTasks
@@ -427,8 +426,7 @@ class Dagger(Service):
     ):
         """Store instance of root template instance in the datastore.
 
-        Args:
-            root_template_instance (ITemplateDAGInstance): Instance of root template
+        :param root_template_instance: Instance of root template aka workflow instance
         """
         await self._invoke_store_insert_key_value_with_timer(
             str(root_template_instance.id), root_template_instance
@@ -439,7 +437,7 @@ class Dagger(Service):
         await self._store.insert_key_value(str(key), value)
         end_time = self.faust_app.loop.time() - start_time
         if self.dd_sensor:
-            self.dd_sensor.client.histogram(metric="insert_key_value", value=end_time)
+            self.dd_sensor.client.histogram(metric="insert_key_value", value=end_time)  # type: ignore
 
     async def _store_trigger_instance(
         self, task_instance: TriggerTask, workflow_instance: ITemplateDAGInstance
@@ -469,11 +467,12 @@ class Dagger(Service):
         new_task: bool = False,
         workflow_instance: ITemplateDAGInstance = None,
     ):
-        """Updates the correletable key in the datastore.
+        """Updates the correletable key for a SensorTask within the datastore.
 
-        Args:
-            itask_instance (ITask): Instance of itask.
-            task_instance (str): the key to be updated
+        :param task_instance: the SensorTask for which the correletable key is updated
+        :param key: the correletable key name to update.
+        :param new_task: If the task is not new, then the entire runtime paramters and subsequent tasks need to be updated
+        :param workflow_instance: the workflow instance
         """
         workflow_instance.sensor_tasks_to_correletable_map[  # type: ignore
             task_instance.get_id()
@@ -516,6 +515,14 @@ class Dagger(Service):
     async def chunk_and_store_correlatable_tasks(
         self, cor_instance: CorreletableKeyTasks, value: UUID, workflow_id: UUID
     ):
+        """
+        This method chunks the value of the key to the list so that we don't overflow the limit of the value size
+        on the datastore used by dagger defined by max_correletable_keys_in_values
+
+        :param cor_instance: the CorreletableKeyTasks instance
+        :param value: the new value to add to the lookup_keys
+        :param workflow_id: the id of the workflow to which the cor_instance belongs to
+        """
         if len(cor_instance.lookup_keys) >= self.max_correletable_keys_in_values:
             logger.info(f"Chunking CorreletableKeyTasks for {cor_instance.key}")
             new_chunk_id: str = str(uuid.uuid1())
@@ -542,6 +549,11 @@ class Dagger(Service):
     async def get_correletable_key_instances(
         self, cor_instance: CorreletableKeyTasks
     ) -> List[CorreletableKeyTasks]:
+        """
+        Gathers all the chunked values of the cor_instance
+        :param cor_instance: the CorreletableKeyTasks to gather
+        :return: A list of all the chunked CorreletableKeyTasks
+        """
         cor_instances: List[CorreletableKeyTasks] = []
         cor_instances.append(cor_instance)
         while cor_instance and cor_instance.overflow_key:
@@ -558,6 +570,11 @@ class Dagger(Service):
     async def remove_task_from_correletable_keys_table(
         self, task: ITask, workflow_instance: ITemplateDAGInstance
     ):
+        """
+        Removes a task from the correletable keys table
+        :param task: the task to remove from the correletable keys table
+        :param workflow_instance: the workflow instance
+        """
         if workflow_instance.runtime_parameters:
             current_key = (
                 workflow_instance.runtime_parameters.get(task.correlatable_key, None)
@@ -601,6 +618,7 @@ class Dagger(Service):
         lookup_keys: Set[CorreletableKeyTasks],
         cor_instances: List[CorreletableKeyTasks],
     ) -> None:
+        """ """
         workflow_task_ids_list = list(lookup_keys)
         if not cor_instances:
             logger.error("Empty CorreketableKeyTasks")
@@ -646,8 +664,7 @@ class Dagger(Service):
     ):
         """Removes an instance of a root template from the datastore.
 
-        Args:
-            root_template_instance (ITemplateDAGInstance): Instance of root template.
+        :param root_template_instance: Instance of root template.
         """
         await self._store.remove_key_value(str(root_template_instance.get_id()))
         logger.debug(
@@ -669,18 +686,16 @@ class Dagger(Service):
                     self.workflows_weak_ref_map[key] = value
         end_time = self.faust_app.loop.time() - start_time
         if self.dd_sensor:
-            self.dd_sensor.client.histogram(metric="get_value_for_key", value=end_time)
+            self.dd_sensor.client.histogram(metric="get_value_for_key", value=end_time)  # type: ignore
         return value
 
     async def get_instance(self, id: UUID, log: bool = True) -> ITask:
         """Get an instance of an ITask given it's id.
 
-        Args:
-            id (UUID): Id of the ITask.
-            log (bool): suppress logging
+        :param id: Id of the ITask.
+        :param log: suppress logging if set to True
 
-        Returns:
-            ITask: Instance of the ITask.
+        :return: Instance of the ITask.
         """
         task = await self._invoke_store_get_value_for_key_with_timer(str(id))
         if not task:
@@ -694,13 +709,15 @@ class Dagger(Service):
         return task
 
     def get_db_options(self) -> Mapping[str, Any]:
+        """
+        Get the DB options on the dagger store
+        :return: the DB options
+        """
         return self._store.get_db_options()
 
     async def _update_instance(self, task: ITemplateDAGInstance) -> None:
-        """Update the state of an ITask.
-
-        Args:
-            task (ITask): Instance of ITask.
+        """Update the state of an workflow instance in the datastore.
+        :param task: the workflow instance to store
         """
 
         await self._invoke_store_insert_key_value_with_timer(str(task.id), task)
@@ -709,10 +726,11 @@ class Dagger(Service):
         )
 
     async def submit(self, task: ITask, *, repartition: bool = True) -> None:
-        """Submits an ITask for execution.
+        """Submits a workflow instance for execution.
 
-        Args:
-            task (ITask): Instance of ITask.
+        :param task: The workflow instance.
+        :param repartition: if True it uses the the repartitioning key to submit the task for execution on the
+        configured kafka topic. If false, it creates the workflow on the same node and submits it for execution
         """
         logger.debug(f"Submitting task with id: {str(task.get_id())}")
         await self._execution_strategy.submit(task, repartition=repartition)
@@ -720,20 +738,17 @@ class Dagger(Service):
     def add_topic(self, topic_name: str, topic: Topic) -> None:
         """Associate a topic instance with a name.
 
-        Args:
-            topic_name (str): Name of topic.
-            topic (Topic): Instance of Topic.
+        :param topic_name: Name of topic.
+        :param topic: Instance of Topic.
         """
         self.topics[topic_name] = topic
 
     def get_topic(self, topic_name: str) -> TopicT:
         """Get a topic based on the associated name.
 
-        Args:
-            topic_name (str): Name of topic.
+        :param topic_name: Name of topic.
+        :return: the instance of the topic
 
-        Returns:
-            TopicT: Instance of Topic.
         """
         return self.topics[topic_name]
 
@@ -751,8 +766,7 @@ class Dagger(Service):
     async def _process_tasks_create_event(self, stream):
         """Upon creation of tasks, store them in the datastore.
 
-        Args:
-            stream ([type]): The stream instance that triggers this event.
+        :param stream: The stream instance that triggers this event.
         """
         async for taskjson in stream:
             task: ITask = ITask.loads(taskjson)
@@ -762,8 +776,7 @@ class Dagger(Service):
     async def _process_bootstrap_tasks(self, stream):
         """Used to process stalled ITasks upon restart.
 
-        Args:
-            stream ([type]): Stream instance that triggers this event.
+        :param stream: The stream instance that triggers this event.
         """
 
         async for taskjson in stream:
@@ -779,6 +792,10 @@ service_blueprint = Blueprint("service_state")
 
 @service_blueprint.route("/ready", name="task_resource")
 class ServiceStateView(View):
+    """
+    Class to represent the state of the application
+    """
+
     async def get(self, request: Request) -> Response:
         """REST endpoint that is just used to tell when the Dagger worker has started."""
         return self.text(
@@ -797,9 +814,16 @@ class TaskDTO(ITask):
 
 @tasks_blueprint.route("/instance/{dag_id}", name="dag_by_id")
 class DagProcessView(View):
-    """REST endpoint to get the details of a process dag."""
+    """REST endpoint to get the details of a workflow instance"""
 
     async def get(self, request: Request, dag_id) -> Response:
+        """
+        Returns the details of the workflow request specified in the request
+
+        :param request: the HTTP request
+        :param dag_id: the workflow instance ID
+        :return: the JSON representation of the workflow instance
+        """
         try:
             dag_obj = await Dagger.app.get_instance(dag_id)
             if not dag_obj:
@@ -823,6 +847,10 @@ class TemplateProcessView(View):
     tasks: List[TaskDTO]
 
     async def get(self, request: Request) -> Response:
+        """
+        Get all the workflow instances
+        :param request: the HTTP request
+        """
         try:
             self.tasks = list()
             for task in Dagger.app._store.kv_table.values():  # pragma: no cover
