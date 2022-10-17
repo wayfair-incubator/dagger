@@ -124,7 +124,7 @@ The remaining jobs are all related to documentation.
     the documentation as it has changed since a maintainer published the `latest` version.
 
 
-[usage-guide]: fundamentals.md
+[usage-guide]: usage-guide/fundamentals.md
 [code of conduct]: https://github.com/wayfair-incubator/dagger/blob/main/CODE_OF_CONDUCT.md
 [contributing]: https://github.com/wayfair-incubator/dagger/blob/main/CONTRIBUTING.md
 [install-docker]: https://docs.docker.com/install/

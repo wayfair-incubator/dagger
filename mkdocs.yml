@@ -12,7 +12,6 @@ nav:
   - Why dagger?: why-dagger.md
   - API Documentation: api.md
   - Development Guide: development-guide.md
-  - Changelog: changelog.md
 theme: material
 markdown_extensions:
   - markdown_include.include:
@@ -28,7 +27,6 @@ plugins:
   - redirects:
       redirect_maps:
         usage-guide.md: usage-guide/fundamentals.md
-        CHANGELOG.md: changelog.md
   - mkdocstrings:
       handlers:
         python:

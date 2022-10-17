@@ -1,6 +1,4 @@
-[![Release](https://img.shields.io/github/v/release/wayfair-incubator/dagger?display_name=tag)](CHANGELOG.md)
 [![Lint](https://github.com/wayfair-incubator/dagger/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/wayfair-incubator/dagger/actions/workflows/lint.yml)
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![Maintainer](https://img.shields.io/badge/Maintainer-Wayfair-7F187F)](https://wayfair.github.io)
 
 # Dagger
