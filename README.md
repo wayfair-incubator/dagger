@@ -179,3 +179,13 @@ Project Link: [https://github.com/wayfair-incubator/dagger](https://github.com/w
 
 This template was adapted from
 [https://github.com/othneildrew/Best-README-Template](https://github.com/othneildrew/Best-README-Template).
+
+## Documentation
+
+Check out the [project documentation][dagger-docs].
+
+For an overview on how repository structure and how to work with the code base, read the
+[Development Guide][development-docs].
+
+[dagger-docs]: https://wayfair-incubator.github.io/dagger/latest/
+[development-docs]: https://wayfair-incubator.github.io/dagger/latest/development-guide/
