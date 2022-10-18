@@ -107,9 +107,30 @@ jobs:
           with:
             requirements: "true"
             test-requirements: "true"
-
         - name: Run pytest
           run: pytest --cov-report xml:coverage-${{ matrix.python-version }}.xml --junitxml=test-results-${{ matrix.python-version }}.xml
+
+        - name: Upload pytest test results artifact
+          uses: actions/upload-artifact@v3
+          with:
+            name: pytest-results-${{ matrix.python-version }}
+            path: test-results-${{ matrix.python-version }}.xml
+          # Use always() to always run this step to publish test results when there are test failures
+          if: ${{ always() }}
+
+        - name: Upload coverage results artifact
+          uses: actions/upload-artifact@v3
+          with:
+            name: pytest-coverage-${{ matrix.python-version }}
+            path: coverage-${{ matrix.python-version }}.xml
+          # Use always() to always run this step to publish test results when there are test failures
+          if: ${{ always() }}
+
+        - name: Publish coverage results to Codecov
+          uses: codecov/codecov-action@v3.1.1
+          with:
+            file: coverage-${{ matrix.python-version }}.xml
+            fail_ci_if_error: true
 
   verify-wheel:
     runs-on: ubuntu-latest
@@ -129,15 +150,7 @@ jobs:
         with:
           package-import-name: "dagger"
 
-#  validate-doc-examples:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Check out code
-#        uses: actions/checkout@v3
-#
-#      - name: Validate docs
-#        run: ./docker/validate_docs.sh
-#
+
   build-docs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
