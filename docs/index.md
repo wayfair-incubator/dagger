@@ -1,4 +1,4 @@
-# Dagger - 0.0.0-final
+# Dagger - 0.1.0
 
 [![Lint](https://github.com/wayfair-incubator/dagger/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/wayfair-incubator/dagger/actions/workflows/lint.yml)
 [![Maintainer](https://img.shields.io/badge/Maintainer-Wayfair-7F187F)](https://wayfair.github.io)
@@ -97,12 +97,18 @@ await workflow_engine.submit(workflow_instance)
 This begins the actual execution of the tasks created by the template definition and executes them in the sequence as
 defined in the template.
 
-## Documentation
+## Where to Start?
 
-Check out the [project documentation][dagger-docs].
+To learn the basics of how to start using `dagger`, read the [Getting Started][getting-started] page.
 
-For an overview on how repository structure and how to work with the code base, read the
-[Development Guide][development-docs].
+## Detailed Documentation
 
-[dagger-docs]: https://wayfair-incubator.github.io/dagger/latest/
-[development-docs]: https://wayfair-incubator.github.io/dagger/latest/development-guide/
+To learn more about the various ways `dagger` can be used, read the [Usage Guide][usage-guide] page.
+
+## API Reference
+
+To find detailed information about a specific function or class, read the [API Reference][api-reference].
+
+[getting-started]: getting-started.md
+[usage-guide]: usage-guide/fundamentals.md
+[api-reference]: api.md
