@@ -1,0 +1,52 @@
+name: Publish Release
+
+env:
+  PYTHON_VERSION: "3.10"
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update_docs_for_version_bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+        with:
+          requirements: "true"
+          test-requirements: "true"
+          docs-requirements: "true"
+
+      - name: Push documentation changes
+        uses: ./.github/actions/publish-docs-with-mike
+        with:
+          new_version: true
+
+  build-and-publish-wheel-to-pypi:
+    runs-on: ubuntu-latest
+    environment: "Publish Release"
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Build wheel
+        uses: ./.github/actions/build-dist
+
+        # Using full SHA for security
+        # https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@37f50c210e3d2f9450da2cd423303d6a14a6e29f
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
