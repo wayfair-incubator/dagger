@@ -6,9 +6,9 @@ echo "::group::Configure Git User"
 "${GITHUB_ACTION_PATH}/configure_git_user.sh"
 echo "::endgroup::"
 
-#echo "::group::Pull down latest docs commit"
-#git fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin gh-pages
-#echo "::endgroup::"
+echo "::group::Pull down latest docs commit"
+git fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin gh-pages
+echo "::endgroup::"
 
 echo "::group::Publish documentation"
 if [[ "${NEW_VERSION}" == "false" ]]; then
