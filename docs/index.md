@@ -1,11 +1,11 @@
 # Dagger - 0.1.0
 
-[![CI pipeline status](https://github.com/wayfair-incubator/dagger/workflows/CI/badge.svg?branch=main)][ci]
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE_OF_CONDUCT.md)
-[![Maintainer](https://img.shields.io/badge/Maintainer-Wayfair-7F187F)](https://wayfair.github.io)
-[![codecov](https://codecov.io/gh/wayfair-incubator/dagger/branch/main/graph/badge.svg)][codecov]
-[![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue)][mypy-home]
-[![Code style: black](https://img.shields.io/badge/code%20style-black-black.svg)][black-home]
+![CI pipeline status](https://github.com/wayfair-incubator/dagger/workflows/CI/badge.svg?branch=main)
+![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)
+![Maintainer](https://img.shields.io/badge/Maintainer-Wayfair-7F187F)
+![codecov](https://codecov.io/gh/wayfair-incubator/dagger/branch/main/graph/badge.svg)
+![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue)
+![Code style: black](https://img.shields.io/badge/code%20style-black-black.svg)
 
 **Dagger** is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous and
 synchronous long-running business logic in a scalable and resilient way.
