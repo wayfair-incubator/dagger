@@ -1,7 +1,7 @@
+# Dagger - 0.0.0
+
 [![Lint](https://github.com/wayfair-incubator/dagger/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/wayfair-incubator/dagger/actions/workflows/lint.yml)
 [![Maintainer](https://img.shields.io/badge/Maintainer-Wayfair-7F187F)](https://wayfair.github.io)
-
-# Dagger
 
 **Dagger** is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous and
 synchronous long-running business logic in a scalable and resilient way.
