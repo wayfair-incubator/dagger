@@ -110,21 +110,21 @@ jobs:
         - name: Run pytest
           run: pytest --cov-report xml:coverage-${{ matrix.python-version }}.xml --junitxml=test-results-${{ matrix.python-version }}.xml
 
-#        - name: Upload pytest test results artifact
-#          uses: actions/upload-artifact@v3
-#          with:
-#            name: pytest-results-${{ matrix.python-version }}
-#            path: test-results-${{ matrix.python-version }}.xml
-#          # Use always() to always run this step to publish test results when there are test failures
-#          if: ${{ always() }}
-#
-#        - name: Upload coverage results artifact
-#          uses: actions/upload-artifact@v3
-#          with:
-#            name: pytest-coverage-${{ matrix.python-version }}
-#            path: coverage-${{ matrix.python-version }}.xml
-#          # Use always() to always run this step to publish test results when there are test failures
-#          if: ${{ always() }}
+        - name: Upload pytest test results artifact
+          uses: actions/upload-artifact@v3
+          with:
+            name: pytest-results-${{ matrix.python-version }}
+            path: test-results-${{ matrix.python-version }}.xml
+          # Use always() to always run this step to publish test results when there are test failures
+          if: ${{ always() }}
+
+        - name: Upload coverage results artifact
+          uses: actions/upload-artifact@v3
+          with:
+            name: pytest-coverage-${{ matrix.python-version }}
+            path: coverage-${{ matrix.python-version }}.xml
+          # Use always() to always run this step to publish test results when there are test failures
+          if: ${{ always() }}
 
         - name: Publish coverage results to Codecov
           uses: codecov/codecov-action@v3.1.1
