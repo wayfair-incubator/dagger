@@ -47,14 +47,28 @@ class DefaultTemplateBuilder(ITemplateDAGBuilder):
     def set_type(
         self, template_type: Type[ITemplateDAGInstance]
     ) -> ITemplateDAGBuilder:
+        """
+        Sets the type of the Task to instantiate from this builder
+        :param template_type: the Template Type
+        :return: the instance of ITemplateDAGBuilder
+        """
         self.__template_type = template_type
         return self
 
     def set_root(self, template: IProcessTemplateDAG) -> ITemplateDAGBuilder:
+        """
+        Sets the root process of this task
+        :param template: the parent Process Task
+        :return: the instance of ITemplateDAGBuilder
+        """
         self.root_process_dag = template
         return self
 
     def build(self) -> ITemplateDAG:
+        """
+        Builds the DefaultTemplateBuilder
+        :return: the instance of ITemplateDAG from the builder definition
+        """
         return TemplateDAG(
             dag=self.root_process_dag,
             name=self.__name,
@@ -63,11 +77,20 @@ class DefaultTemplateBuilder(ITemplateDAGBuilder):
         )
 
     def set_name(self, name: str) -> ITemplateDAGBuilder:
+        """
+        Sets the name of the task
+        :param name: The name of the task the builder is setting up
+        :return: The updated ITemplateDAGBuilder
+        """
         self.__name = name
         return self
 
 
 class ProcessTemplateDAG(IProcessTemplateDAG):
+    """
+    Class that encapsulates the definition of a Process
+    """
+
     def __init__(
         self,
         next_process_dag: List[IProcessTemplateDAG],
@@ -77,6 +100,15 @@ class ProcessTemplateDAG(IProcessTemplateDAG):
         root_task_dag: Optional[TaskTemplate],
         max_run_duration: int,
     ) -> None:
+        """
+        Constructor
+        :param next_process_dag: The list of next processes to execute in this workflow
+        :param app: The Dagger instance
+        :param name: the name of the process
+        :param process_type: the type of the process to instantiate
+        :param root_task_dag: The workflow type instance(definition)
+        :param max_run_duration: The maximum time this process can execute until its marked as failure(timeout)
+        """
         super().__init__(
             next_process_dag=next_process_dag,
             app=app,
@@ -98,7 +130,18 @@ class ProcessTemplateDAG(IProcessTemplateDAG):
         workflow_instance: ITemplateDAGInstance = None,
         **kwargs: Any,
     ) -> IProcessTemplateDAGInstance[KT, VT]:
-        # create the instance in the graph store
+        """Method for creating an instance of a process instance
+        :param id: The id of the instance
+        :param parent_id: the id of the parent of this process(The workflow instance)
+        :param parent_name: the name of the workflow
+        :param partition_key_lookup: The kafka partitioning key to look up
+        :param repartition: If true the instance is serialized and stored in the owner of the parition owned by the
+        partioning key
+        :param seed: The seed to use to create any child instances
+        :param workflow_instance: the instance of the workflow
+        :param **kwargs: Other keyword arguments
+        :return: the instance of the Process
+        """
         process_instance = self.process_type(
             id=id, process_name=self.name, parent_id=parent_id
         )
@@ -151,6 +194,10 @@ class ProcessTemplateDAG(IProcessTemplateDAG):
 
 
 class ParallelCompositeProcessTemplateDAG(ProcessTemplateDAG):
+    """
+    A Process Template to define a set of parallel Processes within a Process
+    """
+
     child_process_task_templates: List[IProcessTemplateDAG]
     parallel_operator_type: TaskOperator
 
@@ -163,6 +210,16 @@ class ParallelCompositeProcessTemplateDAG(ProcessTemplateDAG):
         child_process_task_templates: List[IProcessTemplateDAG],
         parallel_operator_type: TaskOperator,
     ) -> None:
+        """
+        init method
+        :param next_process_dag: The next Process in the workflow definition
+        :param app: The Dagger instance
+        :param name: The name of the ParallelCompositeProcessTask
+        :param process_type: The type of ParallelCompositeTask to be instantiated from the definition
+        :param child_process_task_templates: The list of parallel processes to be created
+        :param parallel_operator_type: Wait for either all to complete or just one before transitioning to the next
+        process in the workflow
+        """
         super().__init__(
             next_process_dag=next_process_dag,
             app=app,
@@ -178,9 +235,7 @@ class ParallelCompositeProcessTemplateDAG(ProcessTemplateDAG):
         self, parallel_process_templates: List[IProcessTemplateDAG]
     ) -> None:  # pragma: no cover
         """Sets child_process_task_templates
-
-        Args:
-            parallel_process_templates (List[IProcessTemplateDAG]): List of parallel process templates
+        :param parallel_process_templates: List of parallel process templates
         """
         self.child_process_task_templates = parallel_process_templates
 
@@ -196,7 +251,19 @@ class ParallelCompositeProcessTemplateDAG(ProcessTemplateDAG):
         workflow_instance: ITemplateDAGInstance = None,
         **kwargs: Any,
     ) -> ParallelCompositeTask[KT, VT]:
-        # create the instance in the graph store
+        """
+        Create a ParallelCompositeTask instance based on the template definition
+        :param id: The id of the instance
+        :param parent_id: the id of the parent of this process(The workflow instance)
+        :param parent_name: the name of the workflow
+        :param partition_key_lookup: The kafka partitioning key to look up
+        :param repartition: If true the instance is serialized and stored in the owner of the parition owned by the
+        partioning key
+        :param seed: The seed to use to create any child instances
+        :param workflow_instance: the instance of the workflow
+        :param **kwargs: Other keyword arguments
+        :return: the instance of the Process
+        """
         kwargs = {} if workflow_instance else kwargs
         process_instance = self.process_type(
             id=id, process_name=self.name, parent_id=parent_id
@@ -243,6 +310,10 @@ class ParallelCompositeProcessTemplateDAG(ProcessTemplateDAG):
 
 
 class DynamicProcessTemplateDAG(IDynamicProcessTemplateDAG):
+    """
+    A template to add Dynamic Processes to a workflow at runtime
+    """
+
     _dynamic_process_builders: List[ProcessTemplateDagBuilder] = []
 
     def __init__(
@@ -252,6 +323,13 @@ class DynamicProcessTemplateDAG(IDynamicProcessTemplateDAG):
         name: str,
         max_run_duration: int,
     ) -> None:
+        """
+        Init method
+        :param next_process_dag: the next process in the workflow definition
+        :param app: The Dagger instance
+        :param name: the name of the Dynamic Process
+        :param max_run_duration: The timeout on the process to COMPLETE execution
+        """
         super().__init__(
             next_process_dags=next_process_dag,
             app=app,
@@ -286,7 +364,19 @@ class DynamicProcessTemplateDAG(IDynamicProcessTemplateDAG):
         workflow_instance: ITemplateDAGInstance = None,
         **kwargs: Any,
     ) -> IProcessTemplateDAGInstance[KT, VT]:
-
+        """
+        Create a ParallelCompositeTask instance based on the template definition
+        :param id: The id of the instance
+        :param parent_id: the id of the parent of this process(The workflow instance)
+        :param parent_name: the name of the workflow
+        :param partition_key_lookup: The kafka partitioning key to look up
+        :param repartition: If true the instance is serialized and stored in the owner of the parition owned by the
+        partioning key
+        :param seed: The seed to use to create any child instances
+        :param workflow_instance: the instance of the workflow
+        :param **kwargs: Other keyword arguments
+        :return: the instance of the Process
+        """
         head_process: List[IProcessTemplateDAG] = []
         if len(self._dynamic_process_builders) > 0:
             head_process = self.build_and_link_processes(
@@ -309,15 +399,16 @@ class DynamicProcessTemplateDAG(IDynamicProcessTemplateDAG):
 
 
 class TemplateDAG(ITemplateDAG):
+    """
+    Default Implementation of ITemplateDAG
+    """
+
     def get_given_process(self, process_name: str) -> Optional[IProcessTemplateDAG]:
         """
         Looks up for a specific process template within a DAG
 
-        Args:
-            process_name [str]: Name of the process
-
-        Returns:
-            [IProcessTemplateDAG]: Process Template if found, else None
+        :param process_name: Name of the process
+        :return: Process Template if found, else None
         """
         #   get the root dag
         process_template: Optional[IProcessTemplateDAG] = self.root_process_dag
@@ -349,9 +440,8 @@ class TemplateDAG(ITemplateDAG):
     ):
         """Sets new process builders within a given process in a DAG
 
-        Args:
-            name (str): Name of the process with in which given process builders must reside
-            parallel_process_templates (List[IProcessTemplateDAG]): List of process template builders
+        :param name: Name of the process with in which given process builders must reside
+        :param parallel_process_templates: List of process template builders
         """
         composite_process = self.get_given_process(process_name=name)
         if composite_process:
@@ -367,10 +457,10 @@ class TemplateDAG(ITemplateDAG):
     ):
         """This method creates and sets 'N' number of new parralel processes for a given process in a DAG
 
-        Args:
-            no_of_processes (int): Number of parallel processes required
-            composite_process_name (str):  Name of the process with in which the parallel processes must reside
-            parallel_template_builder (ProcessTemplateDagBuilder): A process template builder which needs to be cloned 'N' times and executed parallely
+        :param no_of_processes: Number of parallel processes required
+        :param composite_process_name:  Name of the process with in which the parallel processes must reside
+        :param parallel_template_builder: A process template builder which needs to be cloned 'N' times and executed in
+        parallel
         """
 
         parallel_process_templates = list()
@@ -391,6 +481,13 @@ class TemplateDAG(ITemplateDAG):
         app: Dagger,
         template_type: Type[ITemplateDAGInstance[KT, VT]],
     ) -> None:
+        """
+        Constructor
+        :param dag: The definition of the first process to execute
+        :param name: the name of the Workflow
+        :param app: the Dagger instance
+        :param template_type: the type of the Workflow to instantiate
+        """
         super().__init__(dag, name, app, template_type)
 
     async def create_instance(
@@ -402,6 +499,16 @@ class TemplateDAG(ITemplateDAG):
         seed: random.Random = None,
         **kwargs,
     ) -> ITemplateDAGInstance[KT, VT]:
+        """Method for creating an instance of a workflow definition
+        :param id: The id of the workflow
+        :param partition_key_lookup: Kafka topic partition key associated with the instance of the workflow. The key
+        needs to be defined within the runtime parameters
+        :param repartition: Flag indicating if the creation of this instance needs to be stored on the current node or
+        by the owner of the partition defined by the partition_key_lookup
+        :param seed: the seed to use to create all internal instances of the workflow
+        :param **kwargs: Other keyword arguments
+        :return: An instance of the workflow
+        """
         template_instance = self.template_type(
             id=id,
             template_name=self.name,
@@ -446,6 +553,10 @@ class ProcessTemplateDagBuilder(IProcessTemplateDAGBuilder):
     __max_run_duration: int = 0
 
     def __init__(self, app: Dagger) -> None:
+        """
+        Init method
+        :param app: The Dagger instance
+        """
         super().__init__(app)
 
     def set_root_task(self, task: TaskTemplate) -> IProcessTemplateDAGBuilder:
@@ -493,8 +604,7 @@ class DynamicProcessTemplateDagBuilder(IProcessTemplateDAGBuilder):
     def set_root_task(self, task: TaskTemplate) -> IProcessTemplateDAGBuilder:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError(
             "DynamicProcessTemplateDagBuilder does not implement this method"
@@ -511,8 +621,7 @@ class DynamicProcessTemplateDagBuilder(IProcessTemplateDAGBuilder):
     def set_type(self, process_type: Type[ITask]) -> IProcessTemplateDAGBuilder:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError(
             "DynamicProcessTemplateDagBuilder does not implement this method"
@@ -550,8 +659,7 @@ class ParallelCompositeProcessTemplateDagBuilder(IProcessTemplateDAGBuilder):
     def set_root_task(self, task: TaskTemplate) -> IProcessTemplateDAGBuilder:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError(
             "ParallelCompositeProcessTemplateDagBuilder does not implement this method"
@@ -578,8 +686,7 @@ class ParallelCompositeProcessTemplateDagBuilder(IProcessTemplateDAGBuilder):
     def set_max_run_duration(self, max_run_duration: int) -> IProcessTemplateDAGBuilder:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError(
             "ParallelCompositeProcessTemplateDagBuilder does not implement this method"

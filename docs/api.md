@@ -21,3 +21,15 @@
 ::: dagger.templates.template.TriggerTaskTemplateBuilder
 ::: dagger.templates.template.IntervalTaskTemplateBuilder
 ::: dagger.templates.template.KafkaListenerTaskTemplateBuilder
+::: dagger.modeler.definition.DefaultTemplateBuilder
+::: dagger.modeler.definition.ProcessTemplateDAG
+::: dagger.modeler.definition.ParallelCompositeProcessTemplateDAG
+::: dagger.modeler.definition.TemplateDAG
+::: dagger.modeler.definition.DynamicProcessTemplateDAG
+::: dagger.modeler.definition.ProcessTemplateDagBuilder
+::: dagger.modeler.definition.DynamicProcessTemplateDagBuilder
+::: dagger.modeler.definition.ParallelCompositeProcessTemplateDagBuilder
+
+
+
+
