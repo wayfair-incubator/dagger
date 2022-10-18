@@ -29,3 +29,7 @@
 ::: dagger.modeler.definition.ProcessTemplateDagBuilder
 ::: dagger.modeler.definition.DynamicProcessTemplateDagBuilder
 ::: dagger.modeler.definition.ParallelCompositeProcessTemplateDagBuilder
+::: dagger.tasks.task.TaskStatusEnum
+::: dagger.tasks.task.TaskType
+::: dagger.tasks.task.TaskStatus
+::: dagger.tasks.task.ITask

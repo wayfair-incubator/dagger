@@ -28,13 +28,24 @@ COMPLETE_BY_KEY = "complete_by_time"  # time in seconds
 
 
 class TaskStatusEnum(Enum):
+    """
+    Class to indicate State of the Task
+    """
+
     NOT_STARTED = "NOT_STARTED"
+    """The Task has NOT STARTED EXECUTION"""
     EXECUTING = "EXECUTING"
+    """The task is currently EXECUTING"""
     COMPLETED = "COMPLETED"
+    """The Task COMPLETED Execution"""
     FAILURE = "FAILURE"
+    """The Task Failed during Execution"""
     SKIPPED = "SKIPPED"
+    """The Task Skipped Execution"""
     SUBMITTED = "SUBMITTED"
+    """The Task was SUBMITTED for Execution"""
     STOPPED = "STOPPED"
+    """The Task execution was STOPPED"""
 
 
 TERMINAL_STATUSES = [
@@ -46,13 +57,23 @@ TERMINAL_STATUSES = [
 
 
 class TaskType(Enum):
+    """
+    The type of the Task
+    """
+
     ROOT = "ROOT"
+    """The Root node of the workflow"""
     LEAF = "LEAF"
+    """Task which has no children"""
     SUB_DAG = "SUB_DAG"
+    """A Process Task that consists of LEAF Tasks"""
     PARALLEL_COMPOSITE = "PARALLEL_COMPOSITE"
+    """A container for parallel tasks"""
 
 
 class TaskStatus(Record, serializer="raw"):  # type: ignore
+    """Class to serialize the status of the Task"""
+
     code: str = TaskStatusEnum.NOT_STARTED.name
     value: str = TaskStatusEnum.NOT_STARTED.value
 
@@ -83,7 +104,9 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
     async def execute(
         self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
     ) -> None:  # pragma: no cover
-        """Executes the ITask."""
+        """Executes the ITask.
+        :param workflow_instance: The workflow object
+        """
         ...
 
     @abc.abstractmethod
@@ -95,22 +118,28 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
     async def on_message(
         self, runtime_parameters: Dict[str, str], *args: Any, **kwargs: Any
     ) -> bool:  # pragma: no cover
-        """Defines what to do when the task recieves a message."""
+        """Defines what to do when the task recieves a message.
+        :param runtime_parameters: The runtime parameters of the task
+        :return: True if the processing succeeds false otherwise
+        """
         ...
 
     @abc.abstractmethod
     async def evaluate(self, **kwargs: Any) -> Optional[UUID]:  # pragma: no cover
         """Processes some inputs and determines the next ITask id.
 
-        Returns:
-            Optional[UUID]: The next ITask id.
+        :return: The next ITask id.
         """
         ...
 
     async def notify(
         self, status: TaskStatus, workflow_instance: Optional[ITemplateDAGInstance]
     ) -> None:  # pragma: no cover
-        """If not completed, runs the steps required for completion by calling on_complete()."""
+        """If not completed, runs the steps required for completion by calling on_complete().
+        This is used to signal a task that it can now complete
+        :param status: the status of the task to set to when completed
+        :param workflow_instance: the Workflow object
+        """
         if self.status.code != status.code:
             await self.on_complete(status=status, workflow_instance=workflow_instance)
 
@@ -118,11 +147,8 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
     def get_correlatable_key(self, payload: Any) -> TaskLookupKey:  # pragma: no cover
         """Get the lookup key,value associated with the task.Deprecated use get_correlatable_key_from_payload
 
-        Args:
-            payload (Any): The lookup key,value.
-
-        Returns:
-            TaskLookupKey: Can be used to associate a task with a message.
+        :param payload: The lookup key,value.
+        :return: used to associate a task with a message.
         """
         ...
 
@@ -131,11 +157,9 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
     ) -> TaskLookupKey:  # pragma: no cover
         """Get the lookup key,value associated with the task(Deprecated use get_correlatable_keys_from_payload).
 
-        Args:
-            payload (Any): The lookup key,value.
+        :param payload: The lookup key,value.
 
-        Returns:
-            TaskLookupKey: Can be used to associate a task with a message.
+        :return: used to associate a task with a message.
         """
         return self.get_correlatable_key(payload=payload)
 
@@ -144,11 +168,9 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
     ) -> List[TaskLookupKey]:  # pragma: no cover
         """Get a list of lookup key,value associated with the task(s).
 
-        Args:
-            payload (Any): The lookup key,value.
+        :param payload: The lookup key,value.
 
-        Returns:
-            List[TaskLookupKey]: Can be used to associate task(s) with a message.
+        :return: used to associate a tasks with a message.
         """
         return [await self.get_correlatable_key_from_payload(payload=payload)]
 
@@ -156,7 +178,9 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
     async def start(
         self, workflow_instance: Optional[ITemplateDAGInstance]
     ) -> None:  # pragma: no cover
-        """Starts the ITask."""
+        """Starts the ITask.
+        :param workflow_instance: The Workflow instance
+        """
         ...
 
     async def get_remaining_tasks(
@@ -166,15 +190,13 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
         tasks: Optional[List[ITask]] = None,
         end_task_id: UUID = None,
     ) -> Optional[List[ITask]]:
-        """Get the remaining tasks in the template.
+        """Get the remaining tasks in the workflow.
 
-        Args:
-            next_dag_id (UUID): Current ITask id.
-            tasks (List[ITask], optional): List of previous ITasks. Defaults to [].
-            end_task (ITask): The task that the function should stop and return at. Defaults to None (so end of DAG).
-
-        Returns:
-            List[ITask]: List of remaining ITasks appended to inputted list.
+        :param next_dag_id: Current ITask id.
+        :param tasks: List of previous ITasks. Defaults to [].
+        :param end_task_id: The task id that the function should stop and return at. Defaults to None (so end of DAG).
+        :param workflow_instance: The Workflow object
+        :return: List of remaining ITasks appended to inputted list.
         """
         if next_dag_id == workflow_instance.id:
             task_instance = workflow_instance
@@ -211,7 +233,10 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
         *,
         iterate: bool = True,
     ) -> None:
-        """Sets the status of the ITask to completed and starts the next ITask if there is one."""
+        """Sets the status of the ITask to completed and starts the next ITask if there is one.
+        :param workflow_instance: The workflow object
+        :param status: The status of the task to set to
+        """
         # get the parent
         if self.status.code != status.code:
             self.status = status
