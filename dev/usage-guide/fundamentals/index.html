@@ -357,6 +357,34 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#intervaltask" class="md-nav__link">
+    IntervalTask
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#monitoringtask" class="md-nav__link">
+    MonitoringTask
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sensortask" class="md-nav__link">
+    SensorTask
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#imonitoredtask" class="md-nav__link">
+    IMonitoredTask
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#restful-api" class="md-nav__link">
     RESTful API
   </a>
@@ -512,6 +540,34 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#intervaltask" class="md-nav__link">
+    IntervalTask
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#monitoringtask" class="md-nav__link">
+    MonitoringTask
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sensortask" class="md-nav__link">
+    SensorTask
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#imonitoredtask" class="md-nav__link">
+    IMonitoredTask
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#restful-api" class="md-nav__link">
     RESTful API
   </a>
@@ -616,6 +672,24 @@ Dagger comes built in with <code>MonitoredProcessTemplateDAGInstance</code></p>
 <h3 id="parallelcompositetask">ParallelCompositeTask</h3>
 <p>SUB-DAG Task to execute parallel tasks and wait until all of them are in a terminal state before progressing to the next task
 This task can be embedded as a child of the root node or a process node</p>
+<h3 id="intervaltask">IntervalTask</h3>
+<p>A type of Task to Trigger at a trigger time and execute multiple times until the execution completes. The
+task is retried until the timeout is reached periodically after the trigger time</p>
+<h3 id="monitoringtask">MonitoringTask</h3>
+<p>A Type of TriggerTask that executes at s specific time and checks on the monitored task to execute some
+domain specific logic</p>
+<h3 id="sensortask">SensorTask</h3>
+<p>A type of task that halts execution of the workflow until a condition is met. When the condition is met
+the on_message method on this task is invoked</p>
+<h3 id="imonitoredtask">IMonitoredTask</h3>
+<p>An Abstract interface to enable monitoring of a task. Any Task that implements this interface will need to setup
+a MonitoringTask by implementing. Dagger ships with a default implementation using ``</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">setup_monitoring_task</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">workflow_instance</span><span class="p">:</span> <span class="n">ITask</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="o">...</span>
+</code></pre></div>
 <h3 id="restful-api">RESTful API</h3>
 <p>The framework provides a RESTFul API to retrieve the status of root task instances. Root task is the instance created
 using the <code>TaskTemplate</code>
