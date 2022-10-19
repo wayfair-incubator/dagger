@@ -186,7 +186,7 @@ This template was adapted from
 
 Check out the [project documentation][dagger-docs].
 
-For an overview on how repository structure and how to work with the code base, read the
+For an overview on the repository structure and how to work with the code base, read the
 [Development Guide][development-docs].
 
 [dagger-docs]: https://wayfair-incubator.github.io/dagger/latest/
