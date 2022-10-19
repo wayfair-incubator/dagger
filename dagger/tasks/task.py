@@ -309,6 +309,8 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
 
 
 class ExecutorTask(ITask[KT, VT], abc.ABC):
+    """A simple ITask that executes some domain specific logic"""
+
     async def start(
         self,
         workflow_instance: Optional[ITemplateDAGInstance],
@@ -344,8 +346,7 @@ class ExecutorTask(ITask[KT, VT], abc.ABC):
     async def evaluate(self, **kwargs: Any) -> Optional[UUID]:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError("Executor does not evaluate")
 
@@ -354,13 +355,17 @@ class ExecutorTask(ITask[KT, VT], abc.ABC):
     ) -> bool:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError("Executor does not process on_message")
 
 
 class TriggerTask(ExecutorTask[KT, VT], abc.ABC):
+    """
+    This task waits/halts the execution of the DAG until current time >= the trigger time on the task and then
+    invokes the execute method defined by the task
+    """
+
     time_to_execute: Optional[int] = None
 
     async def start(
@@ -395,6 +400,11 @@ class TriggerTask(ExecutorTask[KT, VT], abc.ABC):
 
 
 class IntervalTask(TriggerTask[KT, VT], abc.ABC):
+    """
+    A type of Task to Trigger at a trigger time and execute multiple times until the execution completes. The
+    task is retried until the timeout is reached periodically after the trigger time
+    """
+
     time_to_force_complete: Optional[int] = None  # time in seconds
     interval_execute_period: Optional[int] = None  # time in seconds
 
@@ -433,14 +443,18 @@ class IntervalTask(TriggerTask[KT, VT], abc.ABC):
 
     async def interval_execute(self, runtime_parameters: Dict[str, VT]) -> bool:
         """Task to run on an interval until either the trigger end time or until this method returns True.
-
-        Returns:
-            bool: If True, finish this task.
+        :param runtime_parameters: The runtime parameters of the task
+        :return: If True, finish this task.
         """
         return True
 
 
 class MonitoringTask(TriggerTask[KT, VT], abc.ABC):
+    """
+    A Type of TriggerTask that executes at s specific time and checks on the monitored task to execute some
+    domain specific logic
+    """
+
     monitored_task_id: Optional[UUID] = None
 
     @abc.abstractmethod
@@ -450,6 +464,7 @@ class MonitoringTask(TriggerTask[KT, VT], abc.ABC):
         """
         Callback on when business logic has to be executed on the monitored task based on the time condition
         :param monitored_task: the monitored task
+        :param workflow_instance: the workflow object
         :return: None
         """
         ...
@@ -468,6 +483,10 @@ class MonitoringTask(TriggerTask[KT, VT], abc.ABC):
 
 
 class DefaultMonitoringTask(MonitoringTask[str, str]):
+    """
+    Default Implementation of MonitoringTask
+    """
+
     async def execute(
         self,
         runtime_parameters: Dict[str, str],
@@ -525,6 +544,11 @@ class SkipOnMaxDurationTask(DefaultMonitoringTask):
 
 
 class DecisionTask(ITask[KT, VT]):
+    """
+    This type of task is similar to the `case..switch` statement in a programming language. It returns the next task to
+    execute based on the execution logic. A decision task needs to implement
+    """
+
     async def start(self, workflow_instance: Optional[ITemplateDAGInstance]) -> None:
         # pre-execute
         if self.status.code in [
@@ -586,27 +610,28 @@ class DecisionTask(ITask[KT, VT]):
 
 
 class SystemTask(ExecutorTask[str, str]):
+    """
+    An internal Task for Dagger bookkeeping
+    """
+
     async def on_message(self, *args: Any, **kwargs: Any) -> bool:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError("SystemTask task does not process on_message")
 
     async def evaluate(self, **kwargs: Any) -> Optional[UUID]:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError("SystemTask task does not process on_message")
 
     def get_correlatable_key(self, payload: Any) -> TaskLookupKey:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError(
             "SystemTask task does not process get_correlatable_key"
@@ -622,8 +647,7 @@ class SystemTask(ExecutorTask[str, str]):
     ) -> None:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError("SystemTask task does not process on_complete")
 
@@ -644,6 +668,10 @@ class SystemTask(ExecutorTask[str, str]):
 
 
 class SystemTimerTask(SystemTask):
+    """
+    A type of SystemTask to execute internal Dagger Tasks
+    """
+
     async def execute(
         self, runtime_parameters: Dict[str, VT], workflow_instance: ITask = None
     ) -> None:
@@ -660,6 +688,11 @@ class SystemTimerTask(SystemTask):
 
 
 class SensorTask(ITask[KT, VT], abc.ABC):
+    """
+    A type of task that halts execution of the workflow until a condition is met. When the condition is met
+    the on_message method on this task is invoked
+    """
+
     match_only_one: bool = False
 
     async def start(self, workflow_instance: Optional[ITemplateDAGInstance]) -> None:
@@ -680,9 +713,8 @@ class SensorTask(ITask[KT, VT], abc.ABC):
 
     async def _update_correletable_key(self, workflow_instance: ITask) -> None:
         """Updates the correletable key if the local is not the same as global key.
-
-        Returns:
-            None.
+        :param workflow_instance: the workflow instance
+        :returns None:
         """
         if workflow_instance and workflow_instance.runtime_parameters:
             global_key = workflow_instance.runtime_parameters.get(
@@ -703,8 +735,7 @@ class SensorTask(ITask[KT, VT], abc.ABC):
     async def evaluate(self, **kwargs: Any) -> Optional[UUID]:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError("Executor does not evaluate")
 
@@ -713,15 +744,20 @@ class SensorTask(ITask[KT, VT], abc.ABC):
     ) -> None:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError("Executor does not execute")
 
 
 class IMonitoredTask:
+    """Abstract interface to enable monitoring of a task"""
+
     @abc.abstractmethod
     def get_monitoring_task_type(self) -> Type[MonitoringTask]:  # pragma: no cover
+        """
+        Get the TaskType to instantiate to monitor the current task
+        :return: The Type of MonitoringTask
+        """
         ...
 
     @abc.abstractmethod
@@ -729,6 +765,12 @@ class IMonitoredTask:
         self, workflow_instance: ITask
     ) -> None:  # pragma: no cover
         ...
+
+    """
+    Sets up the MonitoringTask for this task
+    :param workflow_instance: The workflow object
+    :return: None
+    """
 
 
 class KafkaAgent:
@@ -874,10 +916,21 @@ class KafkaAgent:
 
 
 class KafkaCommandTask(ExecutorTask[KT, VT], abc.ABC):
+    """
+    This task is used to send a request/message on a Kafka Topic defined using the template builder. This type of task is a
+    child task in the execution graph and can be extended by implementing the method
+    """
+
     topic: Optional[str] = None
 
 
 class KafkaListenerTask(SensorTask[KT, VT], abc.ABC):
+    """This task waits/halts the execution of the DAG until a message is received on the defined Kafka topic(in the template
+    definition). Each task is created using the DAG builder defines a durable key to correlate each received message on the
+    topic against listener tasks. The Engine handles the complexity of invoking the appropriate task instance based on the
+    key in the payload.
+    """
+
     topic: Optional[str] = None
 
     def get_correlatable_key(self, payload: Any) -> TaskLookupKey:
@@ -885,6 +938,10 @@ class KafkaListenerTask(SensorTask[KT, VT], abc.ABC):
 
 
 class INonLeafNodeTask(ITask[KT, VT], abc.ABC):
+    """
+    An Abstract class for any Process/SUB_DAG node
+    """
+
     task_type: str = TaskType.SUB_DAG.name
 
     async def stop(self) -> None:
@@ -931,8 +988,18 @@ class INonLeafNodeTask(ITask[KT, VT], abc.ABC):
 
 
 class TaskOperator(Enum):
+    """
+    An operator for Joining Parallel Tasks
+    """
+
     ATLEAST_ONE = "ATLEAST_ONE"
+    """Wait for Atleast one of the parallel tasks to reach terminal state to begin execution of the next task
+    in the workflow definition"""
     JOIN_ALL = "JOIN_ALL"
+    """
+    Waits for All the parallel tasks to reach terminal state before execution of the next task in the workflow
+    definition
+    """
 
 
 class ParallelCompositeTask(ITask[KT, VT], abc.ABC):
@@ -1023,17 +1090,29 @@ class ParallelCompositeTask(ITask[KT, VT], abc.ABC):
 
 
 class IProcessTemplateDAGInstance(INonLeafNodeTask[KT, VT], abc.ABC):
+    """
+    A Process implementation of INonLeafNodeTask
+    """
+
     process_name: Optional[str] = None
     max_run_duration_monitor_task_id: Optional[UUID] = None
     max_run_duration: int = 0
 
 
 class CorrelatableMapValue(Record):
+    """
+    An internal Class to store the correletable keys and their associated values for SensorTask
+    """
+
     correlatable_key_attr: str
     correlatable_key_attr_value: str
 
 
 class ITemplateDAGInstance(INonLeafNodeTask[KT, VT], abc.ABC):
+    """
+    A root node implementation of INonLeafNodeTask
+    """
+
     template_name: Optional[str] = None
     partition_key_lookup: Optional[str] = None
     task_type = TaskType.ROOT.name
@@ -1073,6 +1152,10 @@ class ITemplateDAGInstance(INonLeafNodeTask[KT, VT], abc.ABC):
 
 
 class DefaultProcessTemplateDAGInstance(IProcessTemplateDAGInstance[str, str]):
+    """
+    Default Implementation of IProcessTemplateDAGInstance
+    """
+
     async def on_complete(
         self,
         workflow_instance: Optional[ITemplateDAGInstance],
@@ -1109,6 +1192,10 @@ class DefaultProcessTemplateDAGInstance(IProcessTemplateDAGInstance[str, str]):
     async def setup_max_run_duration(
         self, wokflow_instance: Optional[ITemplateDAGInstance]
     ) -> None:
+        """
+        Sets up the max duration of this task to timeout
+        :param wokflow_instance: The workflow instance
+        """
         if (
             hasattr(self, "max_run_duration")
             and self.max_run_duration != 0
@@ -1132,24 +1219,21 @@ class DefaultProcessTemplateDAGInstance(IProcessTemplateDAGInstance[str, str]):
     ) -> bool:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError("ProcessInstance does not process on_message")
 
     async def evaluate(self, **kwargs: Any) -> Optional[ITask]:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError("ProcessInstance does not process on_message")
 
     def get_correlatable_key(self, payload: Any) -> TaskLookupKey:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError(
             "ProcessInstance does not process get_correlatable_key"
@@ -1159,6 +1243,10 @@ class DefaultProcessTemplateDAGInstance(IProcessTemplateDAGInstance[str, str]):
 class MonitoredProcessTemplateDAGInstance(
     DefaultProcessTemplateDAGInstance, IMonitoredTask
 ):
+    """
+    Default implementation of a Monitored ProcessTask
+    """
+
     monitoring_task_id: Optional[UUID] = None
 
     async def on_complete(
@@ -1219,11 +1307,14 @@ class MonitoredProcessTemplateDAGInstance(
 
 
 class DefaultTemplateDAGInstance(ITemplateDAGInstance[str, str]):
+    """
+    Default Implementation of ITemplateDAGInstance
+    """
+
     def get_correlatable_key(self, payload: Any) -> TaskLookupKey:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError(
             "DefaultTemplateDAGInstance does not process get_correlatable_key"
@@ -1232,8 +1323,7 @@ class DefaultTemplateDAGInstance(ITemplateDAGInstance[str, str]):
     async def evaluate(self, **kwargs: Any) -> Optional[ITask]:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError("DefaultTemplateDAGInstance does not evaluate")
 
@@ -1242,8 +1332,7 @@ class DefaultTemplateDAGInstance(ITemplateDAGInstance[str, str]):
     ) -> bool:
         """Not implemented.
 
-        Raises:
-            NotImplementedError: Not implemented.
+        :raises NotImplementedError: Not implemented.
         """
         raise NotImplementedError(
             "DefaultTemplateDAGInstance does not process on_message"
@@ -1251,11 +1340,19 @@ class DefaultTemplateDAGInstance(ITemplateDAGInstance[str, str]):
 
 
 class Trigger(Record, serializer="raw"):  # type: ignore
+    """
+    Class To store the Trigger data. The time to execute a task
+    """
+
     trigger_time: Optional[int] = int(time.time())
     id: Optional[UUID] = None
     workflow_id: Optional[UUID] = None
 
     def get_trigger_key(self) -> Tuple[Optional[UUID], Optional[UUID]]:
+        """
+        The key to store for the trigger instance
+        :return: The Key to store
+        """
         return self.workflow_id, self.id
 
 

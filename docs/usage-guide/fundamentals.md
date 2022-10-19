@@ -98,6 +98,33 @@ Dagger comes built in with `MonitoredProcessTemplateDAGInstance`
 SUB-DAG Task to execute parallel tasks and wait until all of them are in a terminal state before progressing to the next task
 This task can be embedded as a child of the root node or a process node
 
+### IntervalTask
+
+A type of Task to Trigger at a trigger time and execute multiple times until the execution completes. The
+task is retried until the timeout is reached periodically after the trigger time
+
+### MonitoringTask
+
+A Type of TriggerTask that executes at s specific time and checks on the monitored task to execute some
+domain specific logic
+
+### SensorTask
+
+A type of task that halts execution of the workflow until a condition is met. When the condition is met
+the on_message method on this task is invoked
+
+### IMonitoredTask
+An Abstract interface to enable monitoring of a task. Any Task that implements this interface will need to setup
+a MonitoringTask by implementing. Dagger ships with a default implementation using ``
+
+```python
+@abc.abstractmethod
+async def setup_monitoring_task(
+    self, workflow_instance: ITask
+) -> None:
+    ...
+```
+
 ### RESTful API
 
 The framework provides a RESTFul API to retrieve the status of root task instances. Root task is the instance created

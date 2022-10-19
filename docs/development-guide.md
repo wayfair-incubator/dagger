@@ -133,5 +133,5 @@ The remaining jobs are all related to documentation.
 [bandit-docs]: https://bandit.readthedocs.io/en/stable/
 [pep-517]: https://www.python.org/dev/peps/pep-0517
 [build]: https://pypa-build.readthedocs.io/
-[pypi]: https://pypi.org/project/py-dagger/
+[pypi]: https://pypi.org/project/wf-dagger/
 [codecov]: https://about.codecov.io/
