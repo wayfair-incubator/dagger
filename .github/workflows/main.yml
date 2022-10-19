@@ -158,7 +158,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v4.2.0
+      - uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -184,7 +184,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v4.2.0
+      - uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
