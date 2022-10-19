@@ -5,7 +5,7 @@
 To install `dagger`, simply run this simple command in your terminal of choice:
 
 ```bash
-python -m pip install py-dagger
+python -m pip install wf-dagger
 ```
 
 dagger has a dependency on [faust-streaming](https://github.com/faust-streaming/faust)  for kafka stream processing

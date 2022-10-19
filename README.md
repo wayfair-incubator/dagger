@@ -141,7 +141,7 @@ You can install dagger via the Wayfair artifactory or from source.
 To install using `pip`:
 
 ```shell
-pip install py-dagger
+pip install wf-dagger
 ```
 
 dagger has a dependency on `faust-streaming` for kafka stream processing
