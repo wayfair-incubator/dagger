@@ -6,6 +6,7 @@
 ![codecov](https://codecov.io/gh/wayfair-incubator/dagger/branch/main/graph/badge.svg)
 ![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue)
 ![Code style: black](https://img.shields.io/badge/code%20style-black-black.svg)
+[![PyPI](https://img.shields.io/pypi/v/wf-dagger)](https://pypi.org/project/wf-dagger/)
 
 **Dagger** is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous and
 synchronous long-running business logic in a scalable and resilient way.
