@@ -113,6 +113,11 @@ To learn more about the various ways `dagger` can be used, read the [Usage Guide
 
 To find detailed information about a specific function or class, read the [API Reference][api-reference].
 
+## Example
+
+Take a look at the [Test App][test-app] based on Dagger
+
 [getting-started]: getting-started.md
 [usage-guide]: usage-guide/fundamentals.md
 [api-reference]: api.md
+[test-app]: https://github.com/wayfair-incubator/dagger/blob/main/integration_tests/test_app.py
