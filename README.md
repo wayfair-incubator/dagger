@@ -1,4 +1,5 @@
 ![CI pipeline status](https://github.com/wayfair-incubator/dagger/workflows/CI/badge.svg?branch=main)
+[![PyPI](https://img.shields.io/pypi/v/wf-dagger)](https://pypi.org/project/wf-dagger/)
 ![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)
 ![Maintainer](https://img.shields.io/badge/Maintainer-Wayfair-7F187F)
 ![codecov](https://codecov.io/gh/wayfair-incubator/dagger/branch/main/graph/badge.svg)
