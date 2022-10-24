@@ -90,7 +90,7 @@ template = workflow_engine.get_template('OrderWorkflow')
 runtime_parameters:Dict[str, str] = dict()
 runtime_parameters['customer_name']= `EXAMPLE_CUSTOMER`
 runtime_parameters['order_number'] = 'EXAMPLE_ORDER' 
-workflow_instance = await template.create_instance(uuid1(), runtime_parameters)
+workflow_instance = await template.create_instance(uuid1(), **runtime_parameters)
 ```
 
 To begin execution of the DAG instance created above
