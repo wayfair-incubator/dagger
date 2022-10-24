@@ -106,11 +106,6 @@ modern Python syntax to describe how keys and values in streams are serialized. 
 refer to
 <https://faust-streaming.github.io/faust/userguide/models.html>
 
-## OpenTelemetry
-
-Dagger has support for open telemetry. To enable open telemetry the client application has to initialise the tracer
-implementation and set the flag enable_telemetry while initializing dagger
-
 ## Dagger is
 
 ### Simple
