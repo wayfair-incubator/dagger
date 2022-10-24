@@ -80,20 +80,20 @@ using the ``PaymentKafkaCommandTask`` definition. The ``SHIPPING`` process follo
 similarly named topics and processes and the template defines the root process and links them in a
 DAG (Directed Acyclic Graph) structure
 
-The application can define as many DAG'S it needs to model using the ``register_template``
+The application can define as many DAGs it needs to model using the ``register_template``
 decorator. dagger populates all the DAG templates in the codebase decorated with `register_template`
 
-Here's and example of how to create an instance of a specific DAG:
+Here's an example of how to create an instance of a specific DAG:
 
 ```python
 template = workflow_engine.get_template('OrderWorkflow')
-runtime_parameters:Dict[str, str] = dict()
-runtime_parameters['customer_name']= `EXAMPLE_CUSTOMER`
+runtime_parameters: Dict[str, str] = dict()
+runtime_parameters['customer_name']= 'EXAMPLE_CUSTOMER'
 runtime_parameters['order_number'] = 'EXAMPLE_ORDER' 
 workflow_instance = await template.create_instance(uuid1(), **runtime_parameters)
 ```
 
-To begin execution of the DAG instance created above
+To begin execution of the DAG instance created above:
 
 ```python
 await workflow_engine.submit(workflow_instance)
