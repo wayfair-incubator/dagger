@@ -4,7 +4,7 @@ import pytest
 
 from dagger.modeler.builder_helper import DAGBuilderHelper
 from dagger.service.services import Dagger
-from dagger.tasks.task import KafkaCommandTask, SystemTimerTask, KafkaListenerTask
+from dagger.tasks.task import KafkaCommandTask, KafkaListenerTask, SystemTimerTask
 
 
 class TestDAGBuilderHelper:
