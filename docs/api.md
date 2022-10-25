@@ -53,6 +53,7 @@
 ::: dagger.tasks.task.ITemplateDAGInstance
 ::: dagger.tasks.task.MonitoredProcessTemplateDAGInstance
 ::: dagger.tasks.task.Trigger
+::: dagger.modeler.builder_helper.DAGBuilderHelper
 ::: dagger.exceptions.exceptions.DaggerError
 ::: dagger.exceptions.exceptions.InvalidTaskType
 ::: dagger.exceptions.exceptions.TaskInvalidState
