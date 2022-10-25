@@ -249,6 +249,61 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#pizza-ordering-and-delivery-workflow-example" class="md-nav__link">
+    Pizza Ordering and Delivery Workflow Example
+  </a>
+  
+    <nav class="md-nav" aria-label="Pizza Ordering and Delivery Workflow Example">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-instantiate-dagger" class="md-nav__link">
+    Step 1 Instantiate Dagger
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-define-leaf-command-and-listener-tasks-for-order-process" class="md-nav__link">
+    Step 2 Define Leaf Command and Listener Tasks For Order Process
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-define-leaf-command-tasks-for-delivery-process" class="md-nav__link">
+    Step 3 Define Leaf Command Tasks For Delivery Process
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-define-the-sequence-of-process-execution-and-register-the-workflow-definition-using-register_template" class="md-nav__link">
+    Step 4 Define the Sequence of Process Execution and register the workflow definition using register_template
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-define-an-api-to-instantiate-and-execute-pizza-order-workflows" class="md-nav__link">
+    Step 5 Define an API to instantiate and execute pizza order workflows
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-6-start-the-worker" class="md-nav__link">
+    Step 6 Start the worker
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#where-to-start" class="md-nav__link">
     Where to Start?
   </a>
@@ -419,6 +474,61 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#pizza-ordering-and-delivery-workflow-example" class="md-nav__link">
+    Pizza Ordering and Delivery Workflow Example
+  </a>
+  
+    <nav class="md-nav" aria-label="Pizza Ordering and Delivery Workflow Example">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-instantiate-dagger" class="md-nav__link">
+    Step 1 Instantiate Dagger
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-define-leaf-command-and-listener-tasks-for-order-process" class="md-nav__link">
+    Step 2 Define Leaf Command and Listener Tasks For Order Process
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-define-leaf-command-tasks-for-delivery-process" class="md-nav__link">
+    Step 3 Define Leaf Command Tasks For Delivery Process
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-define-the-sequence-of-process-execution-and-register-the-workflow-definition-using-register_template" class="md-nav__link">
+    Step 4 Define the Sequence of Process Execution and register the workflow definition using register_template
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-define-an-api-to-instantiate-and-execute-pizza-order-workflows" class="md-nav__link">
+    Step 5 Define an API to instantiate and execute pizza order workflows
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-6-start-the-worker" class="md-nav__link">
+    Step 6 Start the worker
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#where-to-start" class="md-nav__link">
     Where to Start?
   </a>
@@ -476,86 +586,179 @@
 <a href="https://pypi.org/project/wf-dagger/"><img alt="PyPI" src="https://img.shields.io/pypi/v/wf-dagger" /></a></p>
 <p><strong>Dagger</strong> is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous and
 synchronous long-running business logic in a scalable and resilient way.
-Dagger requires Python 3.7 or later for the new <code>async/await</code>_ syntax, and variable type annotations.
-Here's an example of how to use the library to build and run a workflow:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">uuid</span> <span class="kn">import</span> <span class="n">uuid1</span>
-<span class="kn">from</span> <span class="nn">dagger.service.services</span> <span class="kn">import</span> <span class="n">Dagger</span>
-<span class="kn">from</span> <span class="nn">dagger.modeler.definition</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">dagger.templates.template</span> <span class="kn">import</span> <span class="o">*</span>
-
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-<span class="n">workflow_engine</span> <span class="o">=</span> <span class="n">Dagger</span><span class="p">(</span><span class="n">broker</span><span class="o">=</span><span class="s2">&quot;kafka://localhost:9092&quot;</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="s2">&quot;aerospike://&quot;</span><span class="p">,</span> <span class="n">datadir</span><span class="o">=</span><span class="s2">&quot;/tmp/data/&quot;</span><span class="p">)</span>
-
-<span class="nd">@Dagger</span><span class="o">.</span><span class="n">register_template</span><span class="p">(</span><span class="s1">&#39;OrderWorkflow&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">order_template</span><span class="p">(</span><span class="n">template_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ITemplateDAG</span><span class="p">:</span>
-
-
-    <span class="c1"># Create empty default Template</span>
-    <span class="n">template_builder</span> <span class="o">=</span> <span class="n">DefaultTemplateBuilder</span><span class="p">(</span><span class="n">Dagger</span><span class="o">.</span><span class="n">app</span><span class="p">)</span>
-    <span class="n">template_builder</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">template_name</span><span class="p">)</span>
-    <span class="n">template_builder</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">DefaultTemplateDAGInstance</span><span class="p">)</span>
-
-    <span class="c1"># First process in template (first node in DAG) named waving</span>
-    <span class="n">payment_process_builder</span> <span class="o">=</span> <span class="n">ProcessTemplateDagBuilder</span><span class="p">(</span><span class="n">Dagger</span><span class="o">.</span><span class="n">app</span><span class="p">)</span>
-    <span class="n">payment_process_builder</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="s2">&quot;PAYMENT&quot;</span><span class="p">)</span>
-
-    <span class="c1"># First task and topic in payment process</span>
-    <span class="n">payment_command_topic</span> <span class="o">=</span>  <span class="n">Dagger</span><span class="o">.</span><span class="n">create_topic</span><span class="p">(</span><span class="s2">&quot;PAYMENT_COMMAND&quot;</span><span class="p">,</span> <span class="n">key_type</span><span class="o">=</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">value_type</span><span class="o">=</span><span class="nb">bytes</span><span class="p">)</span>
-    <span class="n">payment_command_task_template_builder</span> <span class="o">=</span> <span class="n">KafkaCommandTaskTemplateBuilder</span><span class="p">(</span><span class="n">Dagger</span><span class="o">.</span><span class="n">app</span><span class="p">)</span>
-    <span class="n">payment_command_task_template_builder</span><span class="o">.</span><span class="n">set_topic</span><span class="p">(</span><span class="n">payment_command_topic</span><span class="p">)</span>
-    <span class="n">payment_command_task_template_builder</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">PaymentKafkaCommandTask</span><span class="p">)</span>
-
-    <span class="c1"># Second task and topic in payment process</span>
-    <span class="n">payment_topic</span><span class="p">:</span> <span class="n">Topic</span> <span class="o">=</span>  <span class="n">Dagger</span><span class="o">.</span><span class="n">create_topic</span><span class="p">(</span><span class="s2">&quot;PAYMENT_LISTENER&quot;</span><span class="p">,</span> <span class="n">key_type</span><span class="o">=</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">value_type</span><span class="o">=</span><span class="nb">bytes</span><span class="p">)</span>
-    <span class="n">payment_listener_task_template_builder</span> <span class="o">=</span> <span class="n">KafkaListenerTaskTemplateBuilder</span><span class="p">(</span><span class="n">Dagger</span><span class="o">.</span><span class="n">app</span><span class="p">)</span>
-    <span class="n">payment_listener_task_template_builder</span><span class="o">.</span><span class="n">set_topic</span><span class="p">(</span><span class="n">payment_topic</span><span class="p">)</span>
-    <span class="n">payment_listener_task_template_builder</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">PaymentKafkaListenerTask</span><span class="p">)</span>
-
-    <span class="c1"># Link and build tasks in payment process (define root task and order, essentially just created a child DAG inside the parent DAG)</span>
-    <span class="n">payment_listener_task_template</span> <span class="o">=</span> <span class="n">payment_listener_task_template_builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
-    <span class="n">payment_command_task_template_builder</span><span class="o">.</span><span class="n">set_next</span><span class="p">(</span><span class="n">payment_listener_task_template</span><span class="p">)</span>
-    <span class="n">payment_command_task_template</span> <span class="o">=</span> <span class="n">payment_command_task_template_builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
-    <span class="n">payment_process_builder</span><span class="o">.</span><span class="n">set_root_task</span><span class="p">(</span><span class="n">payment_command_task_template</span><span class="p">)</span>
-    <span class="n">payment_process_builder</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">DefaultProcessTemplateDAGInstance</span><span class="p">)</span>
-
-    <span class="c1"># Build more processes like above and link them</span>
-
-    <span class="p">[</span><span class="o">...</span><span class="p">]</span>
-
-    <span class="c1"># Link and build processes in DAG (define root task and order) Assuming one more process called &quot;SHIPPING&quot; was created, this would be the flow:</span>
-    <span class="n">shipping_template</span> <span class="o">=</span> <span class="n">shipping_process_builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
-    <span class="n">payment_process_builder</span><span class="o">.</span><span class="n">set_next_process</span><span class="p">(</span><span class="n">shipping_template</span><span class="p">)</span>
-    <span class="n">payment_template</span> <span class="o">=</span> <span class="n">payment_process_builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
-    <span class="n">template_builder</span><span class="o">.</span><span class="n">set_root</span><span class="p">(</span><span class="n">payment_template</span><span class="p">)</span>
-
-    <span class="n">btemplate</span> <span class="o">=</span> <span class="n">template_builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">btemplate</span>
-
-<span class="c1"># Starts the worker</span>
-<span class="n">workflow_engine</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+Dagger requires Python 3.7 or later for the new <code>async/await</code>_ syntax, and variable type annotations.</p>
+<h2 id="pizza-ordering-and-delivery-workflow-example">Pizza Ordering and Delivery Workflow Example</h2>
+<p>Here's an example of how to use the library to build and run a Pizza Ordering Workflow:</p>
+<p><img alt="Pizza Workflow" src="images/workflow.jpg" /></p>
+<p>The PizzaWorkflow consists of 2 Processes:</p>
+<ul>
+<li>Order : Responsible for communicating with the order service to place a pizza order(CommandTask) and wait for the order
+to be ready(ListenerTask)</li>
+<li>Delivery: Once the order is ready, this process communicates with the delivery service to start delivery of the pizza
+order(CommandTask)</li>
+</ul>
+<h3 id="step-1-instantiate-dagger">Step 1 Instantiate Dagger</h3>
+<div class="highlight"><pre><span></span><code><span class="n">workflow_engine</span> <span class="o">=</span> <span class="n">Dagger</span><span class="p">(</span>
+                    <span class="n">broker</span><span class="o">=</span><span class="n">KAFKA_ADMIN_CLIENT_URL</span><span class="p">,</span>
+                    <span class="n">store</span><span class="o">=</span><span class="s2">&quot;aerospike://&quot;</span><span class="p">,</span>
+                    <span class="n">consumer_auto_offset_reset</span><span class="o">=</span><span class="s2">&quot;latest&quot;</span><span class="p">,</span>
+                    <span class="n">task_update_topic</span><span class="o">=</span><span class="s2">&quot;task_update_topic&quot;</span><span class="p">,</span>
+                    <span class="n">trigger_interval</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+                    <span class="n">aerospike_config</span><span class="o">=</span><span class="n">aerospike_config</span><span class="p">,</span>
+                    <span class="n">enable_changelog</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">web_port</span><span class="o">=</span><span class="mi">6066</span><span class="p">,</span>
+                    <span class="n">serializer</span><span class="o">=</span><span class="s2">&quot;raw&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
 </code></pre></div>
-<p>The <code>register_template</code> decorator defines a "DAG processor" that essentially defines the various processes and child
-tasks the DAG executes. In the example above the code creates a named template <code>OrderWorkflow</code>  and associates
-a <code>PAYMENT</code> process with 2 child tasks <code>PAYMENT_LISTENER</code> using <code>PaymentKafkaListenerTask</code> and <code>PAYMENT_COMMAND</code>
-using the <code>PaymentKafkaCommandTask</code> definition. The <code>SHIPPING</code> process follows
-after the <code>PAYMENT</code> process with similarly named topics and processes and the template defines the root process and
-links them in a DAG (Directed Acyclic Graph) structure</p>
-<p>The application can define as many DAG'S it needs to model using the <code>register_template</code>
-decorator. dagger populates all the DAG templates in the codebase decorated with <code>register_template</code></p>
-<p>Here's and example of how to create an instance of a specific DAG:</p>
-<div class="highlight"><pre><span></span><code><span class="n">template</span> <span class="o">=</span> <span class="n">workflow_engine</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s1">&#39;OrderWorkflow&#39;</span><span class="p">)</span>
-<span class="n">runtime_parameters</span><span class="p">:</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-<span class="n">runtime_parameters</span><span class="p">[</span><span class="s1">&#39;customer_name&#39;</span><span class="p">]</span><span class="o">=</span> <span class="err">`</span><span class="n">EXAMPLE_CUSTOMER</span><span class="err">`</span>
-<span class="n">runtime_parameters</span><span class="p">[</span><span class="s1">&#39;order_number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;EXAMPLE_ORDER&#39;</span> 
-<span class="n">workflow_instance</span> <span class="o">=</span> <span class="k">await</span> <span class="n">template</span><span class="o">.</span><span class="n">create_instance</span><span class="p">(</span><span class="n">uuid1</span><span class="p">(),</span> <span class="o">**</span><span class="n">runtime_parameters</span><span class="p">)</span>
+<h3 id="step-2-define-leaf-command-and-listener-tasks-for-order-process">Step 2 Define Leaf Command and Listener Tasks For Order Process</h3>
+<p>Let's assume that the Order Microservice processes incoming orders over a Kafka Topic - <code>pizza_order_topic</code> with the
+JSON schema</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;order_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;pizza_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;customer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer_id&quot;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </code></pre></div>
-<p>To begin execution of the DAG instance created above</p>
-<div class="highlight"><pre><span></span><code><span class="k">await</span> <span class="n">workflow_engine</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">workflow_instance</span><span class="p">)</span>
+<p>Using this information let's build out the OrderCommandTask by overriding the <code>execute</code> method that implements the
+business logic on how to send the payload to the Order Service over a Kafka topic</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">OrderCommandTask</span><span class="p">(</span><span class="n">KafkaCommandTask</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">runtime_parameters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">workflow_instance</span><span class="p">:</span> <span class="n">ITemplateDAGInstance</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;order_id&quot;</span><span class="p">:</span> <span class="n">runtime_parameters</span><span class="p">[</span><span class="s2">&quot;order_id&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;customer_id&quot;</span><span class="p">:</span> <span class="n">runtime_parameters</span><span class="p">[</span><span class="s2">&quot;customer_id&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;pizza_type&quot;</span><span class="p">:</span> <span class="n">runtime_parameters</span><span class="p">[</span><span class="s2">&quot;pizza_type&quot;</span><span class="p">],</span>
+        <span class="p">}</span>
+        <span class="k">await</span> <span class="n">workflow_engine</span><span class="o">.</span><span class="n">topics</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">topic</span><span class="p">]</span><span class="o">.</span><span class="n">send</span><span class="p">(</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+        <span class="p">)</span>
 </code></pre></div>
-<p>This begins the actual execution of the tasks created by the template definition and executes them in the sequence as
-defined in the template.</p>
+<p>After executing the <code>OrderCommandTask</code>, the workflow should enter a <code>WAIT_STATE</code> until it receives a message from the 
+OrderService about the status of the order. Let's assume that Order Service sends a message on a Kafka Topic: 
+order_status_topic when the order is ready in the following JSON format</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;order_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;READY&quot;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+<p>Let's model the <code>OrderListenerTask</code> to process this message on the <code>order_status_topic</code> by implementing the 
+<code>get_correlatable_keys_from_payload</code> and <code>on_message</code> methods on the Listener. It also needs to specify the <code>correletable_key</code>
+as <code>order_id</code> to look up the payload</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">PizzaWaitForReadyListener</span><span class="p">(</span><span class="n">KafkaListenerTask</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+    <span class="n">correlatable_key</span> <span class="o">=</span> <span class="s2">&quot;order_id&quot;</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_correlatable_keys_from_payload</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">TaskLookupKey</span><span class="p">]:</span>
+        <span class="n">tpayload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">tpayload</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">correlatable_key</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">correlatable_key</span><span class="p">,</span> <span class="n">key</span><span class="p">)]</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">on_message</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">runtime_parameters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">VT</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span> <span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pizza Order is Ready&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+</code></pre></div>
+<p>When the order service sends a status message on the <code>order_status_topic</code>, Dagger invokes the <code>get_correlatable_keys_from_payload</code>
+to determine which workflow instance that message belongs to. Once it determines the workflow instance, it invokes
+<code>on_message</code> on the corresponding ListenerTask
+Now that we have the LEAF tasks modeled, lets attach them to the parent <code>Order</code> Process</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">pizza_ordering_process</span><span class="p">(</span>
+    <span class="n">process_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Order&quot;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IProcessTemplateDAGBuilder</span><span class="p">:</span>
+    <span class="n">dag_builder</span> <span class="o">=</span> <span class="n">DAGBuilderHelper</span><span class="p">(</span><span class="n">dagger_app</span><span class="o">=</span><span class="n">workflow_engine</span><span class="p">)</span>
+    <span class="n">root_task</span> <span class="o">=</span> <span class="n">dag_builder</span><span class="o">.</span><span class="n">build_and_link_tasks</span><span class="p">(</span>
+        <span class="p">[</span>
+           <span class="n">dag_builder</span><span class="o">.</span><span class="n">generic_command_task_builder</span><span class="p">(</span>
+                <span class="n">topic</span><span class="o">=</span><span class="s2">&quot;pizza_order_topic&quot;</span><span class="p">,</span>
+                <span class="n">task_type</span><span class="o">=</span><span class="n">OrderCommandTask</span><span class="p">,</span>
+                <span class="n">process_name</span><span class="o">=</span><span class="n">process_name</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">dag_builder</span><span class="o">.</span><span class="n">generic_listener_task_builder</span><span class="p">(</span>
+                <span class="n">topic</span><span class="o">=</span><span class="s2">&quot;PizzaWaitForReadyListener&quot;</span><span class="p">,</span>
+                <span class="n">task_type</span><span class="o">=</span><span class="n">PizzaWaitForReadyListener</span><span class="p">,</span>
+                <span class="n">process_name</span><span class="o">=</span><span class="n">process_name</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">dag_builder</span><span class="o">.</span><span class="n">generic_process_builder</span><span class="p">(</span><span class="n">process_name</span><span class="o">=</span><span class="n">process_name</span><span class="p">,</span> <span class="n">root_task</span><span class="o">=</span><span class="n">root_task</span><span class="p">)</span>
+</code></pre></div>
+<p>The Order Process is in <code>COMPLETED</code> when both the CommandTask and the PizzaWaitForReadyListener are <code>COMPLETED</code> and then
+the workflow transitions to execute the next Process <code>Delivery</code></p>
+<h3 id="step-3-define-leaf-command-tasks-for-delivery-process">Step 3 Define Leaf Command Tasks For Delivery Process</h3>
+<p>Let's assume that the delivery service just requires an HTTP POST request with the following schema</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;order_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;customer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer_id&quot;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+<p>We can model the DeliveryCommandTask to POST this payload by implementing the <code>execute</code> method as follows</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">DeliveryCommandTask</span><span class="p">(</span><span class="n">ExecutorTask</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">runtime_parameters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">VT</span><span class="p">],</span> <span class="n">workflow_instance</span><span class="p">:</span> <span class="n">ITask</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;order_id&quot;</span><span class="p">:</span> <span class="n">runtime_parameters</span><span class="p">[</span><span class="s2">&quot;order_id&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;customer_id&quot;</span><span class="p">:</span> <span class="n">runtime_parameters</span><span class="p">[</span><span class="s2">&quot;customer_id&quot;</span><span class="p">],</span>
+        <span class="p">}</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span class="o">.</span><span class="n">ClientSession</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="k">async</span> <span class="k">with</span> <span class="n">session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://www.deliverysvc.com&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">payload</span><span class="p">):</span>
+                <span class="k">pass</span>
+</code></pre></div>
+<p>Let's attach this to the parent <code>Delivery</code> Process</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">pizza_delivery_process</span><span class="p">(</span>
+    <span class="n">process_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Delivery&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IProcessTemplateDAGBuilder</span><span class="p">:</span>
+    <span class="n">dag_builder</span> <span class="o">=</span> <span class="n">DAGBuilderHelper</span><span class="p">(</span><span class="n">dagger_app</span><span class="o">=</span><span class="n">workflow_engine</span><span class="p">)</span>
+    <span class="n">root_task</span> <span class="o">=</span> <span class="n">dag_builder</span><span class="o">.</span><span class="n">build_and_link_tasks</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">dag_builder</span><span class="o">.</span><span class="n">generic_executor_task_builder</span><span class="p">(</span>
+                <span class="n">task_type</span><span class="o">=</span><span class="n">DeliveryCommandTask</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">process_name</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">dag_builder</span><span class="o">.</span><span class="n">generic_process_builder</span><span class="p">(</span>
+        <span class="n">process_name</span><span class="o">=</span><span class="n">process_name</span><span class="p">,</span> <span class="n">root_task</span><span class="o">=</span><span class="n">root_task</span>
+    <span class="p">)</span>
+</code></pre></div>
+<h3 id="step-4-define-the-sequence-of-process-execution-and-register-the-workflow-definition-using-register_template">Step 4 Define the Sequence of Process Execution and register the workflow definition using <code>register_template</code></h3>
+<p>Based on the workflow, we want the <code>Order</code> Process to execute first before the <code>Delivery</code> Process. The workflow ensures
+that the <code>Delivery</code> tasks are executed only after both the tasks in the <code>Order</code> process are in a terminal state</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@Dagger</span><span class="o">.</span><span class="n">register_template</span><span class="p">(</span><span class="s2">&quot;PizzaWorkflow&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">register_pizza_workflow</span><span class="p">(</span><span class="n">template_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ITemplateDAG</span><span class="p">:</span>
+    <span class="n">dag_builder_helper</span> <span class="o">=</span> <span class="n">DAGBuilderHelper</span><span class="p">(</span><span class="n">workflow_engine</span><span class="p">)</span>
+    <span class="n">order_process</span> <span class="o">=</span> <span class="n">dag_builder_helper</span><span class="o">.</span><span class="n">build_and_link_processes</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">pizza_ordering_process</span><span class="p">(</span><span class="n">process_name</span><span class="o">=</span><span class="s2">&quot;Order&quot;</span><span class="p">),</span>
+            <span class="n">pizza_delivery_process</span><span class="p">(</span><span class="n">process_name</span><span class="o">=</span><span class="s2">&quot;Delivery&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">dag_builder_helper</span><span class="o">.</span><span class="n">generic_template</span><span class="p">(</span>
+        <span class="n">template_name</span><span class="o">=</span><span class="n">template_name</span><span class="p">,</span> <span class="n">root_process</span><span class="o">=</span><span class="n">order_process</span>
+    <span class="p">)</span>
+</code></pre></div>
+<h3 id="step-5-define-an-api-to-instantiate-and-execute-pizza-order-workflows">Step 5 Define an API to instantiate and execute pizza order workflows</h3>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span> <span class="nf">create_and_submit_pizza_delivery_workflow</span><span class="p">(</span>
+    <span class="n">order_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">customer_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pizza_type</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">):</span>
+    <span class="n">pizza_workflow_template</span> <span class="o">=</span> <span class="n">workflow_engine</span><span class="o">.</span><span class="n">template_dags</span><span class="p">[</span><span class="s2">&quot;PizzaWorkflow&quot;</span><span class="p">]</span>
+    <span class="n">pizza_workflow_instance</span> <span class="o">=</span> <span class="k">await</span> <span class="n">pizza_workflow_template</span><span class="o">.</span><span class="n">create_instance</span><span class="p">(</span>
+        <span class="n">uuid</span><span class="o">.</span><span class="n">uuid1</span><span class="p">(),</span>
+        <span class="n">repartition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Create this instance on the current worker</span>
+        <span class="n">order_id</span><span class="o">=</span><span class="n">order_id</span><span class="p">,</span>
+        <span class="n">customer_id</span><span class="o">=</span><span class="n">customer_id</span><span class="p">,</span>
+        <span class="n">pizza_type</span><span class="o">=</span><span class="n">pizza_type</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">await</span> <span class="n">workflow_engine</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">pizza_workflow_instance</span><span class="p">,</span> <span class="n">repartition</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="step-6-start-the-worker">Step 6 Start the worker</h3>
+<div class="highlight"><pre><span></span><code><span class="n">workflow_engine</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</code></pre></div>
 <h2 id="where-to-start">Where to Start?</h2>
 <p>To learn the basics of how to start using <code>dagger</code>, read the <a href="getting-started/">Getting Started</a> page.</p>
 <h2 id="detailed-documentation">Detailed Documentation</h2>
