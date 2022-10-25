@@ -4,7 +4,7 @@ import pytest
 
 from dagger.modeler.builder_helper import DAGBuilderHelper
 from dagger.service.services import Dagger
-from dagger.tasks.task import KafkaCommandTask, SystemTimerTask
+from dagger.tasks.task import KafkaCommandTask, SystemTimerTask, KafkaListenerTask
 
 
 class TestDAGBuilderHelper:
@@ -57,6 +57,17 @@ class TestDAGBuilderHelper:
         assert (
             builder_fixture.generic_command_task_builder(
                 topic="test_topic", task_type=KafkaCommandTask, process_name="test"
+            )
+            is not None
+        )
+
+    @pytest.mark.asyncio
+    async def test_generic_listener_task_builder(self, builder_fixture):
+        Dagger.app = MagicMock()
+        Dagger.app.topics = {"test_topic": MagicMock()}
+        assert (
+            builder_fixture.generic_listener_task_builder(
+                topic="test_topic", task_type=KafkaListenerTask, process_name="test"
             )
             is not None
         )
