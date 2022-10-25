@@ -11,10 +11,12 @@ from typing import Any, Dict, List, Optional, Type
 from uuid import UUID
 
 import aerospike
+import aiohttp
 from faust import Topic
 from kafka import KafkaAdminClient, KafkaConsumer, KafkaProducer
 from kafka.admin import NewTopic
 
+from dagger.modeler.builder_helper import DAGBuilderHelper
 from dagger.modeler.definition import (
     DefaultTemplateBuilder,
     DynamicProcessTemplateDagBuilder,
@@ -55,6 +57,7 @@ from dagger.templates.template import (
     ParallelCompositeTaskTemplate,
     ParallelCompositeTaskTemplateBuilder,
     TriggerTaskTemplateBuilder,
+    IProcessTemplateDAGBuilder,
 )
 
 KAFKA_ADMIN_CLIENT_URL = "kafka:29092"
@@ -195,6 +198,22 @@ class PaymentKafkaCommandTask(KafkaCommandTask[str, str]):
         logger.info(f"Sending Payment Command to topic {self.topic}")
 
 
+class OrderCommandTask(KafkaCommandTask[str, str]):
+    async def execute(
+        self,
+        runtime_parameters: Dict[str, str],
+        workflow_instance: ITemplateDAGInstance,
+    ) -> None:
+        payload = {
+            "order_id": runtime_parameters["order_id"],
+            "customer_id": runtime_parameters["customer_id"],
+            "pizza_type": runtime_parameters["pizza_type"],
+        }
+        topic: Topic = await workflow_engine.topics[self.topic].send(
+            value=json.dumps(payload)
+        )
+
+
 class PaymentDecisionTask(DecisionTask[str, str]):
     async def evaluate(self, **kwargs: Any) -> Optional[UUID]:
         for task_id in self.next_dags:
@@ -206,6 +225,19 @@ class FulfillmentKafkaCommandTask(KafkaCommandTask[str, str]):
         self, runtime_parameters: Dict[str, VT], workflow_instance: ITask = None
     ) -> None:
         logger.info(f"Sending Command to topic {self.topic}")
+
+
+class DeliveryCommandTask(ExecutorTask[str, str]):
+    async def execute(
+        self, runtime_parameters: Dict[str, VT], workflow_instance: ITask = None
+    ) -> None:
+        payload = {
+            "order_id": runtime_parameters["order_id"],
+            "customer_id": runtime_parameters["customer_id"],
+        }
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url="http://www.deliverysvc.com", json=payload):
+                pass
 
 
 class FulfillmentTriggerTask(TriggerTask[str, str]):
@@ -260,6 +292,61 @@ class PaymentKafkaListenerTask(KafkaListenerTask[str, str]):
         tpayload = json.loads(payload)
         logger.info(f"payload {tpayload}")
         return self.correlatable_key, tpayload[self.correlatable_key]
+
+
+class PizzaWaitForReadyListener(KafkaListenerTask[str, str]):
+    correlatable_key = "order_id"
+
+    async def get_correlatable_keys_from_payload(
+        self, payload: Any
+    ) -> List[TaskLookupKey]:
+        tpayload = json.loads(payload)
+        key = tpayload[self.correlatable_key]
+        return [(self.correlatable_key, key)]
+
+    async def on_message(
+        self, runtime_parameters: Dict[str, VT], *args: Any, **kwargs: Any
+    ) -> bool:
+        logger.info(f"Pizza Order is Ready")
+        return True
+
+
+def pizza_ordering_process(process_name: str = "Order") -> IProcessTemplateDAGBuilder:
+    dag_builder = DAGBuilderHelper(dagger_app=workflow_engine)
+    root_task = dag_builder.build_and_link_tasks(
+        [
+            dag_builder.generic_command_task_builder(
+                topic="pizza_order_topic",
+                task_type=OrderCommandTask,
+                process_name=process_name,
+            ),
+            dag_builder.generic_listener_task_builder(
+                topic="PizzaWaitForReadyListener",
+                task_type=PizzaWaitForReadyListener,
+                process_name=process_name,
+            ),
+        ]
+    )
+    return dag_builder.generic_process_builder(
+        process_name=process_name, root_task=root_task
+    )
+
+
+def pizza_delivery_process(
+    process_name: str = "Delivery",
+) -> IProcessTemplateDAGBuilder:
+    dag_builder = DAGBuilderHelper(dagger_app=workflow_engine)
+    root_task = dag_builder.build_and_link_tasks(
+        [
+            dag_builder.generic_executor_task_builder(
+                task_type=DeliveryCommandTask,
+                name=process_name,
+            )
+        ]
+    )
+    return dag_builder.generic_process_builder(
+        process_name=process_name, root_task=root_task
+    )
 
 
 class SimpleKafkaListenerTask(KafkaListenerTask[str, str]):
@@ -388,6 +475,20 @@ def register_simple_process(process_name: str) -> IProcessTemplateDAG:
     simple_process_builder.set_root_task(simple_listener_task_template)
     simple_process_builder.set_type(DefaultProcessTemplateDAGInstance)
     return simple_process_builder.build()
+
+
+@Dagger.register_template("PizzaWorkflow")
+def register_pizza_workflow(template_name: str) -> ITemplateDAG:
+    dag_builder_helper = DAGBuilderHelper(workflow_engine)
+    order_process = dag_builder_helper.build_and_link_processes(
+        [
+            pizza_ordering_process(process_name="Order"),
+            pizza_delivery_process(process_name="Delivery"),
+        ]
+    )
+    return dag_builder_helper.generic_template(
+        template_name=template_name, root_process=order_process
+    )
 
 
 @Dagger.register_template("OrderWorkflow")
@@ -588,6 +689,20 @@ def test_order_template(template_name: str) -> ITemplateDAG:
     payment_template = payment_process_builder.build()
     template_builder.set_root(payment_template)
     return template_builder.build()
+
+
+async def create_and_submit_pizza_delivery_workflow(
+    order_id: str, customer_id: str, pizza_type: int
+):
+    pizza_workflow_template = workflow_engine.template_dags["PizzaWorkflow"]
+    pizza_workflow_instance = await pizza_workflow_template.create_instance(
+        uuid.uuid1(),
+        repartition=False,  # Create this instance on the current worker
+        order_id=order_id,
+        customer_id=customer_id,
+        pizza_type=pizza_type,
+    )
+    await workflow_engine.submit(pizza_workflow_instance, repartition=False)
 
 
 @workflow_engine.faust_app.agent(simple_topic)
