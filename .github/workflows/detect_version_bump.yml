@@ -26,12 +26,12 @@ jobs:
         run: |
           IS_PRERELEASE=$([[ "${{ steps.get-new-version.outputs.version }}" == *-[a-z]* ]] && echo true || echo false)
           echo "::set-output name=result::$IS_PRERELEASE"
-      - name: Create Release
-        # Using full SHA for security
-        # https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions
-        uses: ncipollo/release-action@4c75f0f2e4ae5f3c807cf0904605408e319dcaac # renovate: tag=v1.11.1
-        with:
-          tag: v${{ steps.get-new-version.outputs.version }}
-          name: v${{ steps.get-new-version.outputs.version }} Release
-          commit: main
-          prerelease: ${{ steps.is-prerelease.outputs.result }}
+#      - name: Create Release
+#        # Using full SHA for security
+#        # https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions
+#        uses: ncipollo/release-action@4c75f0f2e4ae5f3c807cf0904605408e319dcaac # renovate: tag=v1.11.1
+#        with:
+#          tag: v${{ steps.get-new-version.outputs.version }}
+#          name: v${{ steps.get-new-version.outputs.version }} Release
+#          commit: main
+#          prerelease: ${{ steps.is-prerelease.outputs.result }}
