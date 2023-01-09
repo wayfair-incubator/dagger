@@ -613,11 +613,11 @@ order(CommandTask)</li>
 <h3 id="step-2-define-leaf-command-and-listener-tasks-for-order-process">Step 2 Define Leaf Command and Listener Tasks For Order Process</h3>
 <p>Let's assume that the Order Microservice processes incoming orders over a Kafka Topic - <code>pizza_order_topic</code> with the
 JSON schema</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="nt">&quot;order_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="nt">&quot;pizza_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="nt">&quot;customer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer_id&quot;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;order_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;pizza_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;customer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer_id&quot;</span>
+<span class="p">}</span>
 </code></pre></div>
 <p>Using this information let's build out the OrderCommandTask by overriding the <code>execute</code> method that implements the
 business logic on how to send the payload to the Order Service over a Kafka topic</p>
@@ -639,10 +639,10 @@ business logic on how to send the payload to the Order Service over a Kafka topi
 <p>After executing the <code>OrderCommandTask</code>, the workflow should enter a <code>WAIT_STATE</code> until it receives a message from the 
 OrderService about the status of the order. Let's assume that Order Service sends a message on a Kafka Topic: 
 order_status_topic when the order is ready in the following JSON format</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="nt">&quot;order_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;READY&quot;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;order_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;READY&quot;</span>
+<span class="p">}</span>
 </code></pre></div>
 <p>Let's model the <code>OrderListenerTask</code> to process this message on the <code>order_status_topic</code> by implementing the 
 <code>get_correlatable_keys_from_payload</code> and <code>on_message</code> methods on the Listener. It also needs to specify the <code>correletable_key</code>
@@ -691,10 +691,10 @@ Now that we have the LEAF tasks modeled, lets attach them to the parent <code>Or
 the workflow transitions to execute the next Process <code>Delivery</code></p>
 <h3 id="step-3-define-leaf-command-tasks-for-delivery-process">Step 3 Define Leaf Command Tasks For Delivery Process</h3>
 <p>Let's assume that the delivery service just requires an HTTP POST request with the following schema</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="nt">&quot;order_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="nt">&quot;customer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer_id&quot;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;order_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;customer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer_id&quot;</span>
+<span class="p">}</span>
 </code></pre></div>
 <p>We can model the DeliveryCommandTask to POST this payload by implementing the <code>execute</code> method as follows</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">DeliveryCommandTask</span><span class="p">(</span><span class="n">ExecutorTask</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>

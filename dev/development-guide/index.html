@@ -613,11 +613,11 @@ structure and how to work with the code base.</p>
 <p>The Dagger project uses Docker to ease setting up a consistent development environment. The Docker documentation has
 details on how to <a href="https://docs.docker.com/install/">install docker</a> on your computer.</p>
 <p>Once that is configured, the integration test suite can be run locally:</p>
-<div class="highlight"><pre><span></span><code>docker-compose run --rm integation_test 
+<div class="highlight"><pre><span></span><code>docker-compose<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>integation_test<span class="w"> </span>
 </code></pre></div>
 <h2 id="testing">Testing</h2>
 <p>You'll be unable to merge code unless the linting and tests pass. You can run these in your container via:</p>
-<div class="highlight"><pre><span></span><code>docker-compose run --rm <span class="nb">test</span>
+<div class="highlight"><pre><span></span><code>docker-compose<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="nb">test</span>
 </code></pre></div>
 <p>This will run the same tests, linting, and code coverage that are run by the CI pipeline. The only difference is that,
 when run locally, <code>black</code> and <code>isort</code> are configured to automatically correct issues they detect.</p>
