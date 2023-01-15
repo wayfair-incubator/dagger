@@ -14,7 +14,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v4.3.0
+      - uses: actions/setup-python@v4.5.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -37,7 +37,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v4.3.0
+      - uses: actions/setup-python@v4.5.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -47,6 +47,6 @@ jobs:
         # Using full SHA for security
         # https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions
       - name: Publish distribution 📦 to PyPI
-        uses: pypa/gh-action-pypi-publish@5fb2f047e26679d7846a8370de1642ff160b9025
+        uses: pypa/gh-action-pypi-publish@7eb3b701d11256e583f5b49899c5e7203deab573
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
