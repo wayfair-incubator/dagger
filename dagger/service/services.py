@@ -28,6 +28,8 @@ import mode
 from aiohttp.web import HTTPNotFound
 from faust import App, Monitor, Record, Sensor, Topic, TopicT
 from faust.sensors.datadog import DatadogMonitor
+from faust.types.codecs import CodecArg
+from faust.types.models import ModelArg
 from faust.types.web import ResourceOptions
 from faust.web import Blueprint, Request, Response, View
 from mode import Service
@@ -291,7 +293,12 @@ class Dagger(Service):
 
     @classmethod
     def create_topic(
-        cls, topic_name: str, key_type: type = str, value_type: type = str
+        cls,
+        topic_name: str,
+        key_type: Optional[ModelArg] = None,
+        value_type: Optional[ModelArg] = None,
+        key_serializer: CodecArg = None,
+        value_serializer: CodecArg = None,
     ) -> TopicT:
         """Create a Kafka topic using Faust
 
@@ -308,7 +315,11 @@ class Dagger(Service):
             topic_instance = Dagger.app.topics[topic_name]
         else:
             topic_instance = Dagger.app.faust_app.topic(
-                topic_name, key_type=key_type, value_type=value_type
+                topic_name,
+                key_type=key_type,
+                value_type=value_type,
+                key_serializer=key_serializer,
+                value_serializer=value_serializer,
             )
             Dagger.app.topics[topic_name] = topic_instance
         return topic_instance
