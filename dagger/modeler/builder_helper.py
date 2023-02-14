@@ -1,7 +1,6 @@
 import logging
 from typing import List, Optional, Type, Union
 
-from faust import Topic  # type: ignore
 from faust.types.codecs import CodecArg
 from faust.types.models import ModelArg
 
