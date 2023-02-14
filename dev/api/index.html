@@ -3871,7 +3871,7 @@ on the datastore used by dagger defined by max_correletable_keys_in_values</p>
 
 
 <h4 id="dagger.service.services.Dagger.create_topic" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">create_topic</span><span class="p">(</span><span class="n">topic_name</span><span class="p">,</span> <span class="n">key_type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">value_type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">create_topic</span><span class="p">(</span><span class="n">topic_name</span><span class="p">,</span> <span class="n">key_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">key_serializer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value_serializer</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
@@ -3908,21 +3908,21 @@ on the datastore used by dagger defined by max_correletable_keys_in_values</p>
         <tr>
           <td><code>key_type</code></td>
           <td>
-                <code>type</code>
+                <code><span title="typing.Optional">Optional</span>[<span title="faust.types.models.ModelArg">ModelArg</span>]</code>
           </td>
           <td><p>Key type for the topic. Defaults to str.</p></td>
           <td>
-                <code>str</code>
+                <code>None</code>
           </td>
         </tr>
         <tr>
           <td><code>value_type</code></td>
           <td>
-                <code>type</code>
+                <code><span title="typing.Optional">Optional</span>[<span title="faust.types.models.ModelArg">ModelArg</span>]</code>
           </td>
           <td><p>Value type for the topic. Defaults to str.</p></td>
           <td>
-                <code>str</code>
+                <code>None</code>
           </td>
         </tr>
     </tbody>
@@ -5800,8 +5800,8 @@ within a workflow</p>
 <code class="highlight language-python"><span class="n">create_instance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">partition_key_lookup</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">repartition</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-async"><code>async</code></small>
       <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
@@ -6091,8 +6091,8 @@ of the workflow</p>
 <code class="highlight language-python"><span class="n">create_instance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">parent_name</span><span class="p">,</span> <span class="n">partition_key_lookup</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">repartition</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">workflow_instance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-async"><code>async</code></small>
       <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
@@ -6581,8 +6581,8 @@ of the workflow cannot be determined statically and needs to be defined at runti
 <code class="highlight language-python"><span class="n">create_instance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">parent_name</span><span class="p">,</span> <span class="n">partition_key_lookup</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">repartition</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">workflow_instance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-async"><code>async</code></small>
       <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
@@ -10374,8 +10374,8 @@ of the workflow cannot be determined statically and needs to be defined at runti
 <code class="highlight language-python"><span class="n">evaluate</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-async"><code>async</code></small>
       <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
@@ -10415,8 +10415,8 @@ of the workflow cannot be determined statically and needs to be defined at runti
 <code class="highlight language-python"><span class="n">execute</span><span class="p">(</span><span class="n">runtime_parameters</span><span class="p">,</span> <span class="n">workflow_instance</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-async"><code>async</code></small>
       <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
@@ -10861,8 +10861,8 @@ This is used to signal a task that it can now complete</p>
 <code class="highlight language-python"><span class="n">on_message</span><span class="p">(</span><span class="n">runtime_parameters</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-async"><code>async</code></small>
       <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
@@ -10926,8 +10926,8 @@ This is used to signal a task that it can now complete</p>
 <code class="highlight language-python"><span class="n">start</span><span class="p">(</span><span class="n">workflow_instance</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-async"><code>async</code></small>
       <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
@@ -10973,8 +10973,8 @@ This is used to signal a task that it can now complete</p>
 <code class="highlight language-python"><span class="n">stop</span><span class="p">()</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-async"><code>async</code></small>
       <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
@@ -11037,8 +11037,8 @@ domain specific logic</p>
 <code class="highlight language-python"><span class="n">process_monitored_task</span><span class="p">(</span><span class="n">monitored_task</span><span class="p">,</span> <span class="n">workflow_instance</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-async"><code>async</code></small>
       <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
@@ -12668,7 +12668,7 @@ This task can be embedded as a child of the root node or a process node</p>
 
 
 <h4 id="dagger.modeler.builder_helper.DAGBuilderHelper.generic_command_task_builder" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">generic_command_task_builder</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">topic</span><span class="p">,</span> <span class="n">task_type</span><span class="p">,</span> <span class="n">process_name</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">generic_command_task_builder</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">topic</span><span class="p">,</span> <span class="n">task_type</span><span class="p">,</span> <span class="n">process_name</span><span class="p">,</span> <span class="n">key_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">key_serializer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value_serializer</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h4>
 
@@ -12691,6 +12691,7 @@ This task can be embedded as a child of the root node or a process node</p>
         <tr>
           <td><code>topic</code></td>
           <td>
+                <code>str</code>
           </td>
           <td><p>The name of the topic to write the command to</p></td>
           <td>
@@ -12897,7 +12898,7 @@ This task can be embedded as a child of the root node or a process node</p>
 
 
 <h4 id="dagger.modeler.builder_helper.DAGBuilderHelper.generic_listener_task_builder" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">generic_listener_task_builder</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">topic</span><span class="p">,</span> <span class="n">task_type</span><span class="p">,</span> <span class="n">process_name</span><span class="p">,</span> <span class="n">allow_skip_to</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">concurrency</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">reprocess_on_message</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">generic_listener_task_builder</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">topic</span><span class="p">,</span> <span class="n">task_type</span><span class="p">,</span> <span class="n">process_name</span><span class="p">,</span> <span class="n">allow_skip_to</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">concurrency</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">reprocess_on_message</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">key_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">key_serializer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value_serializer</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h4>
 
@@ -12920,6 +12921,7 @@ This task can be embedded as a child of the root node or a process node</p>
         <tr>
           <td><code>topic</code></td>
           <td>
+                <code>str</code>
           </td>
           <td><p>the topic name the listener listens to</p></td>
           <td>
