@@ -1,7 +1,8 @@
 import logging
-from typing import List, Type, Union
+from typing import List, Optional, Type, Union
 
-from faust import Topic  # type: ignore
+from faust.types.codecs import CodecArg
+from faust.types.models import ModelArg
 
 import dagger.service.services
 from dagger.modeler.definition import (  # type: ignore
@@ -115,7 +116,15 @@ class DAGBuilderHelper:
         return executor_builder
 
     def generic_command_task_builder(
-        self, *, topic, task_type: Type[ITask], process_name: str
+        self,
+        *,
+        topic: str,
+        task_type: Type[ITask],
+        process_name: str,
+        key_type: Optional[ModelArg] = None,
+        value_type: Optional[ModelArg] = None,
+        key_serializer: CodecArg = None,
+        value_serializer: CodecArg = None,
     ) -> KafkaCommandTaskTemplateBuilder:
         """
         Helper function to define the KafkCommandTask definition
@@ -124,7 +133,13 @@ class DAGBuilderHelper:
         :param process_name: the name of the process it belongs to
         :return: the instance of KafkaCommandTaskTemplateBuilder
         """
-        command_topic: Topic = dagger.service.services.Dagger.create_topic(topic, key_type=str, value_type=str)  # type: ignore
+        command_topic = dagger.service.services.Dagger.create_topic(
+            topic,
+            key_type=key_type,
+            value_type=value_type,
+            key_serializer=key_serializer,
+            value_serializer=value_serializer,
+        )
         command_task_builder = KafkaCommandTaskTemplateBuilder(self.app)
         command_task_builder.set_topic(command_topic)
         command_task_builder.set_type(task_type)
@@ -134,12 +149,16 @@ class DAGBuilderHelper:
     def generic_listener_task_builder(
         self,
         *,
-        topic,
+        topic: str,
         task_type: Type[ITask],
         process_name: str,
         allow_skip_to: bool = False,
         concurrency: int = 1,
         reprocess_on_message: bool = False,
+        key_type: Optional[ModelArg] = None,
+        value_type: Optional[ModelArg] = None,
+        key_serializer: CodecArg = None,
+        value_serializer: CodecArg = None,
     ) -> KafkaListenerTaskTemplateBuilder:
         """
         Helper function to define a KafkaListenerTaskTemplateBuilder
@@ -151,7 +170,13 @@ class DAGBuilderHelper:
         :param reprocess_on_message: Re-executes the task when the message is received irrespective of the state of the task
         :return: The instance of KafkaListenerTaskTemplateBuilder
         """
-        listener_topic: Topic = dagger.service.services.Dagger.create_topic(topic, key_type=str, value_type=str)  # type: ignore
+        listener_topic = dagger.service.services.Dagger.create_topic(
+            topic,
+            key_type=key_type,
+            value_type=value_type,
+            key_serializer=key_serializer,
+            value_serializer=value_serializer,
+        )
         listener_task_builder = KafkaListenerTaskTemplateBuilder(self.app)
         listener_task_builder.set_topic(listener_topic)
         listener_task_builder.set_concurrency(concurrency=concurrency)
