@@ -107,6 +107,9 @@ try:
         NewTopic(name="simple_topic", num_partitions=1, replication_factor=1)
     )
     topic_list.append(
+        NewTopic(name="simple_topic_stop", num_partitions=1, replication_factor=1)
+    )
+    topic_list.append(
         NewTopic(name="SIMPLE_LISTENER", num_partitions=1, replication_factor=1)
     )
     admin_client.create_topics(new_topics=topic_list, validate_only=False)
@@ -139,6 +142,8 @@ workflow_engine = Dagger(
 workflow_engine.tables_cleared = False
 orders_topic = workflow_engine.faust_app.topic(ORDERS_TOPIC, value_type=str)
 simple_topic = workflow_engine.faust_app.topic("simple_topic", value_type=str)
+simple_topic_stop = workflow_engine.faust_app.topic("simple_topic_stop", value_type=str)
+
 simple_listener = workflow_engine.faust_app.topic("SIMPLE_LISTENER", value_type=str)
 
 templates: List[ITemplateDAGInstance] = list()
@@ -354,7 +359,7 @@ class SimpleKafkaListenerTask(KafkaListenerTask[str, str]):
     correlatable_key = "simple_id"
 
     async def stop(self) -> None:
-        pass
+        print("Stop called")
 
     def get_status(self) -> TaskStatus:
         return self.status
@@ -703,6 +708,14 @@ async def create_and_submit_pizza_delivery_workflow(
         pizza_type=pizza_type,
     )
     await workflow_engine.submit(pizza_workflow_instance, repartition=False)
+
+
+@workflow_engine.faust_app.agent(simple_topic_stop)
+async def simple_data_stream_stop(stream):
+    async for value in stream:
+
+        instance = await workflow_engine.get_instance(running_task_ids[-1])
+        await instance.stop()
 
 
 @workflow_engine.faust_app.agent(simple_topic)

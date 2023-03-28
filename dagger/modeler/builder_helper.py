@@ -141,7 +141,7 @@ class DAGBuilderHelper:
             value_serializer=value_serializer,
         )
         command_task_builder = KafkaCommandTaskTemplateBuilder(self.app)
-        command_task_builder.set_topic(command_topic)
+        command_task_builder.set_topic(command_topic)  # type: ignore
         command_task_builder.set_type(task_type)
         command_task_builder.set_name(f"{process_name}_command_task")
         return command_task_builder
@@ -178,7 +178,7 @@ class DAGBuilderHelper:
             value_serializer=value_serializer,
         )
         listener_task_builder = KafkaListenerTaskTemplateBuilder(self.app)
-        listener_task_builder.set_topic(listener_topic)
+        listener_task_builder.set_topic(listener_topic)  # type: ignore
         listener_task_builder.set_concurrency(concurrency=concurrency)
         listener_task_builder.set_type(task_type)
         listener_task_builder.set_name(f"{process_name}_listener_task")

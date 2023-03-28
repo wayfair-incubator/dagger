@@ -31,7 +31,7 @@ services:
       - dagger_py
 
   zookeeper:
-    image: "confluentinc/cp-zookeeper"
+    image: confluentinc/cp-zookeeper:7.3.2
     hostname: zookeeper
     environment:
     - ZOOKEEPER_CLIENT_PORT=2181
@@ -45,7 +45,7 @@ services:
 
   kafka:
     # pinned due to https://github.com/confluentinc/kafka-images/issues/127
-    image: confluentinc/cp-kafka:7.0.0
+    image: confluentinc/cp-kafka:7.3.2
     hostname: kafka
     container_name: kafka
     ports:

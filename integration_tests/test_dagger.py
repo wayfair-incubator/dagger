@@ -55,7 +55,7 @@ def workflow_consumer():
         "task_update_topic",
         bootstrap_servers=KAFKA_ADMIN_CLIENT_URL,
         group_id=f"workflow_{uuid.uuid1()}",
-        consumer_timeout_ms=2000,
+        consumer_timeout_ms=20000,
         auto_offset_reset="earliest",
     )
     return workflow_consumer
@@ -266,3 +266,50 @@ def test_workflow_update(workflow_consumer):
     assert executing_count > 1
     assert completed_count >= 1
     assert workflow_count > 1
+
+
+SIMPLE_ID_TO_DELETE = "SIMPLE_ID_3"
+
+
+def test_create_new_simple():
+    producer = KafkaProducer(bootstrap_servers=[KAFKA_ADMIN_CLIENT_URL])
+    future = producer.send(
+        topic="simple_topic", value=json.dumps(SIMPLE_ID_TO_DELETE).encode("utf-8")
+    )
+    # Block for 'synchronous' sends
+    future.get(timeout=10)
+    producer.flush()
+
+
+@retry(AssertionError, tries=30, delay=1)
+def test_new_simple_workflow_instances_created():
+    response = requests.get(DAGGER_URL + "/tasks/instances")
+    assert response.status_code == requests.codes.ok
+    engine_response = json.loads(response.content)
+    executing_counter = 0
+    for instance in engine_response:
+        if instance["status"]["code"] == "EXECUTING":
+            executing_counter += 1
+    assert executing_counter == 1
+
+
+def test_stop_new_simple():
+    producer = KafkaProducer(bootstrap_servers=[KAFKA_ADMIN_CLIENT_URL])
+    future = producer.send(
+        topic="simple_topic_stop", value=json.dumps(SIMPLE_ID_TO_DELETE).encode("utf-8")
+    )
+    # Block for 'synchronous' sends
+    future.get(timeout=10)
+    producer.flush()
+
+
+@retry(AssertionError, tries=30, delay=1)
+def test_new_simple_workflow_instances_stopped():
+    response = requests.get(DAGGER_URL + "/tasks/instances")
+    assert response.status_code == requests.codes.ok
+    engine_response = json.loads(response.content)
+    executing_counter = 0
+    for instance in engine_response:
+        if instance["status"]["code"] == "STOPPED":
+            executing_counter += 1
+    assert executing_counter == 1
