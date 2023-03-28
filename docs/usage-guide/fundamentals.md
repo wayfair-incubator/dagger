@@ -213,6 +213,7 @@ which then has multiple, chained ProcessTasks and child tasks(KafkaCommand and K
     async def stop(self) -> None:
         print("Stop called")
 ```
+
 ### Step 2. Invoke stop on the workflow instance
 
 ```python
@@ -221,7 +222,6 @@ which then has multiple, chained ProcessTasks and child tasks(KafkaCommand and K
 ```
 
 This will invoke `stop` on tasks in `EXECUTING` state
-
 
 ## Detailed Sections
 
