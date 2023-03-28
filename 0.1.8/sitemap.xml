@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://wayfair-incubator.github.io/dagger/0.1.8/</loc>
+         <lastmod>2023-03-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://wayfair-incubator.github.io/dagger/0.1.8/api/</loc>
+         <lastmod>2023-03-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://wayfair-incubator.github.io/dagger/0.1.8/development-guide/</loc>
+         <lastmod>2023-03-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://wayfair-incubator.github.io/dagger/0.1.8/getting-started/</loc>
+         <lastmod>2023-03-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://wayfair-incubator.github.io/dagger/0.1.8/why-dagger/</loc>
+         <lastmod>2023-03-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://wayfair-incubator.github.io/dagger/0.1.8/usage-guide/fundamentals/</loc>
+         <lastmod>2023-03-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+</urlset>
