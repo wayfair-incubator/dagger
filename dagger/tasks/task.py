@@ -945,7 +945,11 @@ class INonLeafNodeTask(ITask[KT, VT], abc.ABC):
     task_type: str = TaskType.SUB_DAG.name
 
     async def stop(self) -> None:
-        pass
+        self.status = TaskStatus(
+            code=TaskStatusEnum.STOPPED.name,
+            value=TaskStatusEnum.STOPPED.value,
+        )
+        await super().stop()
 
     async def start(self, workflow_instance: Optional[ITemplateDAGInstance]) -> None:
         if self.status.code in [
@@ -1310,6 +1314,23 @@ class DefaultTemplateDAGInstance(ITemplateDAGInstance[str, str]):
     """
     Default Implementation of ITemplateDAGInstance
     """
+
+    async def stop(self) -> None:
+        remaining_tasks: Optional[List[ITask]] = await self.get_remaining_tasks(
+            next_dag_id=self.root_dag, workflow_instance=self, tasks=[]  # type: ignore
+        )  # type: ignore
+        if remaining_tasks:
+            for task in remaining_tasks:
+                if task.status.code == TaskStatusEnum.EXECUTING.name:
+                    await task.stop()
+                if task.status.code not in TERMINAL_STATUSES:
+                    task.status = TaskStatus(
+                        code=TaskStatusEnum.STOPPED.name,
+                        value=TaskStatusEnum.STOPPED.value,
+                    )
+
+        await super().stop()
+        await dagger.service.services.Dagger.app._update_instance(task=self)  # type: ignore
 
     def get_correlatable_key(self, payload: Any) -> TaskLookupKey:
         """Not implemented.

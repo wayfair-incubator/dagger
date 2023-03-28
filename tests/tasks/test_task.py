@@ -324,6 +324,78 @@ class TestTasks:
         assert parallel_composite_task_fixture.on_complete.called
 
     @pytest.mark.asyncio
+    async def test_stop_workflow(
+        self, template_fixture, executor_fixture, sensor_fixture, decision_fixture
+    ):
+
+        first_process = DefaultProcessTemplateDAGInstance(uuid1())
+        second_process = DefaultProcessTemplateDAGInstance(uuid1())
+        template_fixture.root_dag = first_process.id
+        template_fixture.add_task(first_process)
+        first_process.root_dag = executor_fixture.id
+        template_fixture.add_task(executor_fixture)
+        second_process.root_dag = decision_fixture.id
+        template_fixture.add_task(decision_fixture)
+        template_fixture.add_task(sensor_fixture)
+        template_fixture.add_task(second_process)
+        first_process.next_dags = [second_process.id]
+        second_process.next_dags = []
+        first_process.stop = CoroutineMock()
+        second_process.stop = CoroutineMock()
+        executor_fixture.stop = CoroutineMock()
+        sensor_fixture.stop = CoroutineMock()
+        decision_fixture.stop = CoroutineMock()
+        template_fixture.status = TaskStatus(
+            code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+        )
+        first_process.status = TaskStatus(
+            code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+        )
+        sensor_fixture.status = TaskStatus(
+            code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
+        )
+
+        second_process.status = TaskStatus(
+            code=TaskStatusEnum.NOT_STARTED.name, value=TaskStatusEnum.NOT_STARTED.value
+        )
+        executor_fixture.status = TaskStatus(
+            code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+        )
+        decision_fixture.status = TaskStatus(
+            code=TaskStatusEnum.NOT_STARTED.name, value=TaskStatusEnum.NOT_STARTED.value
+        )
+
+        executor_fixture.next_dags = [sensor_fixture.id]
+        executor_fixture.root_dag = None
+        sensor_fixture.next_dags = []
+        sensor_fixture.root_dag = None
+        decision_fixture.next_dags = []
+        decision_fixture.root_dag = None
+        dagger.service.services.Dagger.app._update_instance = CoroutineMock()
+        await template_fixture.stop()
+        assert template_fixture.status == TaskStatus(
+            code=TaskStatusEnum.STOPPED.name, value=TaskStatusEnum.STOPPED.value
+        )
+        assert first_process.status == TaskStatus(
+            code=TaskStatusEnum.STOPPED.name, value=TaskStatusEnum.STOPPED.value
+        )
+        assert second_process.status == TaskStatus(
+            code=TaskStatusEnum.STOPPED.name, value=TaskStatusEnum.STOPPED.value
+        )
+        assert executor_fixture.status == TaskStatus(
+            code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+        )
+        assert decision_fixture.status == TaskStatus(
+            code=TaskStatusEnum.STOPPED.name, value=TaskStatusEnum.STOPPED.value
+        )
+        assert first_process.stop.called
+        assert not second_process.stop.called
+        assert not executor_fixture.stop.called
+        assert not decision_fixture.stop.called
+        assert sensor_fixture.stop.called
+        assert dagger.service.services.Dagger.app._update_instance.called
+
+    @pytest.mark.asyncio
     async def test_get_remaining_tasks(
         self, template_fixture, executor_fixture, sensor_fixture, decision_fixture
     ):

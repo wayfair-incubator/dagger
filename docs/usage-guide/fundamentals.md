@@ -205,6 +205,24 @@ which then has multiple, chained ProcessTasks and child tasks(KafkaCommand and K
 
 ```
 
+## How to stop a workflow
+
+### Step 1. Implement the stop method in the task modeled in the workflow
+
+```python
+    async def stop(self) -> None:
+        print("Stop called")
+```
+### Step 2. Invoke stop on the workflow instance
+
+```python
+    workflow_instance: ITemplateDAGInstance = await dagger_instance.get_instance(id=workflow_id)
+    await workflow_instance.stop()
+```
+
+This will invoke `stop` on tasks in `EXECUTING` state
+
+
 ## Detailed Sections
 
 * [getting-started][getting-started]
