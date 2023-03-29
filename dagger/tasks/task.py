@@ -1154,6 +1154,24 @@ class ITemplateDAGInstance(INonLeafNodeTask[KT, VT], abc.ABC):
                 correletable_kv.correlatable_key_attr_value = new_runtime_value
                 await sensor_task_instance._update_correletable_key(self)
 
+    async def stop(self) -> None:
+        remaining_tasks: Optional[List[ITask]] = await self.get_remaining_tasks(
+            next_dag_id=self.root_dag, workflow_instance=self, tasks=[]  # type: ignore
+        )  # type: ignore
+        if remaining_tasks:
+            for task in remaining_tasks:
+                if task.status.code == TaskStatusEnum.EXECUTING.name:
+                    await task.stop()
+                if task.status.code not in TERMINAL_STATUSES:
+                    task.status = TaskStatus(
+                        code=TaskStatusEnum.STOPPED.name,
+                        value=TaskStatusEnum.STOPPED.value,
+                    )
+
+        await super().stop()
+        await self.on_complete(workflow_instance=self, status=self.status)
+        await dagger.service.services.Dagger.app._update_instance(task=self)  # type: ignore
+
 
 class DefaultProcessTemplateDAGInstance(IProcessTemplateDAGInstance[str, str]):
     """
@@ -1314,23 +1332,6 @@ class DefaultTemplateDAGInstance(ITemplateDAGInstance[str, str]):
     """
     Default Implementation of ITemplateDAGInstance
     """
-
-    async def stop(self) -> None:
-        remaining_tasks: Optional[List[ITask]] = await self.get_remaining_tasks(
-            next_dag_id=self.root_dag, workflow_instance=self, tasks=[]  # type: ignore
-        )  # type: ignore
-        if remaining_tasks:
-            for task in remaining_tasks:
-                if task.status.code == TaskStatusEnum.EXECUTING.name:
-                    await task.stop()
-                if task.status.code not in TERMINAL_STATUSES:
-                    task.status = TaskStatus(
-                        code=TaskStatusEnum.STOPPED.name,
-                        value=TaskStatusEnum.STOPPED.value,
-                    )
-
-        await super().stop()
-        await dagger.service.services.Dagger.app._update_instance(task=self)  # type: ignore
 
     def get_correlatable_key(self, payload: Any) -> TaskLookupKey:
         """Not implemented.

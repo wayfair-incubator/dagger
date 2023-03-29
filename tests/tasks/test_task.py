@@ -372,6 +372,7 @@ class TestTasks:
         decision_fixture.next_dags = []
         decision_fixture.root_dag = None
         dagger.service.services.Dagger.app._update_instance = CoroutineMock()
+        template_fixture.on_complete = CoroutineMock()
         await template_fixture.stop()
         assert template_fixture.status == TaskStatus(
             code=TaskStatusEnum.STOPPED.name, value=TaskStatusEnum.STOPPED.value
@@ -394,6 +395,7 @@ class TestTasks:
         assert not decision_fixture.stop.called
         assert sensor_fixture.stop.called
         assert dagger.service.services.Dagger.app._update_instance.called
+        assert template_fixture.on_complete.called
 
     @pytest.mark.asyncio
     async def test_get_remaining_tasks(
