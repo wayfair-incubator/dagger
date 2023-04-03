@@ -105,13 +105,19 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
         self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
     ) -> None:  # pragma: no cover
         """Executes the ITask.
+        :param runtime_parameters: The runtime parameters of the task
         :param workflow_instance: The workflow object
         """
         ...
 
     @abc.abstractmethod
-    async def stop(self) -> None:  # pragma: no cover
-        """Stops the ITask."""
+    async def stop(
+        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+    ) -> None:  # pragma: no cover
+        """Stops the ITask.
+        :param runtime_parameters: The runtime parameters of the task
+        :param workflow_instance: The workflow object
+        """
         ...
 
     @abc.abstractmethod
@@ -944,12 +950,20 @@ class INonLeafNodeTask(ITask[KT, VT], abc.ABC):
 
     task_type: str = TaskType.SUB_DAG.name
 
-    async def stop(self) -> None:
+    async def stop(
+        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+    ) -> None:  # pragma: no cover
+        """Stops the ITask.
+        :param runtime_parameters: The runtime parameters of the task
+        :param workflow_instance: The workflow object
+        """
         self.status = TaskStatus(
             code=TaskStatusEnum.STOPPED.name,
             value=TaskStatusEnum.STOPPED.value,
         )
-        await super().stop()
+        await super().stop(
+            runtime_parameters=runtime_parameters, workflow_instance=workflow_instance
+        )
 
     async def start(self, workflow_instance: Optional[ITemplateDAGInstance]) -> None:
         if self.status.code in [
@@ -1017,7 +1031,13 @@ class ParallelCompositeTask(ITask[KT, VT], abc.ABC):
     operator_type: str = TaskOperator.JOIN_ALL.name
     process_name: Optional[str] = None
 
-    async def stop(self) -> None:
+    async def stop(
+        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+    ) -> None:  # pragma: no cover
+        """Stops the ITask.
+        :param runtime_parameters: The runtime parameters of the task
+        :param workflow_instance: The workflow object
+        """
         pass
 
     async def start(self, workflow_instance: Optional[ITemplateDAGInstance]) -> None:
@@ -1154,21 +1174,32 @@ class ITemplateDAGInstance(INonLeafNodeTask[KT, VT], abc.ABC):
                 correletable_kv.correlatable_key_attr_value = new_runtime_value
                 await sensor_task_instance._update_correletable_key(self)
 
-    async def stop(self) -> None:
+    async def stop(
+        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+    ) -> None:  # pragma: no cover
+        """Stops the ITask.
+        :param runtime_parameters: The runtime parameters of the task
+        :param workflow_instance: The workflow object
+        """
         remaining_tasks: Optional[List[ITask]] = await self.get_remaining_tasks(
             next_dag_id=self.root_dag, workflow_instance=self, tasks=[]  # type: ignore
         )  # type: ignore
         if remaining_tasks:
             for task in remaining_tasks:
                 if task.status.code == TaskStatusEnum.EXECUTING.name:
-                    await task.stop()
+                    await task.stop(
+                        runtime_parameters=runtime_parameters,
+                        workflow_instance=workflow_instance,
+                    )
                 if task.status.code not in TERMINAL_STATUSES:
                     task.status = TaskStatus(
                         code=TaskStatusEnum.STOPPED.name,
                         value=TaskStatusEnum.STOPPED.value,
                     )
 
-        await super().stop()
+        await super().stop(
+            runtime_parameters=runtime_parameters, workflow_instance=workflow_instance
+        )
         await self.on_complete(workflow_instance=self, status=self.status)
         await dagger.service.services.Dagger.app._update_instance(task=self)  # type: ignore
 
