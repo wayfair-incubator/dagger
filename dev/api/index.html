@@ -1623,6 +1623,19 @@
     INonLeafNodeTask
   </a>
   
+    <nav class="md-nav" aria-label="INonLeafNodeTask">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dagger.tasks.task.INonLeafNodeTask.stop" class="md-nav__link">
+    stop()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1667,6 +1680,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#dagger.tasks.task.ParallelCompositeTask.stop" class="md-nav__link">
+    stop()
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1690,6 +1710,19 @@
   <a href="#dagger.tasks.task.ITemplateDAGInstance" class="md-nav__link">
     ITemplateDAGInstance
   </a>
+  
+    <nav class="md-nav" aria-label="ITemplateDAGInstance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dagger.tasks.task.ITemplateDAGInstance.stop" class="md-nav__link">
+    stop()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3175,6 +3208,19 @@
     INonLeafNodeTask
   </a>
   
+    <nav class="md-nav" aria-label="INonLeafNodeTask">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dagger.tasks.task.INonLeafNodeTask.stop" class="md-nav__link">
+    stop()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3219,6 +3265,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#dagger.tasks.task.ParallelCompositeTask.stop" class="md-nav__link">
+    stop()
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3242,6 +3295,19 @@
   <a href="#dagger.tasks.task.ITemplateDAGInstance" class="md-nav__link">
     ITemplateDAGInstance
   </a>
+  
+    <nav class="md-nav" aria-label="ITemplateDAGInstance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dagger.tasks.task.ITemplateDAGInstance.stop" class="md-nav__link">
+    stop()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -10438,6 +10504,16 @@ of the workflow cannot be determined statically and needs to be defined at runti
     </thead>
     <tbody>
         <tr>
+          <td><code>runtime_parameters</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, str]</code>
+          </td>
+          <td><p>The runtime parameters of the task</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
           <td><code>workflow_instance</code></td>
           <td>
                 <code><a class="autorefs autorefs-internal" title="dagger.tasks.task.ITask" href="#dagger.tasks.task.ITask">ITask</a></code>
@@ -10970,7 +11046,7 @@ This is used to signal a task that it can now complete</p>
 
 
 <h4 id="dagger.tasks.task.ITask.stop" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">stop</span><span class="p">()</span></code>
+<code class="highlight language-python"><span class="n">stop</span><span class="p">(</span><span class="n">runtime_parameters</span><span class="p">,</span> <span class="n">workflow_instance</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
@@ -10983,6 +11059,40 @@ This is used to signal a task that it can now complete</p>
   <div class="doc doc-contents ">
   
       <p>Stops the ITask.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>runtime_parameters</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, str]</code>
+          </td>
+          <td><p>The runtime parameters of the task</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>workflow_instance</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="dagger.tasks.task.ITask" href="#dagger.tasks.task.ITask">ITask</a></code>
+          </td>
+          <td><p>The workflow object</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
 
   </div>
 
@@ -12058,6 +12168,62 @@ key in the payload.</p>
 
 
 
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="dagger.tasks.task.INonLeafNodeTask.stop" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">stop</span><span class="p">(</span><span class="n">runtime_parameters</span><span class="p">,</span> <span class="n">workflow_instance</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+</h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Stops the ITask.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>runtime_parameters</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, str]</code>
+          </td>
+          <td><p>The runtime parameters of the task</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>workflow_instance</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="dagger.tasks.task.ITask" href="#dagger.tasks.task.ITask">ITask</a></code>
+          </td>
+          <td><p>The workflow object</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
 
 
   </div>
@@ -12205,6 +12371,62 @@ This task can be embedded as a child of the root node or a process node</p>
 
 </div>
 
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="dagger.tasks.task.ParallelCompositeTask.stop" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">stop</span><span class="p">(</span><span class="n">runtime_parameters</span><span class="p">,</span> <span class="n">workflow_instance</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+</h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Stops the ITask.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>runtime_parameters</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, str]</code>
+          </td>
+          <td><p>The runtime parameters of the task</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>workflow_instance</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="dagger.tasks.task.ITask" href="#dagger.tasks.task.ITask">ITask</a></code>
+          </td>
+          <td><p>The workflow object</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
 
 
   </div>
@@ -12324,6 +12546,62 @@ This task can be embedded as a child of the root node or a process node</p>
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="dagger.tasks.task.ITemplateDAGInstance.stop" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">stop</span><span class="p">(</span><span class="n">runtime_parameters</span><span class="p">,</span> <span class="n">workflow_instance</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+</h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Stops the ITask.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>runtime_parameters</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, str]</code>
+          </td>
+          <td><p>The runtime parameters of the task</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>workflow_instance</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="dagger.tasks.task.ITask" href="#dagger.tasks.task.ITask">ITask</a></code>
+          </td>
+          <td><p>The workflow object</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
 
 
 
