@@ -78,9 +78,14 @@ class TestTasks:
         return DefaultTemplateDAGInstance(uuid.uuid1())
 
     @pytest.mark.asyncio
-    async def test_parallel_composite_task_stop(self, parallel_composite_task_fixture):
+    async def test_parallel_composite_task_stop(
+        self, parallel_composite_task_fixture, workflow_instance_fixture
+    ):
         try:
-            await parallel_composite_task_fixture.stop()
+            await parallel_composite_task_fixture.stop(
+                runtime_parameters=workflow_instance_fixture.runtime_parameters,
+                workflow_instance=workflow_instance_fixture,
+            )
         except Exception:
             pytest.fail("Error should not be thrown")
 
@@ -373,7 +378,10 @@ class TestTasks:
         decision_fixture.root_dag = None
         dagger.service.services.Dagger.app._update_instance = CoroutineMock()
         template_fixture.on_complete = CoroutineMock()
-        await template_fixture.stop()
+        await template_fixture.stop(
+            runtime_parameters=template_fixture.runtime_parameters,
+            workflow_instance=template_fixture,
+        )
         assert template_fixture.status == TaskStatus(
             code=TaskStatusEnum.STOPPED.name, value=TaskStatusEnum.STOPPED.value
         )
@@ -811,7 +819,10 @@ class TestTasks:
         )
         assert default_process_instance_fixture.on_complete.called
         assert dagger.service.services.Dagger.app._store_trigger_instance.called
-        await default_process_instance_fixture.stop()
+        await default_process_instance_fixture.stop(
+            runtime_parameters=workflow_instance_fixture.runtime_parameters,
+            workflow_instance=workflow_instance_fixture,
+        )
         with pytest.raises(NotImplementedError):
             await default_process_instance_fixture.get_correlatable_key(MagicMock())
         with pytest.raises(NotImplementedError):

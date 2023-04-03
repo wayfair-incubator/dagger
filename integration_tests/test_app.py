@@ -279,7 +279,13 @@ class PaymentKafkaListenerTask(KafkaListenerTask[str, str]):
 
     correlatable_key = "order_id"
 
-    async def stop(self) -> None:
+    async def stop(
+        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+    ) -> None:  # pragma: no cover
+        """Stops the ITask.
+        :param runtime_parameters: The runtime parameters of the task
+        :param workflow_instance: The workflow object
+        """
         pass
 
     def get_status(self) -> TaskStatus:
@@ -358,7 +364,13 @@ class SimpleKafkaListenerTask(KafkaListenerTask[str, str]):
 
     correlatable_key = "simple_id"
 
-    async def stop(self) -> None:
+    async def stop(
+        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+    ) -> None:  # pragma: no cover
+        """Stops the ITask.
+        :param runtime_parameters: The runtime parameters of the task
+        :param workflow_instance: The workflow object
+        """
         print("Stop called")
 
     def get_status(self) -> TaskStatus:
@@ -386,7 +398,13 @@ class SimpleKafkaListenerTask(KafkaListenerTask[str, str]):
 class NoopKafkaListenerTask(KafkaListenerTask[str, str]):
     correlatable_key = "order_id"
 
-    async def stop(self) -> None:
+    async def stop(
+        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+    ) -> None:  # pragma: no cover
+        """Stops the ITask.
+        :param runtime_parameters: The runtime parameters of the task
+        :param workflow_instance: The workflow object
+        """
         pass
 
     def get_status(self) -> TaskStatus:
@@ -406,7 +424,13 @@ class NoopKafkaListenerTask(KafkaListenerTask[str, str]):
 class FulfillmentKafkaListenerTask(KafkaListenerTask[str, str]):
     correlatable_key = "box_id"
 
-    async def stop(self) -> None:
+    async def stop(
+        self, runtime_parameters: Dict[str, str], workflow_instance: ITask = None
+    ) -> None:  # pragma: no cover
+        """Stops the ITask.
+        :param runtime_parameters: The runtime parameters of the task
+        :param workflow_instance: The workflow object
+        """
         pass
 
     def get_status(self) -> TaskStatus:
