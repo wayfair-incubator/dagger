@@ -3558,7 +3558,7 @@
 
 
 <h4 id="dagger.service.services.Dagger.__init__" class="doc doc-heading">
-<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">broker</span><span class="p">,</span> <span class="n">datadir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">StoreEnum</span><span class="o">.</span><span class="n">AEROSPIKE</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">application_name</span><span class="o">=</span><span class="s1">&#39;dagger&#39;</span><span class="p">,</span> <span class="n">package_name</span><span class="o">=</span><span class="s1">&#39;dagger&#39;</span><span class="p">,</span> <span class="n">kafka_partitions</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">task_update_topic</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tasks_topic</span><span class="o">=</span><span class="s1">&#39;dagger_task_topic&#39;</span><span class="p">,</span> <span class="n">bootstrap_topic</span><span class="o">=</span><span class="s1">&#39;dagger_bootstrap&#39;</span><span class="p">,</span> <span class="n">beacon</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kafka_broker_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tracing_sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">datadog_sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trigger_interval</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">max_tasks_per_trigger</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">restart_tasks_on_boot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">aerospike_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">enable_changelog</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_correletable_keys_in_values</span><span class="o">=</span><span class="mi">15000</span><span class="p">,</span> <span class="n">schema_registry_url</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">message_serializer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">delete_workflow_on_complete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">task_update_callbacks</span><span class="o">=</span><span class="p">[],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">broker</span><span class="p">,</span> <span class="n">datadir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">StoreEnum</span><span class="o">.</span><span class="n">AEROSPIKE</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">application_name</span><span class="o">=</span><span class="s1">&#39;dagger&#39;</span><span class="p">,</span> <span class="n">package_name</span><span class="o">=</span><span class="s1">&#39;dagger&#39;</span><span class="p">,</span> <span class="n">kafka_partitions</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">task_update_topic</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tasks_topic</span><span class="o">=</span><span class="s1">&#39;dagger_task_topic&#39;</span><span class="p">,</span> <span class="n">bootstrap_topic</span><span class="o">=</span><span class="s1">&#39;dagger_bootstrap&#39;</span><span class="p">,</span> <span class="n">beacon</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kafka_broker_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tracing_sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">datadog_sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trigger_interval</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">max_tasks_per_trigger</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">restart_tasks_on_boot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">aerospike_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">enable_changelog</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_correletable_keys_in_values</span><span class="o">=</span><span class="mi">15000</span><span class="p">,</span> <span class="n">schema_registry_url</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">message_serializer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">delete_workflow_on_complete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">task_update_callbacks</span><span class="o">=</span><span class="p">[],</span> <span class="n">logging_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
 
 </h4>
 
@@ -3776,6 +3776,15 @@
           <td><p>callbacks when a workflow instance is updated</p></td>
           <td>
                 <code>[]</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>logging_config</code></td>
+          <td>
+          </td>
+          <td><p>the logging config to use</p></td>
+          <td>
+                <code>None</code>
           </td>
         </tr>
         <tr>
@@ -5866,8 +5875,8 @@ within a workflow</p>
 <code class="highlight language-python"><span class="n">create_instance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">partition_key_lookup</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">repartition</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 </h4>
@@ -6157,8 +6166,8 @@ of the workflow</p>
 <code class="highlight language-python"><span class="n">create_instance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">parent_name</span><span class="p">,</span> <span class="n">partition_key_lookup</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">repartition</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">workflow_instance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 </h4>
@@ -6647,8 +6656,8 @@ of the workflow cannot be determined statically and needs to be defined at runti
 <code class="highlight language-python"><span class="n">create_instance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">parent_name</span><span class="p">,</span> <span class="n">partition_key_lookup</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">repartition</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">workflow_instance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 </h4>
@@ -10440,8 +10449,8 @@ of the workflow cannot be determined statically and needs to be defined at runti
 <code class="highlight language-python"><span class="n">evaluate</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 </h4>
@@ -10481,8 +10490,8 @@ of the workflow cannot be determined statically and needs to be defined at runti
 <code class="highlight language-python"><span class="n">execute</span><span class="p">(</span><span class="n">runtime_parameters</span><span class="p">,</span> <span class="n">workflow_instance</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 </h4>
@@ -10937,8 +10946,8 @@ This is used to signal a task that it can now complete</p>
 <code class="highlight language-python"><span class="n">on_message</span><span class="p">(</span><span class="n">runtime_parameters</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 </h4>
@@ -11002,8 +11011,8 @@ This is used to signal a task that it can now complete</p>
 <code class="highlight language-python"><span class="n">start</span><span class="p">(</span><span class="n">workflow_instance</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 </h4>
@@ -11049,8 +11058,8 @@ This is used to signal a task that it can now complete</p>
 <code class="highlight language-python"><span class="n">stop</span><span class="p">(</span><span class="n">runtime_parameters</span><span class="p">,</span> <span class="n">workflow_instance</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 </h4>
@@ -11147,8 +11156,8 @@ domain specific logic</p>
 <code class="highlight language-python"><span class="n">process_monitored_task</span><span class="p">(</span><span class="n">monitored_task</span><span class="p">,</span> <span class="n">workflow_instance</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
 </h4>
