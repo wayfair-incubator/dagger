@@ -95,6 +95,7 @@ class Dagger(Service):
     LOCK_STRIPE_SIZE = 1000
     asyncio_locks: Dict[int, asyncio.Lock] = {}
     task_update_callbacks: List[Callable[[ITemplateDAGInstance], Awaitable[None]]]
+    logging_config = None
 
     def __init__(
         self,
@@ -125,6 +126,7 @@ class Dagger(Service):
         task_update_callbacks: List[
             Callable[[ITemplateDAGInstance], Awaitable[None]]
         ] = [],
+        logging_config=None,
         **kwargs: Any,
     ) -> None:
         """Initialize an instance of Dagger.
@@ -149,6 +151,7 @@ class Dagger(Service):
         :param message_serializer: the message serializer instance using the schema registry
         :param delete_workflow_on_complete: deletes the workflow instance when complete
         :param task_update_callbacks: callbacks when a workflow instance is updated
+        :param logging_config: the logging config to use
         :param **kwargs: Other Faust keyword arguments.
         """
         self.started_flag = False
@@ -205,6 +208,7 @@ class Dagger(Service):
             )
         self.workflows_weak_ref_map = WeakValueDictionary()
         self.task_update_callbacks = task_update_callbacks
+        self.logging_config = logging_config
         for i in range(Dagger.LOCK_STRIPE_SIZE):
             self.asyncio_locks[i] = asyncio.Lock()
 
@@ -236,6 +240,7 @@ class Dagger(Service):
             datadir=self.config.DATADIR,
             value_serializer="raw",
             web_in_thread=True,
+            logging_config=self.logging_config,
             web_cors_options={
                 "*": ResourceOptions(
                     allow_credentials=True,
