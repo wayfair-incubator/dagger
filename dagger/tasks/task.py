@@ -794,7 +794,7 @@ class KafkaAgent:
         processed_task = False
         if mappings:
             for mapping in mappings:
-                if not mapping or len(mapping) < 2:
+                if not mapping or len(mapping) < 2 or not mapping[1]:
                     logger.warning(
                         f"Listener on topic {self.__topic.get_topic_name()} has incorrect mapping {mapping}"
                     )

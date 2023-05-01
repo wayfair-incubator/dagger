@@ -691,7 +691,7 @@ class Dagger(Service):
         start_time = self.faust_app.loop.time()
         random: Random = Random()
         random.seed(str(key))
-        partition: int = random.randint(0, Dagger.LOCK_STRIPE_SIZE)  # nosec
+        partition: int = random.randint(0, Dagger.LOCK_STRIPE_SIZE - 1)  # nosec
         if self.asyncio_locks and self.asyncio_locks.get(partition):
             async with self.asyncio_locks.get(partition):  # type: ignore
                 value = self.workflows_weak_ref_map.get(key, None)
