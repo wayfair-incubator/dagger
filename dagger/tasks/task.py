@@ -889,6 +889,10 @@ class KafkaAgent:
                                     await task_instance.on_complete(
                                         workflow_instance=workflow_instance
                                     )
+                                else:
+                                    await dagger.service.services.Dagger.app._update_instance(
+                                        task=workflow_instance
+                                    )  # type: ignore
                                 processed_task = True
 
                                 if getattr(self.__task, "match_only_one", False):
