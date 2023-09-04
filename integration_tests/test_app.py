@@ -727,11 +727,11 @@ async def create_and_submit_pizza_delivery_workflow(
     pizza_workflow_instance = await pizza_workflow_template.create_instance(
         uuid.uuid1(),
         repartition=False,  # Create this instance on the current worker
+        submit_task=True,
         order_id=order_id,
         customer_id=customer_id,
         pizza_type=pizza_type,
     )
-    await workflow_engine.submit(pizza_workflow_instance, repartition=False)
 
 
 @workflow_engine.faust_app.agent(simple_topic_stop)
@@ -739,7 +739,7 @@ async def simple_data_stream_stop(stream):
     async for value in stream:
 
         instance = await workflow_engine.get_instance(running_task_ids[-1])
-        await instance.stop()
+        await instance.stop(runtime_parameters=instance.runtime_parameters, workflow_instance=instance)
 
 
 @workflow_engine.faust_app.agent(simple_topic)
@@ -767,10 +767,10 @@ async def simple_data_stream(stream):
             complete_by_time=120000,
             repartition=False,
             seed=rd,
+            submit_task=True
         )
         templates.append(instance)
         running_task_ids.append(instance.id)
-        await workflow_engine.submit(instance, repartition=False)
 
 
 @workflow_engine.faust_app.agent(orders_topic)

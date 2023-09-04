@@ -253,7 +253,6 @@ class ITask(Record, Generic[KT, VT], serializer="raw"):  # type: ignore
             else:
                 time_completed = int(time.time())
             self.time_completed = time_completed
-            await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
         if not iterate:
             logger.debug("Skipping on_complete as iterate is false")
             return
@@ -341,7 +340,6 @@ class ExecutorTask(ITask[KT, VT], abc.ABC):
                 runtime_parameters=workflow_instance.runtime_parameters,
                 workflow_instance=workflow_instance,
             )
-            await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
         if self.status.code == TaskStatusEnum.FAILURE.name:
             await self.on_complete(
                 status=self.status, workflow_instance=workflow_instance
@@ -421,7 +419,6 @@ class IntervalTask(TriggerTask[KT, VT], abc.ABC):
                 code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
             )
             self.time_submitted = int(time.time())
-            await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
         if self.time_to_execute and int(time.time()) < self.time_to_execute:
             return False
         if (
@@ -582,7 +579,6 @@ class DecisionTask(ITask[KT, VT]):
                         logger.warning(
                             f"The task instance to skip with id {next_task_id} was not found. Skipped but did not set status to {TaskStatusEnum.SKIPPED.value}"
                         )
-        await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
         await self.on_complete(workflow_instance=workflow_instance)
 
     async def execute(
@@ -715,7 +711,6 @@ class SensorTask(ITask[KT, VT], abc.ABC):
                 code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
             )
             self.time_submitted = int(time.time())
-            await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
 
     async def _update_correletable_key(self, workflow_instance: ITask) -> None:
         """Updates the correletable key if the local is not the same as global key.
@@ -889,10 +884,9 @@ class KafkaAgent:
                                     await task_instance.on_complete(
                                         workflow_instance=workflow_instance
                                     )
-                                else:
-                                    await dagger.service.services.Dagger.app._update_instance(
-                                        task=workflow_instance
-                                    )  # type: ignore
+                                await dagger.service.services.Dagger.app._update_instance(
+                                    task=workflow_instance
+                                )  # type: ignore
                                 processed_task = True
 
                                 if getattr(self.__task, "match_only_one", False):
@@ -985,7 +979,6 @@ class INonLeafNodeTask(ITask[KT, VT], abc.ABC):
                 runtime_parameters=workflow_instance.runtime_parameters,
                 workflow_instance=workflow_instance,
             )
-            await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
         logger.debug(
             f"Starting task {self.task_name} with root dag id {self.root_dag}, parent task id {self.parent_id}, and task id {self.id}"
         )
@@ -1062,7 +1055,6 @@ class ParallelCompositeTask(ITask[KT, VT], abc.ABC):
                 runtime_parameters=workflow_instance.runtime_parameters,
                 workflow_instance=workflow_instance,
             )
-            await dagger.service.services.Dagger.app._update_instance(task=workflow_instance)  # type: ignore
         logger.debug(
             f"Starting task {self.task_name} with parent task id {self.parent_id}, and task id {self.id}"
         )
