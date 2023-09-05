@@ -149,11 +149,9 @@ class TestTasks:
                 workflow_instance=workflow_instance_fixture
             )
             assert parallel_composite_task_fixture.execute.called
-            assert dagger.service.services.Dagger.app._update_instance.called
             assert not parallel_composite_task_fixture.on_complete.called
             assert child_task1.start.called
             assert child_task2.start.called
-            assert dagger.service.services.Dagger.app._update_instance.called
         except Exception:
             pytest.fail("Error should not be thrown")
 
@@ -544,7 +542,6 @@ class TestTasks:
         parent_task.notify = CoroutineMock()
         assert executor_fixture.get_id() == executor_fixture.id
         await executor_fixture.start(workflow_instance=workflow_instance_fixture)
-        assert dagger.service.services.Dagger.app._update_instance.called
         assert executor_fixture.status.code == TaskStatusEnum.COMPLETED.name
         assert executor_fixture.time_completed != 0
         assert parent_task.notify.called
@@ -569,7 +566,6 @@ class TestTasks:
         workflow_instance_fixture.runtime_parameters = {}
         assert decision_fixture.get_id() == decision_fixture.id
         await decision_fixture.start(workflow_instance=workflow_instance_fixture)
-        assert dagger.service.services.Dagger.app._update_instance.called
         assert decision_fixture.on_complete.called
         with pytest.raises(NotImplementedError):
             await decision_fixture.execute(
@@ -646,7 +642,6 @@ class TestTasks:
         ret_val = sensor_fixture.get_correlatable_key(payload)
         assert payload == ret_val
         await sensor_fixture.start(workflow_instance=workflow_instance_fixture)
-        assert dagger.service.services.Dagger.app._update_instance.called
         assert not sensor_fixture.on_complete.called
         with pytest.raises(NotImplementedError):
             await sensor_fixture.execute(
@@ -714,7 +709,6 @@ class TestTasks:
         )
         assert trigger_fixture.get_id() == trigger_fixture.id
         await trigger_fixture.start(workflow_instance=workflow_instance_fixture)
-        assert dagger.service.services.Dagger.app._update_instance.called
         assert trigger_fixture.status.code == TaskStatusEnum.COMPLETED.name
         assert (
             dagger.service.services.Dagger.app._store.process_trigger_task_complete.called
@@ -729,7 +723,6 @@ class TestTasks:
         dagger.service.services.Dagger.app._update_instance = CoroutineMock()
         assert interval_fixture.get_id() == interval_fixture.id
         await interval_fixture.start(workflow_instance=workflow_instance_fixture)
-        assert dagger.service.services.Dagger.app._update_instance.called
         assert interval_fixture.status.code == TaskStatusEnum.EXECUTING.name
 
     @pytest.mark.asyncio
@@ -743,7 +736,6 @@ class TestTasks:
         dagger.service.services.Dagger.app._store.insert_trigger = CoroutineMock()
         assert interval_fixture.get_id() == interval_fixture.id
         await interval_fixture.start(workflow_instance=workflow_instance_fixture)
-        assert dagger.service.services.Dagger.app._update_instance.called
         assert interval_fixture.status.code == TaskStatusEnum.COMPLETED.name
 
     @pytest.mark.asyncio

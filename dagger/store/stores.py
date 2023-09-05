@@ -168,6 +168,7 @@ class IStore:
                     finished = await task.start(workflow_instance)
                 else:
                     await task.start(workflow_instance)
+                await self.app._update_instance(task=workflow_instance)  # type: ignore
                 if finished:
                     await self.remove_trigger(trigger)
             if not task or task.status.code in TERMINAL_STATUSES:

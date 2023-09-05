@@ -66,6 +66,7 @@ class ITemplateDAG:
         *,
         repartition: bool = True,
         seed: random.Random = None,
+        submit_task: bool = False,
         **kwargs,
     ) -> ITemplateDAGInstance:  # pragma: no cover
         """Method for creating an instance of a workflow definition
@@ -75,6 +76,7 @@ class ITemplateDAG:
         :param repartition: Flag indicating if the creation of this instance needs to be stored on the current node or
         by the owner of the partition defined by the partition_key_lookup
         :param seed: the seed to use to create all internal instances of the workflow
+        :param submit_task: if True also submit the task for execution
         :param **kwargs: Other keyword arguments
         :return: An instance of the workflow
         """

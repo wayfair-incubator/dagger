@@ -497,6 +497,7 @@ class TemplateDAG(ITemplateDAG):
         *,
         repartition: bool = True,
         seed: random.Random = None,
+        submit_task: bool = False,
         **kwargs,
     ) -> ITemplateDAGInstance[KT, VT]:
         """Method for creating an instance of a workflow definition
@@ -506,6 +507,7 @@ class TemplateDAG(ITemplateDAG):
         :param repartition: Flag indicating if the creation of this instance needs to be stored on the current node or
         by the owner of the partition defined by the partition_key_lookup
         :param seed: the seed to use to create all internal instances of the workflow
+        :param submit_task: if True also submit the task for execution
         :param **kwargs: Other keyword arguments
         :return: An instance of the workflow
         """
@@ -541,6 +543,11 @@ class TemplateDAG(ITemplateDAG):
         if repartition:
             await self.app.tasks_topic.send(key=template_instance.runtime_parameters[partition_key_lookup], value=template_instance)  # type: ignore
         else:
+            if submit_task:
+                template_instance.status = TaskStatus(
+                    code=TaskStatusEnum.SUBMITTED.name,
+                    value=TaskStatusEnum.SUBMITTED.value,
+                )
             await self.app._store_and_create_task(template_instance)  # type: ignore
         return template_instance
 

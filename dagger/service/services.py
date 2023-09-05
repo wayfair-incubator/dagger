@@ -775,9 +775,9 @@ class Dagger(Service):
 
     async def _store_and_create_task(self, task):
         if isinstance(task, ITemplateDAGInstance):
-            await self._store_root_template_instance(task)
             if task.status.code == TaskStatusEnum.SUBMITTED.name:
                 await task.start(workflow_instance=task)
+            await self._store_root_template_instance(task)
 
     async def _process_tasks_create_event(self, stream):
         """Upon creation of tasks, store them in the datastore.
