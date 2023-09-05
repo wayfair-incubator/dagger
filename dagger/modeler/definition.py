@@ -545,7 +545,8 @@ class TemplateDAG(ITemplateDAG):
         else:
             if submit_task:
                 template_instance.status = TaskStatus(
-                    code=TaskStatusEnum.SUBMITTED.name, value=TaskStatusEnum.SUBMITTED.value
+                    code=TaskStatusEnum.SUBMITTED.name,
+                    value=TaskStatusEnum.SUBMITTED.value,
                 )
             await self.app._store_and_create_task(template_instance)  # type: ignore
         return template_instance

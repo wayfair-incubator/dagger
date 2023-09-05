@@ -739,7 +739,9 @@ async def simple_data_stream_stop(stream):
     async for value in stream:
 
         instance = await workflow_engine.get_instance(running_task_ids[-1])
-        await instance.stop(runtime_parameters=instance.runtime_parameters, workflow_instance=instance)
+        await instance.stop(
+            runtime_parameters=instance.runtime_parameters, workflow_instance=instance
+        )
 
 
 @workflow_engine.faust_app.agent(simple_topic)
@@ -767,7 +769,7 @@ async def simple_data_stream(stream):
             complete_by_time=120000,
             repartition=False,
             seed=rd,
-            submit_task=True
+            submit_task=True,
         )
         templates.append(instance)
         running_task_ids.append(instance.id)
