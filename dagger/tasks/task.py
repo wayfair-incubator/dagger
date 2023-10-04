@@ -1178,7 +1178,9 @@ class ITemplateDAGInstance(INonLeafNodeTask[KT, VT], abc.ABC):
         :param workflow_instance: The workflow object
         """
         if self.status.code in TERMINAL_STATUSES:
-            logger.info(f'Stop called in workflow in terminal state {workflow_instance.id}')
+            logger.info(
+                f"Stop called in workflow in terminal state {workflow_instance.id}"
+            )
             return
         remaining_tasks: Optional[List[ITask]] = await self.get_remaining_tasks(
             next_dag_id=self.root_dag, workflow_instance=self, tasks=[]  # type: ignore
