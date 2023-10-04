@@ -327,6 +327,18 @@ class TestTasks:
         assert parallel_composite_task_fixture.on_complete.called
 
     @pytest.mark.asyncio
+    async def test_stop_workflow_already_stopped(
+        self, template_fixture
+    ):
+        template_fixture.on_complete = CoroutineMock()
+        template_fixture.status = TaskStatus(
+                code=TaskStatusEnum.COMPLETED.name, value=TaskStatusEnum.COMPLETED.value
+            )
+        await template_fixture.stop(runtime_parameters=template_fixture.runtime_parameters,
+            workflow_instance=template_fixture)
+        template_fixture.on_complete.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_stop_workflow(
         self, template_fixture, executor_fixture, sensor_fixture, decision_fixture
     ):
