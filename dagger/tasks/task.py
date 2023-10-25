@@ -322,15 +322,21 @@ class ExecutorTask(ITask[KT, VT], abc.ABC):
         ignore_status: bool = False,
     ) -> None:
         # pre-execute
-        if self.status.code in [
-            TaskStatusEnum.COMPLETED.name,
-            TaskStatusEnum.SKIPPED.name,
-        ] and not self.reprocess_on_message:
+        if (
+            self.status.code
+            in [
+                TaskStatusEnum.COMPLETED.name,
+                TaskStatusEnum.SKIPPED.name,
+            ]
+            and not self.reprocess_on_message
+        ):
             return await self.on_complete(
                 status=self.status, workflow_instance=workflow_instance
             )
         if (
-            ignore_status or self.status.code == TaskStatusEnum.NOT_STARTED.name or self.reprocess_on_message
+            ignore_status
+            or self.status.code == TaskStatusEnum.NOT_STARTED.name
+            or self.reprocess_on_message
         ) and workflow_instance:
             self.status = TaskStatus(
                 code=TaskStatusEnum.EXECUTING.name, value=TaskStatusEnum.EXECUTING.value
@@ -964,10 +970,14 @@ class INonLeafNodeTask(ITask[KT, VT], abc.ABC):
         )
 
     async def start(self, workflow_instance: Optional[ITemplateDAGInstance]) -> None:
-        if self.status.code in [
-            TaskStatusEnum.COMPLETED.name,
-            TaskStatusEnum.SKIPPED.name,
-        ] and not self.reprocess_on_message:
+        if (
+            self.status.code
+            in [
+                TaskStatusEnum.COMPLETED.name,
+                TaskStatusEnum.SKIPPED.name,
+            ]
+            and not self.reprocess_on_message
+        ):
             return await self.on_complete(
                 status=self.status, workflow_instance=workflow_instance
             )
