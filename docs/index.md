@@ -1,4 +1,4 @@
-# Dagger - 0.2.5
+# Dagger - 0.2.6
 
 ![CI pipeline status](https://github.com/wayfair-incubator/dagger/workflows/CI/badge.svg?branch=main)
 ![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)
